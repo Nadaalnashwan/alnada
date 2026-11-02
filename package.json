@@ -6,7 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "verify:llama": "tsx scripts/verify-llama.ts",
+    "data:aspca": "tsx scripts/verify-aspca.ts",
+    "data:images": "tsx scripts/fetch-images.ts",
+    "data:perenual": "tsx scripts/import-perenual.ts",
+    "data:build": "tsx scripts/build-catalog.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
