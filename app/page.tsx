@@ -235,7 +235,7 @@ export default async function Home() {
             <Reveal delay={120}>
               <div className="relative rounded-[2rem] bg-white/[0.06] p-5 ring-1 ring-white/10 backdrop-blur sm:p-6">
                 <div className="mb-4 flex items-center gap-3 border-b border-white/10 pb-4">
-                  <span className="grid size-10 place-items-center rounded-2xl bg-white/10"><DewDrop tone="dark" className="h-6 w-5" /></span>
+                  <span className="grid size-10 place-items-center rounded-2xl bg-white/10"><DewDrop tone="dark" className="size-8" /></span>
                   <div><p className="font-semibold">{t.nada.title}</p><p className="flex items-center gap-1.5 text-xs text-sprout"><span className="size-1.5 animate-pulse-dot rounded-full bg-sprout" />{ar ? "متصلة" : "online"}</p></div>
                 </div>
                 <div className="space-y-3 text-sm">

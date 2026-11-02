@@ -22,6 +22,8 @@ export interface OwnedPlant {
   last_activity: { activity: string; occurred_at: string } | null;
   /** Record-based insights (same logic Nada AI uses). */
   insights: PlantInsights;
+  /** Most recent care records (newest first) for the timeline. */
+  logs: { id: string; activity: string; occurred_at: string; notes: string | null }[];
 }
 
 const COLS = "id, nickname, unconfirmed_label, identification_status, location, light_condition, watering_preference, notes, source, acquired_at, created_at, photo_path, species:plant_species(slug)";
@@ -35,8 +37,8 @@ export async function loadOwnedPlants(sb: SupabaseClient, onlyId?: string): Prom
   const species = await getAllSpecies();
   const ids = (data ?? []).map((p) => p.id);
   const { data: logs } = ids.length
-    ? await sb.from("care_logs").select("user_plant_id, activity, occurred_at, notes").in("user_plant_id", ids).order("occurred_at", { ascending: false }).limit(1000)
-    : { data: [] as { user_plant_id: string; activity: string; occurred_at: string; notes: string | null }[] };
+    ? await sb.from("care_logs").select("id, user_plant_id, activity, occurred_at, notes").in("user_plant_id", ids).order("occurred_at", { ascending: false }).limit(1000)
+    : { data: [] as { id: string; user_plant_id: string; activity: string; occurred_at: string; notes: string | null }[] };
   const paths = (data ?? []).map((p) => p.photo_path).filter(Boolean) as string[];
   const signed = new Map<string, string>();
   if (paths.length) {
@@ -55,6 +57,7 @@ export async function loadOwnedPlants(sb: SupabaseClient, onlyId?: string): Prom
       last_watered_at: mine.find((l) => l.activity === "watering")?.occurred_at ?? null,
       last_activity: mine[0] ? { activity: mine[0].activity, occurred_at: mine[0].occurred_at } : null,
       insights: plantInsights(sp, p, mine),
+      logs: mine.slice(0, 40).map((l) => ({ id: l.id, activity: l.activity, occurred_at: l.occurred_at, notes: l.notes })),
     };
   });
 }

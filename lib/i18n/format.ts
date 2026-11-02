@@ -12,3 +12,12 @@ export function formatDate(iso: string | Date, locale: Locale, opts: Intl.DateTi
 export function L<T extends Record<string, unknown>>(rec: T, base: string, locale: Locale): string {
   return (rec[`${base}_${locale}`] as string) ?? (rec[`${base}_ar`] as string) ?? "";
 }
+
+/** Correct Arabic/English day phrasing: Arabic numbers agree with their noun (يوم / يومين / أيام). */
+export function dayCount(n: number, locale: Locale) {
+  if (locale !== "ar") return n === 1 ? "1 day" : `${n} days`;
+  if (n === 1) return "يوم واحد";
+  if (n === 2) return "يومين";
+  if (n >= 3 && n <= 10) return `${n} أيام`;
+  return `${n} يومًا`;
+}

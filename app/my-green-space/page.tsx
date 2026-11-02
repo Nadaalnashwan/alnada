@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Bookmark, Droplets, Heart, LogIn, Plus, Sparkles, Sprout } from "lucide-react";
-import { Blob, Leaf, Sprig } from "@/components/brand/Decor";
+import { Leaf } from "@/components/brand/Decor";
 import { DewDrop } from "@/components/brand/Logo";
-import { ClearExploredButton, ExploredPlantCard, OwnedPlantCard, WishlistCard, type ExploredCard, type OwnedCard, type PlantStatus, type WishCard } from "@/components/my-green-space/PlantCards";
-import { PlantBox } from "@/components/my-green-space/PlantBox";
+import { Garden, type GardenPlant, type GardenStatus } from "@/components/my-green-space/Garden";
+import { ClearExploredButton, ExploredPlantCard, WishlistCard, type ExploredCard, type WishCard } from "@/components/my-green-space/PlantCards";
+import { Pot } from "@/components/my-green-space/PottedPlant";
 import { Reveal } from "@/components/ui/Reveal";
 import { getAllProducts, getAllSpecies } from "@/lib/catalog/repo";
 import { loadOwnedPlants } from "@/lib/green-space/data";
@@ -17,25 +18,28 @@ export const dynamic = "force-dynamic";
 
 type Tab = "plants" | "explored" | "wishlist";
 
-/** An empty greenhouse shelf: three empty pots waiting for plants. */
-function Empty({ title, body, cta }: { title: string; body: string; cta?: React.ReactNode }) {
+/** Restrained empty state: an empty shelf with a few waiting pots. */
+function EmptyShelf({ title, body, cta }: { title: string; body: string; cta?: React.ReactNode }) {
   return (
-    <div className="relative overflow-hidden rounded-[2.25rem] bg-botanical px-6 py-14 text-center ring-1 ring-saudi/10">
-      <div className="mx-auto mb-8 flex max-w-sm items-end justify-center gap-3" aria-hidden>
-        {[0, 1, 2].map((i) => (
-          <div key={i} className={`w-24 ${i === 1 ? "-translate-y-3" : ""}`}>
-            <PlantBox id={`empty-${i}`} image={null} alt="" size="sm" />
+    <div className="relative overflow-hidden rounded-[2.5rem] bg-[linear-gradient(180deg,#fbf8f1_0%,#f3eee2_100%)] px-6 pb-10 pt-12 text-center ring-1 ring-[#ebe2cc]">
+      <Leaf className="pointer-events-none absolute end-[8%] top-4 h-32 w-16 rotate-[24deg] text-saudi/[0.05]" />
+      <div className="relative mx-auto flex max-w-sm items-end justify-center gap-6" aria-hidden>
+        {["e1", "e2", "e3"].map((id, i) => (
+          <div key={id} className="flex flex-col items-center" style={{ animation: `settle 0.6s var(--ease-organic) ${i * 90}ms both` }}>
+            {i === 1 && <span className="-mb-2 h-8 w-1 rounded-full bg-leaf/50" />}
+            <Pot id={id} width={i === 1 ? 84 : 70} empty={i !== 1} />
           </div>
         ))}
       </div>
-      <h2 className="text-2xl font-bold text-forest">{title}</h2>
+      <div className="mx-auto -mt-1 h-3 max-w-md rounded-full bg-gradient-to-b from-[#e8d9b9] to-[#d2bd94] shadow-[0_12px_18px_-10px_rgb(91_70_40/0.4)]" />
+      <h2 className="mt-8 text-2xl font-bold text-forest">{title}</h2>
       <p className="mx-auto mt-2 max-w-md text-sm leading-7 text-muted">{body}</p>
       {cta && <div className="mt-7 flex flex-wrap justify-center gap-2">{cta}</div>}
     </div>
   );
 }
 
-function statusOf(p: Awaited<ReturnType<typeof loadOwnedPlants>>[number]): PlantStatus {
+function statusOf(p: Awaited<ReturnType<typeof loadOwnedPlants>>[number]): GardenStatus {
   if (p.identification_status === "unconfirmed") return "unconfirmed";
   if (p.insights.soil_check_due) return "soil_check_due";
   if (p.insights.light_matches === false) return "light_mismatch";
@@ -43,76 +47,81 @@ function statusOf(p: Awaited<ReturnType<typeof loadOwnedPlants>>[number]): Plant
   return "on_track";
 }
 
-export default async function GreenSpacePage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+export default async function GreenSpacePage({ searchParams }: { searchParams: Promise<{ tab?: string; plant?: string }> }) {
   const { t, locale } = await getDict();
-  const requested = (await searchParams).tab;
-  const tab: Tab = (["plants", "explored", "wishlist"] as const).find((x) => x === requested) ?? "plants";
+  const sp = await searchParams;
+  const tab: Tab = (["plants", "explored", "wishlist"] as const).find((x) => x === sp.tab) ?? "plants";
   const ar = locale === "ar";
   const user = isSupabaseConfigured() ? await getUser() : null;
+  const firstName = user?.fullName?.trim().split(/\s+/)[0];
 
-  const Hero = ({ stats }: { stats?: { owned: number; attention: number; explored: number; wishlist: number } }) => (
-    <header className="relative overflow-hidden rounded-[2.5rem] bg-forest-glow px-6 pb-10 pt-12 text-white sm:px-10 sm:pt-14">
-      <Leaf className="absolute end-[6%] top-6 h-40 w-20 origin-bottom animate-sway text-sprout/20" />
-      <Leaf className="absolute end-[14%] top-16 h-28 w-14 origin-bottom rotate-12 animate-sway text-white/[0.06] [animation-delay:1.2s]" />
-      <Blob variant={1} className="absolute -bottom-40 -start-32 size-[26rem] text-white/[0.04]" />
-      <div className="relative">
-        <p className="chip bg-white/10 text-sprout"><DewDrop tone="dark" className="h-4 w-3.5" />{t.space.subtitle}</p>
-        <h1 className="mt-4 text-3xl font-bold sm:text-5xl">{user?.fullName ? (ar ? `مساحة ${user.fullName.split(" ")[0]} الخضراء` : `${user.fullName.split(" ")[0]}'s Green Space`) : t.space.title}</h1>
-        <p className="mt-3 max-w-xl leading-8 text-white/75">{ar ? "حديقتك الرقمية: كل نبتة لها صندوقها، وسجل عنايتها، ورفيقة اسمها ندى." : "Your digital garden: every plant gets its own box, its care history, and a companion named Nada."}</p>
-        {stats && (
-          <dl className="mt-8 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
-            {[
-              { v: stats.owned, l: t.space.myPlants, i: Sprout },
-              { v: stats.attention, l: ar ? "تحتاج انتباهك" : "Need attention", i: Droplets },
-              { v: stats.explored, l: t.space.explored, i: Bookmark },
-              { v: stats.wishlist, l: t.space.wishlist, i: Heart },
-            ].map(({ v, l, i: I }) => (
-              <div key={l} className="rounded-2xl bg-white/[0.08] p-4 ring-1 ring-white/10 backdrop-blur">
-                <I className="size-4 text-sprout" />
-                <dd className="mt-2 text-3xl font-bold">{v}</dd>
-                <dt className="text-xs text-white/65">{l}</dt>
-              </div>
-            ))}
-          </dl>
-        )}
+  const Greeting = ({ stats }: { stats?: { owned: number; attention: number; explored: number; wishlist: number } }) => (
+    <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p className="eyebrow"><DewDrop className="h-4 w-3" />{t.space.subtitle}</p>
+        <h1 className="mt-3 text-3xl font-bold text-forest sm:text-[2.6rem] sm:leading-tight">
+          {firstName ? (ar ? <>حديقة <span className="text-saudi">{firstName}</span> الصغيرة</> : <><span className="text-saudi">{firstName}</span>&apos;s little garden</>) : t.space.title}
+        </h1>
       </div>
+      {stats && (
+        <dl className="flex flex-wrap gap-2">
+          {[
+            { v: stats.owned, l: t.space.myPlants, i: Sprout, tone: "bg-white text-forest" },
+            { v: stats.attention, l: ar ? "تحتاج انتباهك" : "Need attention", i: Droplets, tone: stats.attention ? "bg-warn-bg text-warn" : "bg-white text-forest" },
+          ].map(({ v, l, i: I, tone }) => (
+            <div key={l} className={`flex items-center gap-2 rounded-full px-3.5 py-2 text-sm shadow-sm ring-1 ring-saudi/10 ${tone}`}>
+              <I className="size-4" /><dd className="font-bold">{v}</dd><dt className="text-xs opacity-80">{l}</dt>
+            </div>
+          ))}
+        </dl>
+      )}
     </header>
   );
 
-  if (!isSupabaseConfigured()) return <div className="container-x py-8"><Hero /><p className="card mt-8 p-6 text-sm leading-7 text-warn">{t.auth.notConfigured}</p></div>;
+  if (!isSupabaseConfigured()) return <div className="container-x py-8"><Greeting /><p className="card p-6 text-sm leading-7 text-warn">{t.auth.notConfigured}</p></div>;
   if (!user) return (
     <div className="container-x py-8">
-      <Hero />
-      <div className="mt-8">
-        <Empty title={t.auth.required} body={t.auth.why} cta={<><Link href="/account/login?next=/my-green-space" className="btn-primary px-6 py-3"><LogIn className="size-4" />{t.auth.signIn}</Link><Link href="/account/signup" className="btn-outline px-6 py-3">{t.auth.signUp}</Link></>} />
-      </div>
+      <Greeting />
+      <EmptyShelf title={t.auth.required} body={ar ? "حديقتك الرقمية بانتظارك: نباتاتك في أصصها، سجل عنايتها، ورفيقة اسمها ندى. سجّل دخولك عشان نحفظها لك بأمان." : "Your digital garden is waiting: your plants in their pots, their care history, and a companion named Nada. Sign in so we can keep it safe."}
+        cta={<><Link href="/account/login?next=/my-green-space" className="btn-primary px-6 py-3"><LogIn className="size-4" />{t.auth.signIn}</Link><Link href="/account/signup" className="btn-outline px-6 py-3">{t.auth.signUp}</Link></>} />
     </div>
   );
 
   const supabase = (await getSupabase())!;
-  const [products, species, ownedRaw, exploredCount, wishCount] = await Promise.all([
+  const [products, species, ownedRaw, exploredCount, wishCount, sessions] = await Promise.all([
     getAllProducts(),
     getAllSpecies(),
     loadOwnedPlants(supabase),
     supabase.from("explored_plants").select("id", { count: "exact", head: true }).then((r) => r.count ?? 0),
     supabase.from("wishlists").select("product_id", { count: "exact", head: true }).then((r) => r.count ?? 0),
+    supabase.from("chat_sessions").select("id, title, updated_at, context").order("updated_at", { ascending: false }).limit(60).then((r) => r.data ?? []),
   ]);
 
-  const owned: OwnedCard[] = ownedRaw.map((p) => {
-    const sName = p.species ? (ar ? p.species.name_ar : p.species.name_en) : p.unconfirmed_label ?? "?";
+  const garden: GardenPlant[] = ownedRaw.map((p) => {
+    const s = p.species;
+    const sName = s ? (ar ? s.name_ar : s.name_en) : p.unconfirmed_label ?? "?";
     const status = statusOf(p);
-    const tips = ar ? p.insights.suggestions_ar : p.insights.suggestions_en;
     return {
-      id: p.id, title: p.nickname ? `${sName} — ${p.nickname}` : sName, nickname: p.nickname, speciesName: sName, scientific: p.species?.scientific_name ?? null,
-      image: p.photo_url ?? p.species?.image?.url ?? null, ownPhoto: Boolean(p.photo_url), location: p.location,
-      light: p.light_condition ? t.attr.light[p.light_condition as keyof typeof t.attr.light] : null, lastWatered: p.last_watered_at,
-      lastActivity: p.last_activity ? t.plant.activity[p.last_activity.activity as keyof typeof t.plant.activity] : null,
-      addedAt: p.created_at, source: p.source, unconfirmed: p.identification_status === "unconfirmed",
-      status, daysSinceWatering: p.insights.days_since_watering, checkInterval: p.insights.typical_check_interval_days,
-      tip: tips.find((x) => !(status === "no_watering_recorded" && x === tips[0])) ?? null,
+      id: p.id, nickname: p.nickname, speciesName: sName, scientific: s?.scientific_name ?? null, speciesSlug: s?.slug ?? null,
+      productSlug: s ? products.find((x) => x.species_slug === s.slug && x.kind === "plant")?.slug ?? null : null,
+      image: p.photo_url ?? s?.image?.url ?? null, ownPhoto: Boolean(p.photo_url), speciesImage: s?.image?.url ?? null,
+      habit: s?.habit ?? "bushy", size: s?.size ?? "medium",
+      location: p.location, lightCondition: p.light_condition,
+      lightLabel: p.light_condition ? t.attr.light[p.light_condition as keyof typeof t.attr.light] : null,
+      needsLight: s ? s.light.map((l) => t.attr.light[l]) : [],
+      waterNeed: s ? t.attr.water[s.water] : null, humidity: s ? t.attr.humidity[s.humidity] : null,
+      temp: s ? `${s.temp_min_c}–${s.temp_max_c}°C` : null, difficulty: s ? t.attr.difficulty[s.difficulty] : null,
+      source: p.source, addedAt: p.created_at, acquiredAt: p.acquired_at, wateringPreference: p.watering_preference, notes: p.notes,
+      unconfirmed: p.identification_status === "unconfirmed", status,
+      daysSinceWatering: p.insights.days_since_watering, checkInterval: p.insights.typical_check_interval_days, lastWatered: p.last_watered_at,
+      suggestions: ar ? p.insights.suggestions_ar : p.insights.suggestions_en,
+      tips: s ? (ar ? s.tips_ar : s.tips_en) : [], problems: s ? (ar ? s.problems_ar : s.problems_en) : [],
+      observations: p.insights.recent_observations, logs: p.logs,
+      consultations: sessions.filter((c) => (c.context as { focus_user_plant?: string } | null)?.focus_user_plant === p.id).slice(0, 5)
+        .map((c) => ({ id: c.id, title: c.title, updated_at: c.updated_at })),
     };
   });
-  const attention = owned.filter((p) => p.status === "soil_check_due" || p.status === "light_mismatch").length;
+  const attention = garden.filter((p) => p.status === "soil_check_due" || p.status === "light_mismatch").length;
 
   let explored: ExploredCard[] = [];
   let wish: WishCard[] = [];
@@ -133,17 +142,17 @@ export default async function GreenSpacePage({ searchParams }: { searchParams: P
   }
 
   const tabs: { id: Tab; label: string; count: number; icon: typeof Sprout }[] = [
-    { id: "plants", label: t.space.myPlants, count: owned.length, icon: Sprout },
+    { id: "plants", label: t.space.myPlants, count: garden.length, icon: Sprout },
     { id: "explored", label: t.space.explored, count: exploredCount, icon: Bookmark },
     { id: "wishlist", label: t.space.wishlist, count: wishCount, icon: Heart },
   ];
 
   return (
     <div className="container-x py-8">
-      <Hero stats={{ owned: owned.length, attention, explored: exploredCount, wishlist: wishCount }} />
+      <Greeting stats={{ owned: garden.length, attention, explored: exploredCount, wishlist: wishCount }} />
 
-      <div className="sticky top-[5.5rem] z-20 -mx-2 mt-8 flex flex-wrap items-center justify-between gap-3 rounded-[1.4rem] px-2 py-2 sm:static sm:mx-0 sm:px-0">
-        <nav className="glass flex gap-1 rounded-full p-1.5 shadow-[var(--shadow-card)] ring-1 ring-saudi/10" aria-label={t.space.title}>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <nav className="flex gap-1 rounded-full bg-white p-1.5 shadow-[var(--shadow-card)] ring-1 ring-saudi/10" aria-label={t.space.title}>
           {tabs.map(({ id, label, count, icon: I }) => (
             <Link key={id} href={`/my-green-space?tab=${id}`} aria-current={tab === id ? "page" : undefined} scroll={false}
               className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold transition duration-300 sm:px-4 ${tab === id ? "bg-saudi text-white shadow-[var(--shadow-glow)]" : "text-deep hover:bg-soft"}`}>
@@ -152,38 +161,26 @@ export default async function GreenSpacePage({ searchParams }: { searchParams: P
             </Link>
           ))}
         </nav>
-        {tab === "plants" && <Link href="/my-green-space/add" className="btn-primary px-5 py-2.5"><Plus className="size-4" />{t.space.addPlant}</Link>}
+        {tab === "plants" && garden.length > 0 && <Link href="/my-green-space/add" className="btn-outline hidden px-4 py-2.5 sm:inline-flex"><Plus className="size-4" />{t.space.addPlant}</Link>}
         {tab === "explored" && explored.length > 0 && <ClearExploredButton />}
       </div>
 
-      <section className="relative mt-6">
-        <Sprig className="pointer-events-none absolute -end-10 -top-10 hidden h-56 w-36 text-sage/40 xl:block" />
-        {tab === "plants" && (owned.length ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {owned.map((p, i) => <Reveal key={p.id} delay={(i % 3) * 90}><OwnedPlantCard p={p} index={i} /></Reveal>)}
-            <Reveal delay={90}>
-              <Link href="/my-green-space/add" className="group flex h-full min-h-80 flex-col items-center justify-center gap-3 rounded-[2rem] border-2 border-dashed border-saudi/20 bg-mist/60 p-8 text-center transition hover:border-saudi/50 hover:bg-soft">
-                <span className="grid size-14 place-items-center rounded-full bg-white text-saudi shadow-sm transition duration-500 group-hover:rotate-90 group-hover:bg-saudi group-hover:text-white"><Plus className="size-6" /></span>
-                <span className="font-bold text-forest">{t.space.addPlant}</span>
-                <span className="text-xs text-muted">{ar ? "ازرع نبتة جديدة في حديقتك الرقمية" : "Plant a new one in your digital garden"}</span>
-              </Link>
-            </Reveal>
-          </div>
-        ) : (
-          <Empty title={t.space.emptyPlants} body={t.space.emptyPlantsBody}
-            cta={<><Link href="/my-green-space/add" className="btn-primary px-6 py-3"><Sprout className="size-4" />{t.space.addPlant}</Link><Link href="/shop" className="btn-outline px-6 py-3">{t.hero.ctaShop}</Link></>} />
-        ))}
-        {tab === "explored" && (explored.length ? (
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">{explored.map((p, i) => <Reveal key={p.id} delay={(i % 4) * 70}><ExploredPlantCard p={p} /></Reveal>)}</div>
-        ) : (
-          <Empty title={t.space.emptyExplored} body={t.space.emptyExploredBody} cta={<Link href="/nada-ai" className="btn-primary px-6 py-3"><Sparkles className="size-4" />{t.nav.nada}</Link>} />
-        ))}
-        {tab === "wishlist" && (wish.length ? (
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">{wish.map((p, i) => <Reveal key={p.id} delay={(i % 4) * 70}><WishlistCard p={p} /></Reveal>)}</div>
-        ) : (
-          <Empty title={t.space.emptyWishlist} body={t.cart.emptyBody} cta={<Link href="/shop" className="btn-primary px-6 py-3">{t.hero.ctaShop}</Link>} />
-        ))}
-      </section>
+      {tab === "plants" && (garden.length ? (
+        <Garden plants={garden} initialId={sp.plant ?? null} />
+      ) : (
+        <EmptyShelf title={t.space.emptyPlants} body={t.space.emptyPlantsBody}
+          cta={<><Link href="/my-green-space/add" className="btn-primary px-6 py-3"><Sprout className="size-4" />{t.space.addPlant}</Link><Link href="/shop" className="btn-outline px-6 py-3">{t.hero.ctaShop}</Link></>} />
+      ))}
+      {tab === "explored" && (explored.length ? (
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">{explored.map((p, i) => <Reveal key={p.id} delay={(i % 4) * 70}><ExploredPlantCard p={p} /></Reveal>)}</div>
+      ) : (
+        <EmptyShelf title={t.space.emptyExplored} body={t.space.emptyExploredBody} cta={<Link href="/nada-ai" className="btn-primary px-6 py-3"><Sparkles className="size-4" />{t.nav.nada}</Link>} />
+      ))}
+      {tab === "wishlist" && (wish.length ? (
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">{wish.map((p, i) => <Reveal key={p.id} delay={(i % 4) * 70}><WishlistCard p={p} /></Reveal>)}</div>
+      ) : (
+        <EmptyShelf title={t.space.emptyWishlist} body={t.cart.emptyBody} cta={<Link href="/shop" className="btn-primary px-6 py-3">{t.hero.ctaShop}</Link>} />
+      ))}
     </div>
   );
 }

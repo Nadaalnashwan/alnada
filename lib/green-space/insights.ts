@@ -2,6 +2,7 @@
 // (species requirements + the customer's own records). Shared by Nada AI and the plant page so
 // both always say the same thing. Never claims to know the plant's real-time condition.
 
+import { dayCount } from "@/lib/i18n/format";
 import type { LightLevel, Species } from "@/lib/plants/types";
 
 /** Typical days between waterings for a species' water need — a prompt to check the soil, not a schedule. */
@@ -42,7 +43,7 @@ export function plantInsights(
   const products: string[] = [];
   if (species) {
     if (days === null) { ar.push("سجّل آخر ري عشان نقدر نتابع معك"); en.push("Log the last watering so we can follow along"); }
-    else if (due) { ar.push(`مر ${days} يوم على آخر ري مسجل — افحص رطوبة التربة قبل الري`); en.push(`${days} days since the last recorded watering — check soil moisture before watering`); }
+    else if (due) { ar.push(`مر ${dayCount(days, "ar")} على آخر ري مسجل — افحص رطوبة التربة قبل الري`); en.push(`${dayCount(days, "en")} since the last recorded watering — check soil moisture before watering`); }
     if (lightMatches === false) { ar.push("الإضاءة المسجلة ما تطابق احتياجها؛ فكّر تغيّر مكانها"); en.push("The recorded light doesn't match its needs; consider moving it"); }
     if (species.humidity === "high") {
       ar.push("تحب الرطوبة العالية: أبعدها عن هواء المكيف المباشر"); en.push("Likes high humidity: keep it out of direct AC airflow");

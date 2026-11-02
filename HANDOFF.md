@@ -46,6 +46,11 @@ no email sent; password only in the owner's `.env.local` as `TEST_PASSWORD`). De
 `delete from auth.users where email like 'alnada.test.%@example.com';`
 **Admin:** none yet — run `supabase/admin/grant-admin.sql` with the owner's email after signing up.
 
+## Design branch `design/botanical-redesign` (not merged to main yet)
+"Living Botanical" design system, redesigned homepage/shop/Nada AI, official logo + icons, and My Green Space as a
+shared interactive garden shelf with a selectable details panel (real Supabase data; watering updates the DB and UI).
+Catalogue photos are mirrored locally (`npm run data:mirror`). Merge via PR after review.
+
 ## Nada AI ↔ customer data (added 2026-11-02, second session)
 `lib/green-space/insights.ts` derives record-based insights from saved data only: days since the last *recorded*
 watering vs the species' typical check interval (low 14 / moderate 7 / high 4 days — a prompt to check soil, not a

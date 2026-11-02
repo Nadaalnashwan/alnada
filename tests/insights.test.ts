@@ -31,3 +31,19 @@ describe("record-based plant insights", () => {
     expect(plantInsights(sp("aloe-vera"), { light_condition: "full_sun" }, [], now).helpful_product_slugs).toEqual([]);
   });
 });
+
+describe("Arabic day phrasing", () => {
+  it("agrees numbers with the noun", async () => {
+    const { dayCount } = await import("@/lib/i18n/format");
+    expect(dayCount(1, "ar")).toBe("يوم واحد");
+    expect(dayCount(2, "ar")).toBe("يومين");
+    expect(dayCount(7, "ar")).toBe("7 أيام");
+    expect(dayCount(14, "ar")).toBe("14 يومًا");
+    expect(dayCount(1, "en")).toBe("1 day");
+    expect(dayCount(9, "en")).toBe("9 days");
+  });
+  it("uses it in record-based suggestions", () => {
+    const i = plantInsights(sp("monstera-deliciosa"), { light_condition: "medium" }, [{ activity: "watering", occurred_at: daysAgo(9), notes: null }], now);
+    expect(i.suggestions_ar[0]).toContain("9 أيام");
+  });
+});

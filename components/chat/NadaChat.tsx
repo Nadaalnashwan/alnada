@@ -169,7 +169,7 @@ export function NadaChat({ plants, aiReady, initialPrompt, initialPlantId }: { p
           <Leaf className="absolute end-24 -top-6 h-20 w-10 rotate-45 text-white/[0.06]" />
           <div className="relative flex items-center gap-3">
             <span className="relative grid size-11 place-items-center rounded-2xl bg-white/10 ring-1 ring-white/15">
-              <DewDrop tone="dark" className="h-7 w-6 animate-dew" />
+              <DewDrop tone="dark" className="size-8" />
               <span className="absolute -bottom-0.5 -end-0.5 size-3 rounded-full bg-sprout ring-2 ring-forest" />
             </span>
             <div>

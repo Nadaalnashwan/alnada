@@ -22,7 +22,12 @@ Brand colours (exact): Saudi Green `#006C35` (primary), Deep Green `#004D26`, So
 (fresh accents), `sage`, `mist` (light section bg), `dew`, `cream` (warm surface — sparingly, never dominant),
 `sun` (tiny accent only). No burgundy, maroon, purple, beige-dominant themes, heavy gradients or cartoon plants.
 Font: IBM Plex Sans Arabic. RTL-first; English via `locale` cookie; use logical props (`ms/me/start/end`).
-Shared pieces: `components/brand/Logo.tsx` (dew-drop + leaf mark), `components/brand/Decor.tsx` (Leaf, Sprig,
+Official logo: `public/brand/alnada-mark*.png` — the exact supplied artwork (only margins trimmed); never
+recolour or redraw it; on dark surfaces it sits on an ivory badge (`DewDrop tone="dark"`). Favicon/app icons:
+`app/icon.png`, `app/apple-icon.png`, `app/manifest.ts`, `public/brand/alnada-app-icon-*.png`.
+My Green Space = one shared garden shelf (`components/my-green-space/Garden.tsx`, `PottedPlant.tsx`): every owned
+plant in its own pot side by side; selecting one shows its full details below (no page reload).
+Shared pieces: `components/brand/Logo.tsx` (official mark + wordmark), `components/brand/Decor.tsx` (Leaf, Sprig,
 Blob, DewCluster, Pot — decorative, aria-hidden), `components/ui/Reveal.tsx` (scroll reveal; content visible
 without JS), `components/ui/SectionHeading.tsx`, `components/my-green-space/PlantBox.tsx` (plant "planted" in a pot).
 Utilities: `btn-*`, `card`, `chip`, `eyebrow`, `display`, `section-title`, `lead`, `arch`, `glass`, `bg-botanical`,

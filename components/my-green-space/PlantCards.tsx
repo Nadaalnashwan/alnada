@@ -3,123 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { AlertTriangle, Bookmark, Check, CircleHelp, Droplets, Heart, Info, MapPin, ShoppingBag, Sparkles, Sprout, Store, Sun, Trash2 } from "lucide-react";
+import { Bookmark, Check, Heart, ShoppingBag, Sparkles, Sprout, Trash2 } from "lucide-react";
 import { useCart, useT, useWishlist } from "@/components/layout/Providers";
 import { PlantImage } from "@/components/store/PlantImage";
 import { formatDate, formatSAR } from "@/lib/i18n/format";
-import { PlantBox } from "./PlantBox";
 
-export type PlantStatus = "on_track" | "soil_check_due" | "light_mismatch" | "no_watering_recorded" | "unconfirmed";
-
-export interface OwnedCard {
-  id: string; title: string; nickname: string | null; speciesName: string; scientific: string | null; image: string | null; ownPhoto: boolean;
-  location: string | null; light: string | null; lastWatered: string | null; lastActivity: string | null; addedAt: string; source: "store_purchase" | "manual"; unconfirmed: boolean;
-  status: PlantStatus; daysSinceWatering: number | null; checkInterval: number | null; tip: string | null;
-}
 export interface ExploredCard { id: string; speciesSlug: string; name: string; scientific: string; image: string | null; reason: string | null; at: string; productId: string | null; productSlug: string | null }
 export interface WishCard { id: string; slug: string; name: string; scientific: string; image: string | null; price: number; stock: number }
-
-const STATUS_STYLE: Record<PlantStatus, { cls: string; icon: typeof Check }> = {
-  on_track: { cls: "bg-white/95 text-saudi", icon: Check },
-  soil_check_due: { cls: "bg-warn-bg text-warn", icon: Droplets },
-  light_mismatch: { cls: "bg-warn-bg text-warn", icon: AlertTriangle },
-  no_watering_recorded: { cls: "bg-white/95 text-muted", icon: Info },
-  unconfirmed: { cls: "bg-white/95 text-muted", icon: CircleHelp },
-};
-
-export function statusLabel(s: PlantStatus, ar: boolean) {
-  return {
-    on_track: ar ? "على المسار حسب سجلاتك" : "On track (your records)",
-    soil_check_due: ar ? "حان فحص التربة" : "Time to check soil",
-    light_mismatch: ar ? "الإضاءة غير مناسبة" : "Light mismatch",
-    no_watering_recorded: ar ? "ما فيه ري مسجل" : "No watering logged",
-    unconfirmed: ar ? "تعريف غير مؤكد" : "Unconfirmed ID",
-  }[s];
-}
-
-/** Days since last recorded watering relative to the species' usual check interval. */
-function WaterMeter({ days, interval, ar }: { days: number | null; interval: number | null; ar: boolean }) {
-  if (days === null || !interval) return null;
-  const pct = Math.min(100, Math.round((days / interval) * 100));
-  const tone = pct >= 100 ? "bg-warn" : pct >= 70 ? "bg-sun" : "bg-leaf";
-  return (
-    <div className="mt-2" aria-label={ar ? `مضى ${days} من ${interval} يوم` : `${days} of ${interval} days`}>
-      <div className="h-1.5 overflow-hidden rounded-full bg-mist"><div className={`h-full rounded-full ${tone} transition-all duration-700`} style={{ width: `${Math.max(6, pct)}%` }} /></div>
-    </div>
-  );
-}
-
-export function OwnedPlantCard({ p, index = 0 }: { p: OwnedCard; index?: number }) {
-  const { locale } = useT();
-  const ar = locale === "ar";
-  const router = useRouter();
-  const [watering, setWatering] = useState<"idle" | "busy" | "done" | "err">("idle");
-  const st = STATUS_STYLE[p.status];
-  const StatusI = st.icon;
-
-  const logWatering = async () => {
-    setWatering("busy");
-    const res = await fetch("/api/care-logs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plantId: p.id, activity: "watering" }) });
-    setWatering(res.ok ? "done" : "err");
-    if (res.ok) setTimeout(() => router.refresh(), 700);
-  };
-
-  const wateredText = p.lastWatered
-    ? p.daysSinceWatering === 0 ? (ar ? "سُقيت اليوم" : "Watered today") : ar ? `آخر ري قبل ${p.daysSinceWatering} يوم` : `Watered ${p.daysSinceWatering} days ago`
-    : ar ? "ما فيه ري مسجل" : "No watering logged";
-
-  return (
-    <article className="group relative flex flex-col rounded-[2rem] bg-white p-2.5 shadow-[var(--shadow-card)] ring-1 ring-saudi/[0.06] transition duration-500 ease-[var(--ease-organic)] hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]"
-      style={{ animationDelay: `${index * 70}ms` }}>
-      <Link href={`/my-green-space/plants/${p.id}`} className="relative block" aria-label={p.title}>
-        <PlantBox id={p.id} image={p.image} alt={p.title} ownPhoto={p.ownPhoto} priority={index < 3} />
-        <span className={`absolute start-3 top-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold shadow-sm ${st.cls}`}>
-          <StatusI className="size-3.5" />{statusLabel(p.status, ar)}
-        </span>
-        <span className="absolute end-3 top-3 grid size-8 place-items-center rounded-full bg-white/90 text-saudi shadow-sm" title={p.source === "store_purchase" ? (ar ? "من متجر الندى" : "From AL NADA") : (ar ? "أضفتها بنفسك" : "Added by you")}>
-          {p.source === "store_purchase" ? <Store className="size-4" /> : <Sprout className="size-4" />}
-        </span>
-      </Link>
-
-      <div className="flex flex-1 flex-col px-2.5 pb-2 pt-4">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h3 className="truncate text-xl font-bold text-forest">{p.nickname ?? p.speciesName}</h3>
-            <p className="truncate text-sm text-muted">
-              {p.nickname && p.speciesName}
-              {p.nickname && p.scientific && <span className="mx-1.5 text-sage">•</span>}
-              {p.scientific && <bdi className="italic">{p.scientific}</bdi>}
-            </p>
-          </div>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {p.location && <span className="chip bg-mist"><MapPin className="size-3 text-saudi" />{p.location}</span>}
-          {p.light && <span className="chip bg-mist"><Sun className="size-3 text-sun" />{p.light}</span>}
-        </div>
-
-        <div className="mt-4 rounded-2xl bg-mist/80 p-3">
-          <p className="flex items-center justify-between gap-2 text-xs">
-            <span className="flex items-center gap-1.5 font-semibold text-deep"><Droplets className="size-4 text-saudi" />{wateredText}</span>
-            {p.checkInterval && <span className="text-muted">{ar ? `فحص كل ~${p.checkInterval} أيام` : `check ~every ${p.checkInterval}d`}</span>}
-          </p>
-          <WaterMeter days={p.daysSinceWatering} interval={p.checkInterval} ar={ar} />
-          {p.tip && <p className="mt-2.5 text-xs leading-5 text-muted">{p.tip}</p>}
-        </div>
-
-        <div className="mt-auto grid grid-cols-[1fr_1fr_auto] gap-2 pt-4">
-          <button onClick={logWatering} disabled={watering === "busy" || watering === "done"}
-            className={`btn px-3 py-2 text-xs ${watering === "done" ? "bg-leaf text-white" : "bg-soft text-saudi hover:bg-dew"}`}>
-            {watering === "done" ? <Check className="size-4 animate-pop" /> : <Droplets className="size-4" />}
-            {watering === "done" ? (ar ? "سجلناها" : "Logged") : watering === "err" ? (ar ? "حاول مجددًا" : "Retry") : ar ? "سقيتها اليوم" : "Watered today"}
-          </button>
-          <Link href={`/nada-ai?userPlant=${p.id}`} className="btn-primary px-3 py-2 text-xs"><Sparkles className="size-4" />{ar ? "اسأل ندى" : "Ask Nada"}</Link>
-          <Link href={`/my-green-space/plants/${p.id}`} className="btn-outline px-3 py-2 text-xs" aria-label={ar ? "التفاصيل" : "Details"}><Info className="size-4" /></Link>
-        </div>
-        <p className="mt-2.5 text-center text-[10px] text-muted">{ar ? "أضيفت في" : "Added"} {formatDate(p.addedAt, locale, { day: "numeric", month: "long", year: "numeric" })}</p>
-      </div>
-    </article>
-  );
-}
 
 export function ExploredPlantCard({ p }: { p: ExploredCard }) {
   const { t, locale } = useT();
