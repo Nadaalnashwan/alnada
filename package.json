@@ -13,7 +13,8 @@
     "data:aspca": "tsx scripts/verify-aspca.ts",
     "data:images": "tsx scripts/fetch-images.ts",
     "data:perenual": "tsx scripts/import-perenual.ts",
-    "data:build": "tsx scripts/build-catalog.ts"
+    "data:build": "tsx scripts/build-catalog.ts",
+    "test:live": "tsx scripts/live-db-test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

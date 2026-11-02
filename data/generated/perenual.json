@@ -1,0 +1,673 @@
+{
+  "monstera-deliciosa": {
+    "id": 5257,
+    "matched": "Monstera deliciosa",
+    "fetched_at": "2026-11-02T16:08:42.603Z",
+    "details": null,
+    "image": null
+  },
+  "epipremnum-aureum": {
+    "id": 2773,
+    "matched": "Epipremnum aureum",
+    "fetched_at": "2026-11-02T16:08:44.923Z",
+    "details": {
+      "id": 2773,
+      "common_name": "golden pothos",
+      "family": "Araceae",
+      "description": "Golden Pothos, also known as Epipremnum aureum, is an amazing, easy-care houseplant that is both aesthetically pleasing and resilient. The attractive variegated leaves of the plant grow rapidly and are easy to care for, making it a popular choice for beginners. Its glossy leaves drape gracefully in looping trails making it perfect for hanging baskets, wall mount containers, and table displays. The plant is also known to reduce various volatile organic compounds (VOCs) in the air that can be toxic, and can also help reduce snoring in bedrooms. Its natural resilience and ease of care makes the Golden Pothos a great choice for any plant lover, from beginner to advanced!",
+      "watering": "Average",
+      "sunlight": [
+        "part sun/part shade"
+      ],
+      "care_level": null,
+      "indoor": true,
+      "drought_tolerant": false,
+      "poisonous_to_pets": true
+    },
+    "image": {
+      "url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/2773_epipremnum_aureum/regular/2560px-Epipremnum_aureum_31082012.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160844Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=703f7bb94b904445c82506c000d47db4d38f5bf29a40876bf427daea4f8b8579",
+      "thumb_url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/2773_epipremnum_aureum/thumbnail/2560px-Epipremnum_aureum_31082012.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160844Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=0d2e666bbb23a9b14d98335852bbd455d7df2e2250cf4e0a5089f71d0d261ccf",
+      "license": "Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)",
+      "attribution": "Perenual",
+      "source_url": "https://creativecommons.org/licenses/by-sa/3.0/deed.en"
+    },
+    "description_ar": "البوثوس الذهبي، المعروف أيضًا باسم Epipremnum aureum، هو نبات منزلي رائع وسهل العناية، يتمتع بالجمال والمتانة. أوراق النبات المخططة جذابة تنمو بسرعة وسهلة العناية، مما يجعله خيارًا شائعًا للمبتدئين. تتدلى أوراقه اللامعة بأناقة في مسارات حلزونية، مما يجعله مثاليًا للأسلات المعلقة وأواني الجدران وعروض الطاولة. كما يعرف النبات بتقليل مركبات العضوية المتطايرة (VOCs) المختلفة في الهواء التي يمكن أن تكون سامة، ويمكنه أيضًا المساعدة في تقليل نقيق الأنف في الغرف النومية. تعزز متانتة النبات الطبيعية وسهولة رعايته من جعل البوثوس الذهبي خيارًا رائعًا لأي محب للنباتات، من المبتدئين إلى المتقدمين!"
+  },
+  "zamioculcas-zamiifolia": {
+    "id": 8386,
+    "matched": "Zamioculcas zamiifolia",
+    "fetched_at": "2026-11-02T16:08:46.623Z",
+    "details": null,
+    "image": null
+  },
+  "chlorophytum-comosum": {
+    "id": 1847,
+    "matched": "Chlorophytum comosum 'Vittatum'",
+    "fetched_at": "2026-11-02T16:08:48.280Z",
+    "details": {
+      "id": 1847,
+      "common_name": "spider plant",
+      "family": "Asparagaceae",
+      "description": "Spider plants are amazing because they are so easy to maintain and grow. They are incredibly sturdy and can survive in different types of light and temperature conditions. They love humidity, so they are excellent for areas of the home that require more moisture, such as bathrooms and kitchens. They also act as natural air purifiers by absorbing toxins and removing them from the air. They have long snake-like leaves with white stripes that create a beautiful contrast. The stems are tough and can trail down in a perfect decorative cascade. Spider plants are perfect for beginner gardeners and offer a stunning addition to any home.",
+      "watering": "Average",
+      "sunlight": [
+        "part shade",
+        "full shade"
+      ],
+      "care_level": "Easy",
+      "indoor": true,
+      "drought_tolerant": false,
+      "poisonous_to_pets": false
+    },
+    "image": {
+      "url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/1847_chlorophytum_comosum_vittatum/regular/2560px-Chlorophytum_comosum_27Vittatum27_kz02.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160848Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=821f479874d7ac9b106f1036590e8b9316cc89b0852258905bb5804c899e58ad",
+      "thumb_url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/1847_chlorophytum_comosum_vittatum/thumbnail/2560px-Chlorophytum_comosum_27Vittatum27_kz02.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160848Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=53a76d3e1e1264e337c8d8f63ee86cb0e618623c04e552af866a608eda1a1e3b",
+      "license": "Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)",
+      "attribution": "Perenual",
+      "source_url": "https://creativecommons.org/licenses/by-sa/3.0/deed.en"
+    },
+    "description_ar": "نباتات العنكبوت رائعة لأنها سهلة الصيانة والنمو. وهي قوية بشكل لا يصدق وقادرة على النجاة في أنواع مختلفة من الضوء والظروف المناخية. تحب الرطوبة ، لذلك هي ممتازة للمناطق المنزلية التي تتطلب رطوبة أكبر ، مثل الحمامات والمطابخ. كما تعمل كمنقي هواء طبيعي عن طريق امتصاص السموم وإزالتها من الهواء. لها أوراق طويلة على شكل ثعبان مع شرائط بيضاء تخلق تناقضًا جميلًا. الساقات قوية وقادرة على الانحدار في شلال زخرفي مثالي. نباتات العنكبوت مثالية للبستانيين المبتدئين وتقدم إضافة رائعة لأي منزل."
+  },
+  "ficus-elastica": {
+    "id": 2961,
+    "matched": "Ficus elastica",
+    "fetched_at": "2026-11-02T16:08:50.388Z",
+    "details": {
+      "id": 2961,
+      "common_name": "Indian rubberplant",
+      "family": "Moraceae",
+      "description": "The Indian Rubberplant, or Ficus elastica, is an amazing species for houseplant lovers looking for a dramatic statement piece. It has glossy, broad leaves with a deep green hue, and its dramatic size and shape make it an eye-catching addition to any room. Its air-purifying properties also make it a great addition to a plant-filled home. Its tolerance for lower light and easier maintenance make it an ideal choice for those new to houseplants. With proper care, its large leaves can reach a width of up to 12 inches, adding a truly statement piece to any room.",
+      "watering": "Average",
+      "sunlight": [
+        "full sun",
+        "part sun/part shade"
+      ],
+      "care_level": "Medium",
+      "indoor": true,
+      "drought_tolerant": true,
+      "poisonous_to_pets": false
+    },
+    "image": {
+      "url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/2961_ficus_elastica/regular/533092219_8da73ba0d2_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160850Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=6f80e81505705fa896dcaed061dc165177312cdae929e0991284f0d7bbf6c11a",
+      "thumb_url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/2961_ficus_elastica/thumbnail/533092219_8da73ba0d2_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160850Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=7a5730c7e7a3e7cd5d1743e1db277d4843a4cf6bada124379803382fac46e928",
+      "license": "Attribution-ShareAlike License",
+      "attribution": "Perenual",
+      "source_url": "https://creativecommons.org/licenses/by-sa/2.0/"
+    },
+    "description_ar": "نبات المطاط الهندي، أو Ficus elastica، هو نوع رائع لمحبي النباتات المنزلية الذين يبحثون عن قطعة إعلانية دراماتيكية. له أوراق لامعة وعريضة بلون أخضر غامق، ويشكل حجمه وشكله الدراماتيكيان إضافة مثيرة للانتباه إلى أي غرفة. كما أن خصائصه المطهرة للهواء تجعله إضافة رائعة إلى المنزل المليء بالنباتات. كما أن تحمله للضوء الأقل وسهولة العناية به تجعله خياراً مثاليًا لأولئك الذين yeniين إلى النباتات المنزلية. مع العناية المناسبة، يمكن أن تصل أوراقه الكبيرة إلى عرض يصل إلى 12 بوصة، مما يضيف قطعة إعلانية حقيقية إلى أي غرفة."
+  },
+  "ficus-lyrata": {
+    "id": 2963,
+    "matched": "Ficus lyrata",
+    "fetched_at": "2026-11-02T16:08:51.944Z",
+    "details": {
+      "id": 2963,
+      "common_name": "fiddle-leaf fig",
+      "family": "Moraceae",
+      "description": "The Fiddle-leaf Fig is a unique and stunning species of indoor plant. Its broad, glossy leaves have an attractive violin-like shape, and its thick trunk has an interesting look, making it a great choice for any home or office. Not only is it easy to care for with a bit of direct sunlight once a week, it’s also known to be air-purifying, filtering toxins and pollutants from the air. Due to its ability to thrive indoors with minimal fuss, this impressive plant is also known to be a great stress reliever, which makes it perfect for any environment.",
+      "watering": "Average",
+      "sunlight": [
+        "part sun/part shade"
+      ],
+      "care_level": "Medium",
+      "indoor": true,
+      "drought_tolerant": false,
+      "poisonous_to_pets": false
+    },
+    "image": {
+      "url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/2963_ficus_lyrata/regular/48139747872_36fa010c48_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160851Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=1d385b80e4eec96362ba0d1b1c4ef4caba1da46a6dc07c411367dce4f451d38f",
+      "thumb_url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/2963_ficus_lyrata/thumbnail/48139747872_36fa010c48_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160851Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=9d831727ee15f46e17c0b91a9158b70ef18d5c8c468d086472ed42369a90352b",
+      "license": "Attribution License",
+      "attribution": "Perenual",
+      "source_url": "https://creativecommons.org/licenses/by/2.0/"
+    },
+    "description_ar": "نبات الفيدل ليف فيج هو نوع فريد وجميل من النباتات الداخلية. أوراقه العريضة واللامعة لها شكل يشبه الكمان، وجذعه السميك له مظهر مثير للاهتمام، مما يجعله خيارًا رائعًا لأي منزل أو مكتب. ليس فقط من السهل العناية به بمقدار بسيط من أشعة الشمس المباشرة مرة في الأسبوع، بل إنه معروف أيضًا بتقديمه لتنقية الهواء، حيث يفلتر السموم والملوثات من الهواء. بسبب قدرته على النمو بداخل المنازل بقليل من العناية، يُعرف هذا النبات الرائع أيضًا بأنه مُخفف للتوتر، مما يجعله مثاليًا لأي بيئة."
+  },
+  "chamaedorea-elegans": {
+    "id": 1820,
+    "matched": "Chamaedorea elegans",
+    "fetched_at": "2026-11-02T16:08:53.645Z",
+    "details": {
+      "id": 1820,
+      "common_name": "parlor palm",
+      "family": "Arecaceae",
+      "description": "The Parlor Palm (Chamaedorea elegans) is an amazing house plant with several incredible attributes. It is a very slow growing species, requiring minimal maintenance. It is also quite small, so it fits perfectly in spaces such as desks, tabletops or counters. This species thrives in medium to low light conditions and requires little water, making it an easy addition to even the most neglectful caretakers. Additionally, this tropical species has beautiful, deep green leaves and graceful fronds that add a lush, exotic texture to any home. Its air purifying quality and affordability make it a great choice for anyone looking to add a bit of nature and beauty to their home.",
+      "watering": "Average",
+      "sunlight": [
+        "part shade"
+      ],
+      "care_level": "Moderate",
+      "indoor": true,
+      "drought_tolerant": true,
+      "poisonous_to_pets": false
+    },
+    "image": {
+      "url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/1820_chamaedorea_elegans/regular/24981394791_176142abd3_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160853Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=4b7fd6264dfbd2c93278646ee400eae4e914e28fad610cc21e8c684488fdb830",
+      "thumb_url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/1820_chamaedorea_elegans/thumbnail/24981394791_176142abd3_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160853Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=f462c60261857f33a285a444290cbcd2fd17eeca0d1c6c83676d54c42b6f20b3",
+      "license": "Attribution License",
+      "attribution": "Perenual",
+      "source_url": "https://creativecommons.org/licenses/by/2.0/"
+    },
+    "description_ar": "نبات النخيل الصالون (Chamaedorea elegans) هو نبات منزلي رائع يتمتع بسمات مذهلة. إنه نوع ينمو ببطء شديد ، ويتطلب صيانة قليلة. كما أنه صغير جدًا ، لذلك يناسب تمامًا الأماكن مثل المكاتب أو الطاولات أو المنضدة. يزدهر هذا النوع في ظروف الضوء المتوسط إلى المنخفض ، ويتطلب القليل من الماء ، مما يجعله إضافة سهلة حتى لأولئك الذين يهملون رعايته. بالإضافة إلى ذلك ، يمتلك هذا النوع الاستوائي أوراقًا خضراء جميلة وفرonds أنيقة تضيف لمسة غنية وغريبة إلى أي منزل. جودة تنقية الهواء ومتانته تجعله خيارًا رائعًا لأي شخص يبحث عن إضافة بعض الطبيعة والجمال إلى منزله."
+  },
+  "peperomia-obtusifolia": {
+    "id": 5808,
+    "matched": "Peperomia obtusifolia",
+    "fetched_at": "2026-11-02T16:08:54.793Z",
+    "details": null,
+    "image": null
+  },
+  "maranta-leuconeura": {
+    "id": 5159,
+    "matched": "Maranta leuconeura var. erythroneura",
+    "fetched_at": "2026-11-02T16:08:57.098Z",
+    "details": null,
+    "image": null
+  },
+  "aloe-vera": {
+    "id": 728,
+    "matched": "Aloe vera",
+    "fetched_at": "2026-11-02T16:09:00.027Z",
+    "details": {
+      "id": 728,
+      "common_name": "aloe",
+      "family": "Asphodelaceae",
+      "description": "Aloe vera is a fantastic plant species known for its many amazing health benefits. Consisting of thick leaves with a gel-like interior, aloe vera has long been used as a traditional remedy for treating skin conditions. It is a great source of vitamins, minerals, and amino acids, making it a great natural remedy for common ailments. Aloe vera is also incredibly versatile, with the gel and sap being used for everything from digestive disorders to eye health. It is even believed to reduce inflammation and improve circulation. With its myriad of benefits, aloe vera is definitely an amazing plant species.",
+      "watering": "Minimum",
+      "sunlight": [
+        "full sun"
+      ],
+      "care_level": null,
+      "indoor": true,
+      "drought_tolerant": true,
+      "poisonous_to_pets": false
+    },
+    "image": {
+      "url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/728_aloe_vera/regular/52619084582_6ebcfe6a74_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160900Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=56f7ba2ab1c4b6da9c1e1852d05a533773a50c52d4a377e2447ac9ad1cf882e5",
+      "thumb_url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/728_aloe_vera/thumbnail/52619084582_6ebcfe6a74_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160900Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=0dc223c911ea227c3d7f5ecc59f16b604d4606c7af687d1789b7a267fc94a1e4",
+      "license": "Attribution-ShareAlike License",
+      "attribution": "Perenual",
+      "source_url": "https://creativecommons.org/licenses/by-sa/2.0/"
+    },
+    "description_ar": "الآلو فيرا هي نوع رائع من النباتات معروف بفوائده الصحية الرائعة. تتكون من أوراق سميكة ذات داخل شبيه بالجيل، وقد استخدمت الآلو فيرا منذ زمن طويل كعلاج تقليدي لمعالجة الحالات الجلدية. وهي مصدر جيد للفيتامينات والمعادن والامينو الأحماض، مما يجعلها علاجا طبيعيا رائعا للعلل الشائعة. الآلو فيرا أيضا متنوعة الاستخدامات، حيث يستخدم الجيل والصفراء لها في كل شيء من اضطرابات الهضم إلى صحة العين. كما يعتقد أنها تقلل من الالتهاب وتحسن الدورة الدموية. مع فوائدها العديدة، فإن الآلو فيرا هي بالتأكيد نوع رائع من النباتات."
+  },
+  "crassula-ovata": {
+    "id": 2193,
+    "matched": "Crassula ovata",
+    "fetched_at": "2026-11-02T16:09:03.472Z",
+    "details": {
+      "id": 2193,
+      "common_name": "jade plant",
+      "family": "Crassulaceae",
+      "description": "The Jade Plant is an amazing species native to South Africa. This small, slow-growing succulent grows sprouts of thick, energy-storing, glossy green leaves that form into a single-stemmed, rounded plant. It's also known as a money tree due to its popularity in bringing good luck and wealth. It is fairly low-maintenance as it is drought tolerant and grows in all types of light. It does need occasional trimming for looking bushy. It is great for all kinds of garden styles ranging from modern, eclectic, and traditional. The Jade Plant is sure to add lush happiness to any home or garden with its amazing vibrant life!",
+      "watering": "Minimum",
+      "sunlight": [
+        "full sun"
+      ],
+      "care_level": "Moderate",
+      "indoor": true,
+      "drought_tolerant": false,
+      "poisonous_to_pets": false
+    },
+    "image": {
+      "url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/2193_crassula_ovata/regular/33253726791_980c738a1e_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160903Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=afdc74adeca90fb7348adafbbedfddae0df0318f8de3cb8f5c781677063e26fc",
+      "thumb_url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/2193_crassula_ovata/thumbnail/33253726791_980c738a1e_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160903Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=671d7312b7eac65b67b301534d1156d95074427affad1b5d1447bd70a2dc3a31",
+      "license": "Attribution License",
+      "attribution": "Perenual",
+      "source_url": "https://creativecommons.org/licenses/by/2.0/"
+    },
+    "description_ar": "نبات الجيد هو نوع رائع مستوطن في جنوب أفريقيا. يتطور هذا النبات السكلي الصغير والبطيء النمو إلى أفرع من الأوراق الخضراء اللامعة السميكة التي تخزن الطاقة، وتتكون إلى نبات مستدير ذي ساق واحدة. كما يعرف باسم شجرة المال بسبب شعبيته في جلب الحظ والسعة. إنه نبات منخفض الصيانة إلى حد ما لأنه يتحمل الجفاف وينمو في جميع أنواع الضوء. ومع ذلك، فهو يحتاج إلى تقليم من وقت لآخر ليعطي مظهراً كثيفاً. إنه مناسب لجميع أنواع تصميم الحدائق، بدءاً من الحديث والمتنوع والتقليدية. سيضيف نبات الجيد سعادة خضراء وافرة إلى أي منزل أو حديقة بفضل حياته المفعمة بالحيوية!"
+  },
+  "beaucarnea-recurvata": {
+    "id": 1192,
+    "matched": "Beaucarnea recurvata",
+    "fetched_at": "2026-11-02T16:09:05.476Z",
+    "details": {
+      "id": 1192,
+      "common_name": "ponytail palm",
+      "family": "Asparagaceae",
+      "description": "The ponytail palm (Beaucarnea recurvata) is one of the most interesting houseplants out there. Unique and eye-catching, it has a swollen base and a thin, cascading crown of green foliage, resembling a head of hair. It’s a slow growing and long lived species, making it a great gift to last through generations. Its drought tolerant nature also makes it an excellent choice for neglectful owners. This palm is also incredibly hardy, and can survive in temperatures as low as 10°F. With proper care, it can add a unique, tropical feel to any space.",
+      "watering": "Average",
+      "sunlight": [
+        "part sun/part shade"
+      ],
+      "care_level": "Medium",
+      "indoor": true,
+      "drought_tolerant": true,
+      "poisonous_to_pets": false
+    },
+    "image": {
+      "url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/1192_beaucarnea_recurvata/regular/51792797390_1b15a8415d_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160905Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=72f24037585e3a3c9907fb2263ffd143139352d4b74ad930589eaf5b375a63c8",
+      "thumb_url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/1192_beaucarnea_recurvata/thumbnail/51792797390_1b15a8415d_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160905Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=a106404520264ebfe168b48470140a243132660fe05e0d7bc1909499a4050b54",
+      "license": "Attribution License",
+      "attribution": "Perenual",
+      "source_url": "https://creativecommons.org/licenses/by/2.0/"
+    },
+    "description_ar": "نبات البوني تايل بالم (Beaucarnea recurvata) هو واحد من أكثر النباتات المنزلية إثارة للاهتمام. فريد ومميز، له قاعدة متورمة وتاج رقيق متدلي من الأوراق الخضراء، مشابه لشعر الرأس. وهو نوع بطيء النمو وطويل العمر، مما يجعله هدية رائعة تدوم عبر الأجيال. كما أن طبيعته المقاومة للجفاف تجعله خيارًا ممتازًا لأصحاب النباتات المتهملين. هذا النخيل أيضًا قوي للغاية، ويمكنه النجاة في درجات حرارة تصل إلى 10 درجة فهرنهايت. مع العناية المناسبة، يمكنه إضافة لمسة فريدة واستوائية إلى أي مكان."
+  },
+  "salvia-rosmarinus": {
+    "id": 7109,
+    "matched": "Salvia rosmarinus",
+    "fetched_at": "2026-11-02T16:09:07.797Z",
+    "details": null,
+    "image": null
+  },
+  "ocimum-basilicum": {
+    "id": 5497,
+    "matched": "Ocimum basilicum",
+    "fetched_at": "2026-11-02T16:09:09.346Z",
+    "details": null,
+    "image": null
+  },
+  "mentha-spicata": {
+    "id": 5193,
+    "matched": "Mentha spicata 'Kentucky Colonel'",
+    "fetched_at": "2026-11-02T16:09:10.815Z",
+    "details": null,
+    "image": null
+  },
+  "aglaonema-commutatum": {
+    "id": 625,
+    "matched": "Aglaonema commutatum",
+    "fetched_at": "2026-11-02T16:09:13.018Z",
+    "details": {
+      "id": 625,
+      "common_name": "Philippine evergreen",
+      "family": "Araceae",
+      "description": "Philippine evergreen (Aglaonema commutatum) is truly an amazing plant for many reasons. It has a beautiful, glossy foliage that is decorated with silver brush strokes, giving it an eye-catching appearance. It is also considered one of the most versatile and easy-to-care-for houseplants. It grows quickly, is tolerant of low light, and surviving drought periods. Additionally, the Philippine evergreen is known to be an air-purifying plant, ridding the air of many harmful toxins. It provides a lush, jungle-like atmosphere to your home or office with minimal effort.",
+      "watering": "Average",
+      "sunlight": [
+        "part shade",
+        "full shade"
+      ],
+      "care_level": "Medium",
+      "indoor": true,
+      "drought_tolerant": true,
+      "poisonous_to_pets": false
+    },
+    "image": {
+      "url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/625_aglaonema_commutatum/regular/24798632751_3a039ecbc6_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160913Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=8210abd91462b291b3b2ff35f28bf723858eacf45bbb758ea8b3c301a38655a5",
+      "thumb_url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/625_aglaonema_commutatum/thumbnail/24798632751_3a039ecbc6_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160913Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=67fbd31d9313afa03ace2cbddfa51a45169bba54ec360d7dd1bbf4ce881271e9",
+      "license": "Attribution License",
+      "attribution": "Perenual",
+      "source_url": "https://creativecommons.org/licenses/by/2.0/"
+    },
+    "description_ar": "النبات الخضري الفلبيني (Aglaonema commutatum) هو حقًا نبات رائع لعدة أسباب. فهو يمتلك أوراقًا جميلة لامعة مزخرفة بالخطوط الفضية، مما يعطيه مظهرًا جذابًا للعين. كما يُعتبر واحدًا من أكثر النباتات المنزلية مرونة وسهولة في العناية. ينمو بسرعة، ويتحمل الضوء المنخفض، ويستمر في النمو خلال فترات الجفاف. بالإضافة إلى ذلك، يُعرف النبات الخضري الفلبيني بكونه نباتًا منقى للهواء، حيث يزيل العديد من السموم الضارة من الهواء. يوفر جوًا غنيًا يشبه غابة الجングル لمنزلك أو مكتبك مع جهد قليل."
+  },
+  "philodendron-hederaceum": {
+    "id": 5869,
+    "matched": "Philodendron hederaceum",
+    "fetched_at": "2026-11-02T16:09:14.715Z",
+    "details": null,
+    "image": null
+  },
+  "dypsis-lutescens": {
+    "id": 2568,
+    "matched": "Dypsis lutescens",
+    "fetched_at": "2026-11-02T16:09:16.915Z",
+    "details": {
+      "id": 2568,
+      "common_name": "bamboo palm",
+      "family": "Arecaceae",
+      "description": "The bamboo palm (Dypsis lutescens) is an amazing plant species for its versatility in brightening up any home or office. This bamboo-like palm is easy to care for, requiring minimal care once established. Not only does it look great, but it also offers many other benefits. It is an air-cleaning plant, removing toxins from the air, and it also produces humidity, helping to improve the air quality and freshness in your home. Additionally, it can be used indoors or outdoors, making it a very easy-to-maintain indoor or outdoor houseplant. Bamboo palms are a great addition to any home or office, offering beauty, improved air quality and easy care.",
+      "watering": "Average",
+      "sunlight": [
+        "part sun/part shade",
+        "part shade"
+      ],
+      "care_level": "Moderate",
+      "indoor": true,
+      "drought_tolerant": false,
+      "poisonous_to_pets": false
+    },
+    "image": {
+      "url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/2568_dypsis_lutescens/regular/4630882967_d9c40b00de_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160916Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=bf56ac99f913be42117b595c4111f8451e0bc5301f84d8adb7b5bbaaa290a387",
+      "thumb_url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/2568_dypsis_lutescens/thumbnail/4630882967_d9c40b00de_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160916Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=bd1d83ffdcc1134163aaeea391c34c638550ed05df344ce74606d367a12daba1",
+      "license": "Attribution-ShareAlike License",
+      "attribution": "Perenual",
+      "source_url": "https://creativecommons.org/licenses/by-sa/2.0/"
+    },
+    "description_ar": "نبات النخيل البامبو (Dypsis lutescens) هو نوع رائع من النباتات لتنوعه في إضاءة أي منزل أو مكتب. هذا النخيل الشبيه بالبامبو سهل العناية ، يتطلب رعاية قليلة بعد تأسيسه. ليس فقط يبدو رائعًا ، ولكن لديه أيضًا العديد من الفوائد الأخرى. إنه نبات منقي للهواء ، يزيل السموم من الهواء ، وينتج أيضًا الرطوبة ، مما يساعد على تحسين جودة الهواء وطازجته في منزلك. بالإضافة إلى ذلك ، يمكن استخدامه داخل المنزل أو خارج المنزل ، مما يجعله نباتًا منزليًا داخليًا أو خارجيًا سهل الصيانة. النخيل البامبو إضافة رائعة إلى أي منزل أو مكتب ، حيث يقدم الجمال وتحسين جودة الهواء والرعاية السهلة."
+  },
+  "strelitzia-reginae": {
+    "id": 7568,
+    "matched": "Strelitzia reginae",
+    "fetched_at": "2026-11-02T16:09:18.737Z",
+    "details": null,
+    "image": null
+  },
+  "hoya-carnosa": {
+    "id": 3971,
+    "matched": "Hoya carnosa",
+    "fetched_at": "2026-11-02T16:09:20.383Z",
+    "details": null,
+    "image": null
+  },
+  "nephrolepis-exaltata": {
+    "id": 5465,
+    "matched": "Nephrolepis exaltata",
+    "fetched_at": "2026-11-02T16:09:22.248Z",
+    "details": null,
+    "image": null
+  },
+  "jasminum-sambac": {
+    "id": 4457,
+    "matched": "Jasminum sambac",
+    "fetched_at": "2026-11-02T16:09:23.962Z",
+    "details": null,
+    "image": null
+  },
+  "lavandula-angustifolia": {
+    "id": 4702,
+    "matched": "Lavandula angustifolia",
+    "fetched_at": "2026-11-02T16:09:25.398Z",
+    "details": null,
+    "image": null
+  },
+  "catharanthus-roseus": {
+    "id": 1715,
+    "matched": "Catharanthus roseus",
+    "fetched_at": "2026-11-02T16:09:27.574Z",
+    "details": {
+      "id": 1715,
+      "common_name": "Madagascar periwinkle",
+      "family": "Apocynaceae",
+      "description": "The Madagascar periwinkle (Catharanthus roseus) is a stunning flowering plant that is adored all around the world. Featuring dark green pointed leaves and of course, beautiful pink, white, and purple clusters of flowers, it's no wonder why this species has become such a garden favorite. Its sweet aroma and rich medicinal benefits have also earned it much admiration, making the Madagascar periwinkle an amazing addition to any garden. Its fast growing and low maintenance qualities help to make it an easy choice for gardeners all over.",
+      "watering": "Average",
+      "sunlight": [
+        "full sun",
+        "part shade"
+      ],
+      "care_level": "Medium",
+      "indoor": false,
+      "drought_tolerant": true,
+      "poisonous_to_pets": true
+    },
+    "image": {
+      "url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/1715_catharanthus_roseus/regular/49305331131_4e5ab296ac_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160927Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=671132912ce00cfb3f940e467436d98e2c0b9151081b24e5106ac7a15e1802e4",
+      "thumb_url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/1715_catharanthus_roseus/thumbnail/49305331131_4e5ab296ac_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160927Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=c56f5e3deef4b7ba66a061c58306958e45f28ecf2fcdcb1c75ba0a20a5d81b6c",
+      "license": "Attribution License",
+      "attribution": "Perenual",
+      "source_url": "https://creativecommons.org/licenses/by/2.0/"
+    },
+    "description_ar": "نبات الكاثارانتوس روزيوس (Catharanthus roseus) هو نبات مزهر رائع يتم إعجاب به في جميع أنحاء العالم. يتميز بأوراق خضراء داكنة مدببة، وبالطبع، مجموعات جميلة من الأزهار الوردية والبيضاء والبنفسجية، لا عجب أن هذا النوع أصبح من المفضلة في الحدائق. كما أن رائحته العطرة وفوائده الطبية الغنية كسبت له الكثير من الإعجاب، مما يجعل نبات الكاثارانتوس روزيوس إضافة رائعة لأي حديقة. كما أن صفاته السريعة النمو والصيانة المنخفضة تساعد على جعله خيارا سهلا للبستانيين في كل مكان."
+  },
+  "nerium-oleander": {
+    "id": 5469,
+    "matched": "Nerium oleander",
+    "fetched_at": "2026-11-02T16:09:29.153Z",
+    "details": null,
+    "image": null
+  },
+  "ixora-coccinea": {
+    "id": 4452,
+    "matched": "Ixora coccinea",
+    "fetched_at": "2026-11-02T16:09:31.511Z",
+    "details": null,
+    "image": null
+  },
+  "portulaca-grandiflora": {
+    "id": 6272,
+    "matched": "Portulaca grandiflora",
+    "fetched_at": "2026-11-02T16:09:32.909Z",
+    "details": null,
+    "image": null
+  },
+  "echinocactus-grusonii": {
+    "id": 8551,
+    "matched": "Echinocactus grusonii",
+    "fetched_at": "2026-11-02T16:09:34.438Z",
+    "details": null,
+    "image": null
+  },
+  "tradescantia-zebrina": {
+    "id": 7923,
+    "matched": "Tradescantia zebrina",
+    "fetched_at": "2026-11-02T16:09:36.737Z",
+    "details": null,
+    "image": null
+  },
+  "anthurium-andraeanum": {
+    "id": 855,
+    "matched": "Anthurium andraeanum",
+    "fetched_at": "2026-11-02T16:09:39.880Z",
+    "details": {
+      "id": 855,
+      "common_name": "anthurium",
+      "family": "Araceae",
+      "description": "Anthurium andraeanum is an amazing plant species for many reasons. It has a brightly coloured spathe, which can be orange, white and yellow, as well as long-lasting flowering. It is a long-lived species, and its blooms can remain intact for several months. This attractive plant is also easy to care for and can thrive in indirect light and humid environments. Its flowers bloom regularly and even if the plant is not fertilised, it can still keep thriving. Furthermore, the Anthurium andraeanum is perfect for those looking for a unique, eye-catching houseplant to add to their home. In conclusion, Anthurium andraeanum is a stunning and resilient species with distinctively vibrant flowers.",
+      "watering": "Average",
+      "sunlight": [
+        "part sun/part shade"
+      ],
+      "care_level": "Medium",
+      "indoor": true,
+      "drought_tolerant": false,
+      "poisonous_to_pets": false
+    },
+    "image": {
+      "url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/855_anthurium_andraeanum/regular/49388458462_0ef650db39_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160939Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=40f38ff225a4ad68932d05ac23f0689950596eb927dc038e8a2471fb016f9a3a",
+      "thumb_url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/855_anthurium_andraeanum/thumbnail/49388458462_0ef650db39_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160939Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=37f2d8dc60cbd4a4ca4a7b86ecb4fa74a201297fab81c464eaa41412b1fec1d2",
+      "license": "Attribution-ShareAlike License",
+      "attribution": "Perenual",
+      "source_url": "https://creativecommons.org/licenses/by-sa/2.0/"
+    },
+    "description_ar": "الأنثوريوم أندريانوم هو نوع رائع من النباتات لعدة أسباب. فهو يمتلك غطاء زهري ملون ساطع، يمكن أن يكون برتقاليًا أو أبيض أو أصفر، بالإضافة إلى زهور طويلة الأمد. كما أنه نوع دائم الحياة، ويمكن أن تبقى زهوره سليمة لعدة أشهر. هذا النبات الجذاب سهل العناية أيضًا، ويمكنه النمو في الضوء غير المباشر والبيئات الرطبة. تزهر زهوره بانتظام، وحتى لو لم يتم تغذيته، يمكنه الاستمرار في النمو. بالإضافة إلى ذلك، فإن الأنثوريوم أندريانوم مثالي لأولئك الذين يبحثون عن نبات منزلي فريد وجذاب لإضافته إلى منازلهم. خلاصة القول، الأنثوريوم أندريانوم هو نوع رائع وقوي مع زهور ملونة بشكل فريد."
+  },
+  "dracaena-marginata": {
+    "id": 2531,
+    "matched": "Dracaena marginata",
+    "fetched_at": "2026-11-02T16:09:41.662Z",
+    "details": {
+      "id": 2531,
+      "common_name": "dragontree",
+      "family": "Asparagaceae",
+      "description": "The dragontree (Dracaena marginata) is an amazing species of plant that adds a vibrant and striking look to any space. It has long, thin leaves that are deep green with a thin red stripe along the edges. Dragon trees can be surprisingly resilient, surviving low light and inconsistent watering. They even make great air-purifying plants! With proper care, these plants can live for decades and even grow up to 8 feet tall. Dragon trees make a stunning addition to any home, office, or living space, without requiring much effort.",
+      "watering": "Average",
+      "sunlight": [
+        "part shade",
+        "full sun",
+        "part sun/part shade"
+      ],
+      "care_level": "Moderate",
+      "indoor": true,
+      "drought_tolerant": true,
+      "poisonous_to_pets": false
+    },
+    "image": {
+      "url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/2531_dracaena_marginata/regular/24448909183_1a82d61ed5_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160941Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=af1ec91c2d9c509d36e1bccced75d7202ad5ad164593ee12753520671fff4444",
+      "thumb_url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/2531_dracaena_marginata/thumbnail/24448909183_1a82d61ed5_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160941Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=6c12ada0eaa661bd1c397a625e287f0d0819e7238c44640a6c3706175b596488",
+      "license": "Attribution License",
+      "attribution": "Perenual",
+      "source_url": "https://creativecommons.org/licenses/by/2.0/"
+    },
+    "description_ar": "شجرة التنين (Dracaena marginata) هي نوع رائع من النباتات التي تضيف مظهراً حيويّاً وجذاباً إلى أي مكان. لها أوراق طويلة ورفيعة، خضراء غامقة مع شريط أحمر رقيق على طول الحواف. يمكن لشجرات التنين أن تكون قوية بشكل مفاجئ، حيث تتحمل الضوء المنخفض والري غير المنتظم. وهي حتى نباتات رائعة لتنقية الهواء! مع العناية المناسبة، يمكن لهذه النباتات أن تعيش لعقود وتنمو حتى ارتفاع 8 أقدام. تشكل شجرات التنين إضافة رائعة إلى أي منزل أو مكتب أو مساحة معيشة، دون الحاجة إلى الكثير من الجهد."
+  },
+  "hedera-helix": {
+    "id": 3349,
+    "matched": "Hedera helix",
+    "fetched_at": "2026-11-02T16:09:43.818Z",
+    "details": null,
+    "image": null
+  },
+  "kalanchoe-blossfeldiana": {
+    "id": 4558,
+    "matched": "Kalanchoe blossfeldiana",
+    "fetched_at": "2026-11-02T16:09:46.235Z",
+    "details": null,
+    "image": null
+  },
+  "gardenia-jasminoides": {
+    "id": 3087,
+    "matched": "Gardenia jasminoides",
+    "fetched_at": "2026-11-02T16:09:47.940Z",
+    "details": null,
+    "image": null
+  },
+  "adenium-obesum": {
+    "id": 540,
+    "matched": "Adenium obesum",
+    "fetched_at": "2026-11-02T16:09:50.365Z",
+    "details": {
+      "id": 540,
+      "common_name": "desert rose",
+      "family": "Apocynaceae",
+      "description": "The desert rose is an amazing plant species that adds vibrant, flowering color to any space. This drought-tolerant succulent requires minimal water and a sunny, dry environment, making it ideal for most desert and dry climate gardens. Its showy blooms range in color from hot pink and vibrant red to stunning white and yellow shades. The striking ombre of the adenium obesum's swollen base and graceful, slender stems make it a true stunner. It's also highly toxin resistant and can handle a wide range of temperatures and environmental conditions. No wonder it's quickly becoming one of the most popular flowers around!",
+      "watering": "Minimum",
+      "sunlight": [
+        "full sun"
+      ],
+      "care_level": null,
+      "indoor": true,
+      "drought_tolerant": true,
+      "poisonous_to_pets": false
+    },
+    "image": {
+      "url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/540_adenium_obesum/regular/9244335137_6d662ed77c_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160950Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=4ba636cd9dbb3a1dabcfac2f26065274ccf7eee5026230b375783aad1aac3423",
+      "thumb_url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/540_adenium_obesum/thumbnail/9244335137_6d662ed77c_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160950Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=4ee7f958d0084eb92058baee3d9d9ab6cab4ce074702751aebc158f024a6e0fa",
+      "license": "Attribution-ShareAlike License",
+      "attribution": "Perenual",
+      "source_url": "https://creativecommons.org/licenses/by-sa/2.0/"
+    },
+    "description_ar": "الورود الصحراوية هي نوع مذهل من النباتات يضيف لونًا مزهرًا متوهجًا إلى أي مكان. هذا الصبار المقاوم للجفاف يتطلب كمية ماء قليلة وبيئة مشمسة وجافة ، مما يجعله مثاليًا لمعظم حدائق الصحراء والمناخ الجاف. تترواح أزهاره البارزة في اللون من الوردي الساخن والأحمر المتوهج إلى درجات البياض والصفرة الرائعة. يمنحها التدرج الملون للقاعدة المتورمة من adenium obesum والساقين الرقيقة والأنيقة مظهرًا رائعًا. كما أنها مقاومة للسموم بدرجة عالية وقادرة على تحمل مجموعة واسعة من درجات الحرارة والظروف البيئية. لا عجب أنها تصبح بسرعة واحدة من أكثر الأزهار شعبية حول العالم!"
+  },
+  "ficus-benjamina": {
+    "id": 2954,
+    "matched": "Ficus benjamina",
+    "fetched_at": "2026-11-02T16:09:52.488Z",
+    "details": {
+      "id": 2954,
+      "common_name": "weeping fig",
+      "family": "Moraceae",
+      "description": "The Weeping Fig (Ficus benjamina) is an amazing plant species that truly lives up to its name. With its signature weeping branches, lush, dark green foliage and long life span, it will add beauty and life to any space indoors or outdoors. Not only is it attractive, but it is also easy to care for and long-lasting. It thrives in bright, indirect sunlight and is tolerant to a variety of climates. The Weeping Fig can be used as a houseplant, but can also be planted outdoors in the garden and can withstand temperatures as low as 25°F. Its beauty and resilience make it a great choice for any environment.",
+      "watering": "Average",
+      "sunlight": [
+        "part sun/part shade"
+      ],
+      "care_level": null,
+      "indoor": true,
+      "drought_tolerant": false,
+      "poisonous_to_pets": false
+    },
+    "image": {
+      "url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/2954_ficus_benjamina/regular/48923602057_6c919e42f1_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160952Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=134ad030f637160242791b1d74f61d94b61172b07bd3e9979c07cf44df7a9e4b",
+      "thumb_url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/2954_ficus_benjamina/thumbnail/48923602057_6c919e42f1_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T160952Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=3159539a741c9ada18760430135e47949d3f70510244d0121a453edd0d153713",
+      "license": "Attribution-ShareAlike License",
+      "attribution": "Perenual",
+      "source_url": "https://creativecommons.org/licenses/by-sa/2.0/"
+    },
+    "description_ar": "نبات التين الباكي (Ficus benjamina) هو نوع رائع من النباتات التي تبرر حقًا اسمها. مع فروعها الباكية المميزة وورقها الغني الأخضر الداكن وعمرها الطويل، سوف يضيف جمالًا وحياة إلى أي مكان داخل المنزل أو خارجًا. ليس فقط جميلًا، ولكن أيضًا من السهل العناية به وطويل العمر. يزدهر في ضوء الشمس الساطع غير المباشر ويتحمل مجموعة متنوعة من المناخات. يمكن استخدام التين الباكي كنبات منزلي، ولكن يمكن أيضًا زراعته خارج المنزل في الحديقة ويتحمل درجات حرارة تصل إلى 25 درجة فهرنهايت. جماله وقوته تجعله خيارًا رائعًا لأي بيئة."
+  },
+  "schefflera-arboricola": {
+    "id": 7245,
+    "matched": "Schefflera arboricola",
+    "fetched_at": "2026-11-02T16:09:54.276Z",
+    "details": null,
+    "image": null
+  },
+  "dracaena-trifasciata": {
+    "id": 7171,
+    "matched": "Sansevieria trifasciata",
+    "fetched_at": "2026-11-02T16:10:28.454Z",
+    "details": null,
+    "image": null
+  },
+  "curio-rowleyanus": {
+    "id": 7345,
+    "matched": "Senecio rowleyanus",
+    "fetched_at": "2026-11-02T16:11:53.379Z",
+    "details": null,
+    "image": null
+  },
+  "calathea-makoyana": {
+    "id": 1470,
+    "matched": "Calathea makoyana",
+    "fetched_at": "2026-11-02T16:12:24.381Z",
+    "details": {
+      "id": 1470,
+      "common_name": "peacock plant",
+      "family": "Marantaceae",
+      "description": "The Peacock Plant (Calathea makoyana) is an amazing plant with unique foliage. Its striking leaves boast a bright green color on the surface and deep purple color on the underside. These attractive leaves grow in an interesting fan shape, possessing the look of a peacock's grand display of feathers. Plus, as the plant's leaves mature and expand they form a unique 'stair' pattern, giving the plant a special visual appeal. Moreover, the plant repels pests such insects, and many have said that it fills the room with a pleasant fragrance. To top it all off, the Peacock Plant is incredibly easy to care for and is a great choice for any houseplant enthusiast.",
+      "watering": "Average",
+      "sunlight": [
+        "part shade",
+        "part sun/part shade"
+      ],
+      "care_level": null,
+      "indoor": true,
+      "drought_tolerant": false,
+      "poisonous_to_pets": false
+    },
+    "image": {
+      "url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/1470_calathea_makoyana/regular/5455983461_9d5ac395aa_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T161224Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=63062e4fe26e3a12ae1af662dddc7babb0736fab884149cc22a8d9a57fdb1167",
+      "thumb_url": "https://s3.us-central-1.wasabisys.com/perenual/species_image/1470_calathea_makoyana/thumbnail/5455983461_9d5ac395aa_b.jpg?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=0MPGHU7CIPXNPMVWMXUW%2F20261102%2Fus-central-1%2Fs3%2Faws4_request&X-Amz-Date=20261102T161224Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86400&X-Amz-Signature=8597c032a373df88913b544f1bf4abcc51bb97d0dca3d7c10afae958e3bce8f5",
+      "license": "Attribution License",
+      "attribution": "Perenual",
+      "source_url": "https://creativecommons.org/licenses/by/2.0/"
+    },
+    "description_ar": "نبات الببغاء (Calathea makoyana) هو نبات رائع ذو أوراق فريدة. تتميز أوراقه المذهلة بلون أخضر ساطع على السطح ولون أرجواني غامق على الجانب الآخر. تنمو هذه الأوراق الجميلة على شكل مروحة مثيرة للاهتمام، وتتميز بمظهر يشبه عرض الببغاء الرائع لريشها. بالإضافة إلى ذلك، عندما تنضج أوراق النبات وتتوسع، فإنها تشكل نمطًا فريدًا على شكل \"درج\"، مما يعطي النبات جاذبية بصرية خاصة. علاوة على ذلك، يصد النبات الحشرات مثل الحشرات، وقال العديد من الناس إنه يملأ الغرفة برائحة عطرة. ولتكون الأمور أكثر إثارة، فإن نبات الببغاء سهل للغاية في العناية به ويعد خيارًا رائعًا لأي محب للنباتات المنزلية."
+  },
+  "monstera-adansonii": {
+    "miss": true,
+    "id": 0,
+    "matched": "",
+    "fetched_at": "2026-11-02T00:00:00Z",
+    "details": null
+  },
+  "spathiphyllum-wallisii": {
+    "miss": true,
+    "id": 0,
+    "matched": "",
+    "fetched_at": "2026-11-02T00:00:00Z",
+    "details": null
+  },
+  "pilea-peperomioides": {
+    "miss": true,
+    "id": 0,
+    "matched": "",
+    "fetched_at": "2026-11-02T00:00:00Z",
+    "details": null
+  },
+  "goeppertia-orbifolia": {
+    "miss": true,
+    "id": 0,
+    "matched": "",
+    "fetched_at": "2026-11-02T00:00:00Z",
+    "details": null
+  },
+  "haworthiopsis-attenuata": {
+    "miss": true,
+    "id": 0,
+    "matched": "",
+    "fetched_at": "2026-11-02T00:00:00Z",
+    "details": null
+  },
+  "echeveria-elegans": {
+    "miss": true,
+    "id": 0,
+    "matched": "",
+    "fetched_at": "2026-11-02T00:00:00Z",
+    "details": null
+  },
+  "bougainvillea-glabra": {
+    "miss": true,
+    "id": 0,
+    "matched": "",
+    "fetched_at": "2026-11-02T00:00:00Z",
+    "details": null
+  },
+  "phoenix-roebelenii": {
+    "miss": true,
+    "id": 0,
+    "matched": "",
+    "fetched_at": "2026-11-02T00:00:00Z",
+    "details": null
+  },
+  "pelargonium-graveolens": {
+    "miss": true,
+    "id": 0,
+    "matched": "",
+    "fetched_at": "2026-11-02T00:00:00Z",
+    "details": null
+  }
+}

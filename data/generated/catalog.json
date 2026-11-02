@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-02T15:19:18.145Z",
+ "generated_at": "2026-11-02T16:15:24.953Z",
  "species": [
   {
    "slug": "monstera-deliciosa",
@@ -43,7 +43,7 @@
     "اصفرار الأوراق السفلية بسبب زيادة الري",
     "أوراق صغيرة بدون شقوق بسبب قلة الإضاءة"
    ],
-   "perenual_id": null,
+   "perenual_id": 5257,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Monstera%20deliciosa",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Monstera%20deliciosa"
@@ -172,7 +172,7 @@
     "فقدان التلوين الذهبي في الإضاءة الضعيفة",
     "اصفرار الأوراق بسبب التربة المشبعة"
    ],
-   "perenual_id": null,
+   "perenual_id": 2773,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Epipremnum%20aureum",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Epipremnum%20aureum"
@@ -237,7 +237,7 @@
     "طراوة قاعدة الأوراق بسبب زيادة الري",
     "ميلان الأوراق في الإضاءة الضعيفة جدًا"
    ],
-   "perenual_id": null,
+   "perenual_id": 7171,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Dracaena%20trifasciata",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Dracaena%20trifasciata"
@@ -302,7 +302,7 @@
     "اصفرار السيقان بسبب زيادة الري",
     "نمو بطيء في الظل الشديد"
    ],
-   "perenual_id": null,
+   "perenual_id": 8386,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Zamioculcas%20zamiifolia",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Zamioculcas%20zamiifolia"
@@ -366,7 +366,7 @@
     "أطراف بنية بسبب الأملاح في الماء",
     "شحوب الأوراق في الشمس المباشرة القوية"
    ],
-   "perenual_id": null,
+   "perenual_id": 1847,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Chlorophytum%20comosum",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Chlorophytum%20comosum"
@@ -495,7 +495,7 @@
     "تساقط الأوراق بعد النقل المفاجئ أو تيارات الهواء البارد",
     "نمو طويل ضعيف في الإضاءة الضعيفة"
    ],
-   "perenual_id": null,
+   "perenual_id": 2961,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Ficus%20elastica",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Ficus%20elastica"
@@ -558,7 +558,7 @@
     "بقع بنية بسبب تعفن الجذور أو الري غير المنتظم",
     "تساقط الأوراق بعد نقلها"
    ],
-   "perenual_id": null,
+   "perenual_id": 2963,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Ficus%20lyrata",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Ficus%20lyrata"
@@ -622,7 +622,7 @@
     "أطراف سعف بنية في الهواء الجاف",
     "العنكبوت الأحمر في الغرف الحارة الجافة"
    ],
-   "perenual_id": null,
+   "perenual_id": 1820,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Chamaedorea%20elegans",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Chamaedorea%20elegans"
@@ -686,7 +686,7 @@
     "سيقان طرية بسبب زيادة الري",
     "تساقط الأوراق من البرد"
    ],
-   "perenual_id": null,
+   "perenual_id": 5808,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Peperomia%20obtusifolia",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Peperomia%20obtusifolia"
@@ -813,7 +813,7 @@
     "حواف جافة في الهواء الجاف",
     "بهتان النقوش في الشمس المباشرة"
    ],
-   "perenual_id": null,
+   "perenual_id": 5159,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Maranta%20leuconeura",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Maranta%20leuconeura"
@@ -941,7 +941,7 @@
     "أوراق طرية بنية بسبب زيادة الري",
     "أوراق رفيعة شاحبة في الإضاءة الضعيفة"
    ],
-   "perenual_id": null,
+   "perenual_id": 728,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Aloe%20vera",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Aloe%20vera"
@@ -1135,7 +1135,7 @@
     "تجعد الأوراق عند العطش الشديد",
     "تساقط الأوراق من زيادة الري"
    ],
-   "perenual_id": null,
+   "perenual_id": 2193,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Crassula%20ovata",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Crassula%20ovata"
@@ -1200,7 +1200,7 @@
     "طراوة الجذع من زيادة الري",
     "أطراف بنية في الهواء الداخلي الجاف (شكلية)"
    ],
-   "perenual_id": null,
+   "perenual_id": 1192,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Beaucarnea%20recurvata",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Beaucarnea%20recurvata"
@@ -1326,7 +1326,7 @@
     "البياض الدقيقي في الهواء الرطب الراكد",
     "تعفن الجذور في التربة الثقيلة"
    ],
-   "perenual_id": null,
+   "perenual_id": 7109,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Salvia%20rosmarinus",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Salvia%20rosmarinus"
@@ -1391,7 +1391,7 @@
     "الذبول في شمس العصر الحارة",
     "حشرة المن على النمو الجديد"
    ],
-   "perenual_id": null,
+   "perenual_id": 5497,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Ocimum%20basilicum",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Ocimum%20basilicum"
@@ -1456,7 +1456,7 @@
     "الذبول من الحرارة وجفاف التربة",
     "الصدأ أو البياض في الأصص المزدحمة"
    ],
-   "perenual_id": null,
+   "perenual_id": 5193,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Mentha%20spicata",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Mentha%20spicata"
@@ -1520,7 +1520,7 @@
     "اصفرار الأوراق من البرد أو زيادة الري",
     "البق الدقيقي بين مفاصل الأوراق"
    ],
-   "perenual_id": null,
+   "perenual_id": 625,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Aglaonema%20commutatum",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Aglaonema%20commutatum"
@@ -1585,7 +1585,7 @@
     "فروع طويلة بأوراق صغيرة في الإضاءة الضعيفة",
     "اصفرار الأوراق من زيادة الري"
    ],
-   "perenual_id": null,
+   "perenual_id": 5869,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Philodendron%20hederaceum",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Philodendron%20hederaceum"
@@ -1649,7 +1649,7 @@
     "أطراف بنية من الهواء الجاف أو الأملاح",
     "العنكبوت الأحمر"
    ],
-   "perenual_id": null,
+   "perenual_id": 2568,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Dypsis%20lutescens",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Dypsis%20lutescens"
@@ -1714,7 +1714,7 @@
     "عدم التزهير مع قلة الإضاءة",
     "التفاف الأوراق عند قلة الري"
    ],
-   "perenual_id": null,
+   "perenual_id": 7568,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Strelitzia%20reginae",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Strelitzia%20reginae"
@@ -1778,7 +1778,7 @@
     "عدم التزهير في الإضاءة الضعيفة",
     "البق الدقيقي على السيقان"
    ],
-   "perenual_id": null,
+   "perenual_id": 3971,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Hoya%20carnosa",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Hoya%20carnosa"
@@ -1842,7 +1842,7 @@
     "تساقط وريقات بنية في الهواء الجاف",
     "شحوب السعف في الشمس المباشرة"
    ],
-   "perenual_id": null,
+   "perenual_id": 5465,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Nephrolepis%20exaltata",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Nephrolepis%20exaltata"
@@ -1907,7 +1907,7 @@
     "تساقط البراعم من الري غير المنتظم",
     "الذبابة البيضاء والبق الدقيقي"
    ],
-   "perenual_id": null,
+   "perenual_id": 4457,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Jasminum%20sambac",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Jasminum%20sambac"
@@ -1970,7 +1970,7 @@
     "تعفن الجذور في الرطوبة أو التربة المبللة",
     "نمو خشبي متفرق بدون تقليم"
    ],
-   "perenual_id": null,
+   "perenual_id": 4702,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Lavandula%20angustifolia",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Lavandula%20angustifolia"
@@ -2033,7 +2033,7 @@
     "تعفن الجذور في التربة المشبعة",
     "نمو طويل ضعيف في الظل"
    ],
-   "perenual_id": null,
+   "perenual_id": 1715,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Catharanthus%20roseus",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Catharanthus%20roseus"
@@ -2096,7 +2096,7 @@
     "المن على الأفرع الجديدة",
     "قلة الأزهار في الظل"
    ],
-   "perenual_id": null,
+   "perenual_id": 5469,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Nerium%20oleander",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Nerium%20oleander"
@@ -2225,7 +2225,7 @@
     "اصفرار الأوراق مع بقاء العروق خضراء في التربة القلوية",
     "المن"
    ],
-   "perenual_id": null,
+   "perenual_id": 4452,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Ixora%20coccinea",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Ixora%20coccinea"
@@ -2288,7 +2288,7 @@
     "التعفن في التربة المبللة",
     "قلة الأزهار في الظل"
    ],
-   "perenual_id": null,
+   "perenual_id": 6272,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Portulaca%20grandiflora",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Portulaca%20grandiflora"
@@ -2353,7 +2353,7 @@
     "تعفن القاعدة من زيادة الري",
     "حروق الشمس إذا نُقل فجأة للشمس الكاملة"
    ],
-   "perenual_id": null,
+   "perenual_id": 8551,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Echinocactus%20grusonii",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Echinocactus%20grusonii"
@@ -2416,7 +2416,7 @@
     "طراوة اللؤلؤ من زيادة الري",
     "فراغ في قمة النبتة مع الإضاءة الضعيفة"
    ],
-   "perenual_id": null,
+   "perenual_id": 7345,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Curio%20rowleyanus",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Curio%20rowleyanus"
@@ -2480,7 +2480,7 @@
     "بهتان اللون في الإضاءة الضعيفة",
     "نمو طويل متفرق مع الوقت"
    ],
-   "perenual_id": null,
+   "perenual_id": 7923,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Tradescantia%20zebrina",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Tradescantia%20zebrina"
@@ -2608,7 +2608,7 @@
     "أطراف بنية في الهواء الجاف",
     "عدم ظهور أزهار جديدة في الإضاءة الضعيفة"
    ],
-   "perenual_id": null,
+   "perenual_id": 855,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Anthurium%20andraeanum",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Anthurium%20andraeanum"
@@ -2672,7 +2672,7 @@
     "أطراف بنية من أملاح ماء الحنفية",
     "تساقط الأوراق من زيادة الري"
    ],
-   "perenual_id": null,
+   "perenual_id": 2531,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Dracaena%20marginata",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Dracaena%20marginata"
@@ -2802,7 +2802,7 @@
     "العنكبوت الأحمر في الغرف الحارة الجافة",
     "جفاف الأوراق من الحرارة"
    ],
-   "perenual_id": null,
+   "perenual_id": 3349,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Hedera%20helix",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Hedera%20helix"
@@ -2867,7 +2867,7 @@
     "التعفن من زيادة الري",
     "الاستطالة في الإضاءة الضعيفة"
    ],
-   "perenual_id": null,
+   "perenual_id": 4558,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Kalanchoe%20blossfeldiana",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Kalanchoe%20blossfeldiana"
@@ -2931,7 +2931,7 @@
     "تساقط البراعم من الهواء الجاف أو التحريك",
     "اصفرار الأوراق في التربة القلوية"
    ],
-   "perenual_id": null,
+   "perenual_id": 3087,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Gardenia%20jasminoides",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Gardenia%20jasminoides"
@@ -2995,7 +2995,7 @@
     "تعفن الجذع من التربة الباردة المبللة",
     "تساقط الأوراق في الشتاء (سكون طبيعي)"
    ],
-   "perenual_id": null,
+   "perenual_id": 540,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Adenium%20obesum",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Adenium%20obesum"
@@ -3059,7 +3059,7 @@
     "تساقط مفاجئ للأوراق بعد النقل",
     "الحشرات القشرية"
    ],
-   "perenual_id": null,
+   "perenual_id": 2954,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Ficus%20benjamina",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Ficus%20benjamina"
@@ -3124,7 +3124,7 @@
     "نمو طويل ضعيف في الإضاءة الضعيفة",
     "العنكبوت الأحمر والحشرات القشرية"
    ],
-   "perenual_id": null,
+   "perenual_id": 7245,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Schefflera%20arboricola",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Schefflera%20arboricola"
@@ -3188,7 +3188,7 @@
     "التفاف وجفاف الأوراق في الهواء الجاف",
     "حواف بنية من ماء الحنفية"
    ],
-   "perenual_id": null,
+   "perenual_id": 1470,
    "references": [
     "https://www.rhs.org.uk/plants/search-results?query=Goeppertia%20makoyana",
     "https://www.missouribotanicalgarden.org/PlantFinder/PlantFinderSearchResults.aspx?basic=Goeppertia%20makoyana"

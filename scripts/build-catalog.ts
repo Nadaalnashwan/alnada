@@ -19,7 +19,9 @@ import type { Category, ImageInfo, PetToxicity, Product, Species } from "../lib/
 const readJson = (p: string) => (existsSync(p) ? JSON.parse(readFileSync(p, "utf8")) : {});
 const toxicity: Record<string, PetToxicity> = readJson("data/generated/toxicity.json");
 const images: Record<string, ImageInfo | null> = readJson("data/generated/images.json");
-const perenual: Record<string, { id: number; image?: ImageInfo | null; details?: Record<string, unknown> | null; description_ar?: string | null }> = readJson("data/generated/perenual.json");
+const perenualRaw: Record<string, { miss?: boolean; id: number; image?: ImageInfo | null; details?: Record<string, unknown> | null; description_ar?: string | null }> = readJson("data/generated/perenual.json");
+// Confirmed misses are cached by the importer only to save quota; they carry no data.
+const perenual = Object.fromEntries(Object.entries(perenualRaw).filter(([, e]) => !e.miss && e.id > 0));
 
 function uuidFromSku(sku: string) {
   const h = createHash("sha1").update(`alnada:product:${sku}`).digest("hex");
