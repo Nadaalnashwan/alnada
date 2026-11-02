@@ -28,7 +28,7 @@ export const llamaChat: LlamaChat = async (messages, { json = false, temperature
       method: "POST",
       headers: { Authorization: `Bearer ${cfg.token}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: cfg.model,
+        model: json ? cfg.intentModel : cfg.model,
         messages,
         temperature,
         max_tokens: maxTokens,

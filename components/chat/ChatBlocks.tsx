@@ -8,6 +8,11 @@ import { PlantImage } from "@/components/store/PlantImage";
 import { formatDate, formatSAR } from "@/lib/i18n/format";
 import type { ChatBlock, ProductCardData } from "@/lib/ai/schemas";
 
+const FLAG_LABEL = {
+  ar: { soil_check_due: "افحص التربة", light_mismatch: "الإضاءة غير مناسبة", no_watering_recorded: "ما فيه ري مسجل", recent_observation: "ملاحظة صحية" },
+  en: { soil_check_due: "Check soil", light_mismatch: "Light mismatch", no_watering_recorded: "No watering logged", recent_observation: "Health note" },
+} as const;
+
 /** Tiny safe formatter for model text: paragraphs, bullet lists and **bold** (no HTML injection). */
 export function RichText({ text }: { text: string }) {
   const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
@@ -89,6 +94,11 @@ export function ChatBlockView({ block, onChoose }: { block: ChatBlock; onChoose:
                   {p.location && <p className="mt-1 flex items-center gap-1"><MapPin className="size-3" />{p.location}</p>}
                   {p.light && <p className="flex items-center gap-1"><Sun className="size-3" />{p.light}</p>}
                   <p className="flex items-center gap-1"><Droplets className="size-3" />{p.lastWatered ? formatDate(p.lastWatered, locale, { day: "numeric", month: "long" }) : t.space.noWatering}</p>
+                  {!!p.flags?.length && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {p.flags.map((f) => <span key={f} className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${f === "light_mismatch" || f === "soil_check_due" ? "bg-warn-bg text-warn" : "bg-soft text-saudi"}`}>{FLAG_LABEL[locale][f]}</span>)}
+                    </div>
+                  )}
                 </div>
               </Link>
             ))}

@@ -8,6 +8,7 @@ export function llamaConfig(env: NodeJS.ProcessEnv = process.env) {
     const token = env.GROQ_API_KEY ?? "";
     return {
       provider, token, model: env.LLAMA_MODEL || "llama-3.3-70b-versatile",
+      intentModel: env.LLAMA_INTENT_MODEL || env.LLAMA_MODEL || "llama-3.3-70b-versatile",
       chatUrl: "https://api.groq.com/openai/v1/chat/completions", ready: Boolean(token),
     };
   }
@@ -15,6 +16,8 @@ export function llamaConfig(env: NodeJS.ProcessEnv = process.env) {
   const token = env.CLOUDFLARE_API_TOKEN ?? "";
   return {
     provider, token, account, model: env.LLAMA_MODEL || "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    // Optional cheaper Meta model for the short JSON intent call (saves Workers AI neurons).
+    intentModel: env.LLAMA_INTENT_MODEL || env.LLAMA_MODEL || "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     chatUrl: `https://api.cloudflare.com/client/v4/accounts/${account}/ai/v1/chat/completions`,
     ready: Boolean(account && token),
   };

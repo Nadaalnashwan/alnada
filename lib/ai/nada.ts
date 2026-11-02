@@ -6,6 +6,7 @@
 // model can never reach the database: it only fills the Understanding schema.
 
 import { matchesQuery } from "@/lib/catalog/filter";
+import { plantInsights, type PlantInsights } from "@/lib/green-space/insights";
 import type { Locale } from "@/lib/i18n/dict";
 import { DICTS } from "@/lib/i18n/dict";
 import type { ProductWithSpecies, Species } from "@/lib/plants/types";
@@ -256,29 +257,62 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
     facts.action = { status: "needs_choice", options: list.length };
   };
 
+  const insightsCache = new Map<string, { logs: CareLogRecord[]; insights: PlantInsights }>();
+  const loadInsights = async (p: UserPlantRecord) => {
+    const hit = insightsCache.get(p.id);
+    if (hit) return hit;
+    const sp = p.species_slug ? speciesBySlug.get(p.species_slug) ?? null : null;
+    const logs = deps.data ? await deps.data.getCareLogs(p.id, { limit: 20 }) : [];
+    const value = { logs, insights: plantInsights(sp, p, logs, now) };
+    insightsCache.set(p.id, value);
+    return value;
+  };
+
+  /** Minimal, relevant customer data for the model: no names/emails, only this plant's own records. */
   const plantFacts = async (p: UserPlantRecord) => {
     const sp = p.species_slug ? speciesBySlug.get(p.species_slug) ?? null : null;
-    const logs = deps.data ? await deps.data.getCareLogs(p.id, { limit: 8 }) : [];
+    const { logs, insights } = await loadInsights(p);
     return {
       sp,
       logs,
+      insights,
       fact: {
         nickname: p.nickname, species: sp ? speciesKnowledge(sp, locale) : { unconfirmed_description: p.unconfirmed_label },
         location: p.location, light_condition: p.light_condition, watering_preference: p.watering_preference,
         source: p.source, added: p.created_at.slice(0, 10), last_watered: p.last_watered_at?.slice(0, 10) ?? null,
-        recent_care_logs: logs.map((l) => ({ activity: l.activity, date: l.occurred_at.slice(0, 10), notes: l.notes })),
+        recent_care_logs: logs.slice(0, 8).map((l) => ({ activity: l.activity, date: l.occurred_at.slice(0, 10), notes: l.notes })),
+        // Computed from saved records only; the model must present these as "based on your records".
+        record_based_insights: {
+          days_since_recorded_watering: insights.days_since_watering,
+          typical_soil_check_interval_days: insights.typical_check_interval_days,
+          soil_check_due: insights.soil_check_due,
+          recorded_light_matches_species: insights.light_matches,
+          recent_observations: insights.recent_observations,
+          suggestions: ar ? insights.suggestions_ar : insights.suggestions_en,
+        },
       },
     };
   };
 
-  const userPlantCard = (p: UserPlantRecord): UserPlantCardData => {
+  const flagsFor = (i: PlantInsights): NonNullable<UserPlantCardData["flags"]> => [
+    ...(i.soil_check_due ? (["soil_check_due"] as const) : []),
+    ...(i.light_matches === false ? (["light_mismatch"] as const) : []),
+    ...(i.no_watering_recorded ? (["no_watering_recorded"] as const) : []),
+    ...(i.recent_observations.length ? (["recent_observation"] as const) : []),
+  ];
+
+  const userPlantCard = (p: UserPlantRecord, insights?: PlantInsights): UserPlantCardData => {
     const sp = p.species_slug ? speciesBySlug.get(p.species_slug) ?? null : null;
     return {
       id: p.id, title: plantTitle(p, sp, locale), species: sp?.scientific_name ?? (ar ? "تعريف غير مؤكد" : "Unconfirmed ID"),
       image: sp?.image?.thumb_url ?? null, location: p.location, light: p.light_condition ? DICTS[locale].attr.light[p.light_condition as "low"] ?? p.light_condition : null,
-      lastWatered: p.last_watered_at, source: p.source,
+      lastWatered: p.last_watered_at, source: p.source, flags: insights ? flagsFor(insights) : undefined,
     };
   };
+
+  /** Store products that address a real, record-based need (never generic upselling). */
+  const helpfulProducts = (i: PlantInsights) =>
+    deps.products.filter((pr) => i.helpful_product_slugs.includes(pr.slug) && pr.stock > 0).slice(0, 2).map((pr) => productCard(pr, locale));
 
   const recordExplored = async (sp: Species, reason: string, productId: string | null = null) => {
     if (deps.data && ctx.save_explored) await deps.data.upsertExplored({ species_slug: sp.slug, product_id: productId, reason }).catch(() => {});
@@ -332,12 +366,14 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
       if (ambiguous.length) { askWhichPlant(ambiguous); break; }
       if (plant) {
         ctx.focus_user_plant = plant.id;
-        const { sp, logs, fact } = await plantFacts(plant);
+        const { sp, logs, fact, insights } = await plantFacts(plant);
         facts.user_plant = fact;
-        blocks.push({ type: "user_plants", title: ar ? "نبتتك" : "Your plant", items: [userPlantCard(plant)] });
+        blocks.push({ type: "user_plants", title: ar ? "نبتتك" : "Your plant", items: [userPlantCard(plant, insights)] });
         if (logs.length) blocks.push({ type: "care_logs", title: ar ? "آخر نشاط مسجل" : "Recent recorded activity", plantId: plant.id, items: logs.slice(0, 5) });
         if (sp) ctx.focus_species = sp.slug;
         blocks.push({ type: "checklist", title: rescue ? (ar ? "خطة فحص وإنقاذ آمنة" : "Safe check & rescue plan") : (ar ? "قائمة عناية" : "Care checklist"), items: rescue ? rescueChecklist(locale) : sp ? careChecklist(sp, locale) : rescueChecklist(locale), tone: rescue ? "rescue" : "care" });
+        const helpers = helpfulProducts(insights);
+        if (!rescue && helpers.length) blocks.push({ type: "products", title: ar ? "قد يفيد نبتتك حسب احتياجها" : "May help, based on its needs", items: helpers });
         if (rescue && (u.observation_note || u.symptoms.length)) {
           blocks.push({ type: "save_observation", plantId: plant.id, note: (u.observation_note ?? u.symptoms.join("، ")).slice(0, 300) });
         }
@@ -373,10 +409,16 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
     case "get_my_plants": {
       if (!deps.user || !deps.data) { needAuth(); break; }
       if (!plants.length) { facts.user_plants = []; break; }
-      blocks.push({ type: "user_plants", title: ar ? "نباتاتك في مساحتك الخضراء" : "Plants in your Green Space", items: plants.map(userPlantCard) });
       const summaries = [];
-      for (const p of plants.slice(0, 8)) summaries.push((await plantFacts(p)).fact);
+      const cards: UserPlantCardData[] = [];
+      for (const p of plants.slice(0, 12)) {
+        const f = await plantFacts(p);
+        summaries.push(f.fact);
+        cards.push(userPlantCard(p, f.insights));
+      }
+      blocks.push({ type: "user_plants", title: ar ? "نباتاتك في مساحتك الخضراء" : "Plants in your Green Space", items: cards });
       facts.user_plants = summaries;
+      facts.note = "Plant status is based only on the customer's records; you cannot see the plants.";
       break;
     }
 
@@ -392,7 +434,7 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
       facts.activity = activity;
       facts.records = logs.map((l) => ({ date: l.occurred_at.slice(0, 10), notes: l.notes }));
       facts.no_records = logs.length === 0;
-      blocks.push({ type: "user_plants", title: ar ? "نبتتك" : "Your plant", items: [userPlantCard(plant)] });
+      blocks.push({ type: "user_plants", title: ar ? "نبتتك" : "Your plant", items: [userPlantCard(plant, (await loadInsights(plant)).insights)] });
       blocks.push({ type: "care_logs", title: ar ? `سجل ${DICTS.ar.plant.activity[activity]}` : `${DICTS.en.plant.activity[activity]} history`, plantId: plant.id, items: logs });
       break;
     }
@@ -404,7 +446,7 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
       if (!plant) {
         facts.action = { status: "failed", reason: "plant_not_found" };
         blocks.push({ type: "action", status: "failed", message: ar ? "ما لقيت هذي النبتة في مساحتك الخضراء. أضفها أول أو اختر من نباتاتك." : "I couldn't find that plant in your Green Space. Add it first or pick one of your plants." });
-        if (plants.length) blocks.push({ type: "user_plants", title: ar ? "نباتاتك" : "Your plants", items: plants.map(userPlantCard) });
+        if (plants.length) blocks.push({ type: "user_plants", title: ar ? "نباتاتك" : "Your plants", items: plants.map((p) => userPlantCard(p)) });
         break;
       }
       const activity = u.care_activity ?? "watering";
@@ -532,9 +574,9 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
       else return { reply: "", replyError: true, blocks, context: ctx, sessionId: input.sessionId, intent, clientActions, model: deps.model };
     }
     // Llama occasionally emits stray CJK/Cyrillic/Vietnamese glyphs inside Arabic: retry once, then strip.
-    if (STRAY_SCRIPT.test(reply)) {
+    if (hasStrayScript(reply, locale)) {
       const retry = (await generate()).trim();
-      reply = STRAY_SCRIPT.test(retry) ? retry.replace(STRAY_SCRIPT_G, "").replace(/\s{2,}/g, " ") : retry;
+      reply = hasStrayScript(retry, locale) ? stripStray(retry, locale) : retry;
     }
   } catch (e) {
     if (!blocks.length) throw e;
@@ -568,9 +610,13 @@ const SYMPTOMS = /صفرا|صفراء|اصفر|ذبل|ذابل|تذبل|بنية
 const FAILURE_WORDS = /لم أستطع|لم استطع|ما قدرت|ما قدرنا|لم يتم|لم تكتمل|فشل|تعذر|couldn['’]t|could not|failed|unable/i;
 const SUCCESS_WORDS = /تم |حفظت|أضفت|سجلت|سجّلت|saved|added|logged/i;
 
-const STRAY = "\\u0400-\\u04FF\\u3040-\\u30FF\\u3400-\\u4DBF\\u4E00-\\u9FFF\\uAC00-\\uD7AF\\u1EA0-\\u1EF9";
-const STRAY_SCRIPT = new RegExp(`[${STRAY}]`);
-const STRAY_SCRIPT_G = new RegExp(`[${STRAY}]`, "g");
+// Allowlist: Arabic replies may contain Arabic-script letters and plain A–Z (scientific names);
+// English replies Latin + Arabic. Any other letter (CJK, kana, Cyrillic, Vietnamese…) is a model glitch.
+const STRAY_AR = /(?![\p{Script=Arabic}A-Za-z])\p{L}/u;
+const STRAY_EN = /(?![\p{Script=Latin}\p{Script=Arabic}])\p{L}/u;
+export const hasStrayScript = (text: string, locale: Locale) => (locale === "ar" ? STRAY_AR : STRAY_EN).test(text);
+const stripStray = (text: string, locale: Locale) =>
+  text.replace(new RegExp((locale === "ar" ? STRAY_AR : STRAY_EN).source, "gu"), "").replace(/\s{2,}/g, " ");
 
 /**
  * Deterministic backstop for constraints that affect safety or suitability, so they never depend

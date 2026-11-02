@@ -5,6 +5,7 @@ import { CareLogForm, DeleteLogButton, PlantEditor } from "@/components/my-green
 import { PlantImage } from "@/components/store/PlantImage";
 import { getAllProducts } from "@/lib/catalog/repo";
 import { loadOwnedPlants } from "@/lib/green-space/data";
+import { plantInsights } from "@/lib/green-space/insights";
 import { getDict } from "@/lib/i18n/server";
 import { formatDate } from "@/lib/i18n/format";
 import { getSupabase, getUser } from "@/lib/supabase/server";
@@ -29,18 +30,10 @@ export default async function MyPlantPage({ params }: { params: Promise<{ id: st
   const product = s ? (await getAllProducts()).find((p) => p.species_slug === s.slug && p.kind === "plant") : null;
   const sName = s ? (ar ? s.name_ar : s.name_en) : plant.unconfirmed_label ?? "?";
   const observations = (logs ?? []).filter((l) => l.activity === "observation");
-  const daysSinceWater = plant.last_watered_at ? Math.floor((Date.now() - new Date(plant.last_watered_at).getTime()) / 86_400_000) : null;
 
-  // In-app suggestions derived from saved data only (no reminders/notifications are implied).
-  const suggestions: string[] = [];
-  if (s) {
-    const interval = { low: 14, moderate: 7, high: 4 }[s.water];
-    if (daysSinceWater === null) suggestions.push(ar ? "سجّل آخر ري عشان نقدر نتابع معك" : "Log the last watering so we can follow along");
-    else if (daysSinceWater >= interval) suggestions.push(ar ? `مر ${daysSinceWater} يوم على آخر ري مسجل — افحص رطوبة التربة` : `${daysSinceWater} days since the last recorded watering — check soil moisture`);
-    if (s.humidity === "high") suggestions.push(ar ? "تحب الرطوبة العالية: أبعدها عن المكيف" : "Likes high humidity: keep away from AC");
-    if (plant.light_condition && !s.light.includes(plant.light_condition as never)) suggestions.push(ar ? "الإضاءة المسجلة ما تطابق احتياجها؛ فكّر تغير مكانها" : "Recorded light doesn't match its needs; consider moving it");
-    if (!(logs ?? []).some((l) => l.activity === "cleaning")) suggestions.push(ar ? "امسح الغبار عن الأوراق" : "Wipe dust off the leaves");
-  }
+  // In-app suggestions from the shared, record-based insights (same logic Nada AI uses).
+  const insights = plantInsights(s, plant, (logs ?? []) as { activity: string; occurred_at: string; notes: string | null }[]);
+  const suggestions = ar ? insights.suggestions_ar : insights.suggestions_en;
 
   return (
     <div className="container-x py-8">

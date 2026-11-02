@@ -54,7 +54,72 @@ async function chat(cookie: string | null, ctx: Ctx, message: string, extra: Rec
 const api = (cookie: string, path: string, method: string, body?: unknown) =>
   fetch(`${APP}${path}`, { method, headers: { "Content-Type": "application/json", Cookie: cookie }, body: body ? JSON.stringify(body) : undefined });
 
+/** App routes without Llama (for when the AI quota is exhausted) + live check of the AI failure path. */
+async function mainNoAi() {
+  const r = await fetch(`${APP}/api/chat`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: "مرحبا", history: [] }) });
+  const body = await r.json();
+  const fake = typeof body.reply === "string" && body.reply.length > 0;
+  check("T14 AI unavailable → clear error, no fabricated reply", r.ok || (!fake && typeof body.error === "string" && body.error.startsWith("AI_")), `${r.status} ${body.error ?? "ok"}`);
+
+  const A = await session(process.env.TEST_A_EMAIL!);
+  const B = await session(process.env.TEST_B_EMAIL!);
+  const cookie = A.cookie();
+  await A.sb.from("user_plants").delete().eq("user_id", A.userId);
+  const created = await api(cookie, "/api/user-plants", "POST", { speciesSlug: "monstera-deliciosa", nickname: "لولو", location: "غرفة النوم", light_condition: "medium" });
+  const { id } = await created.json();
+  check("T5 add owned plant via app route", created.ok && Boolean(id));
+  const unknown = await api(cookie, "/api/user-plants", "POST", { unconfirmedLabel: "نبتة أوراقها عريضة مخططة", location: "الصالة" });
+  check("unconfirmed identification saved", unknown.ok);
+  const patch = await api(cookie, `/api/user-plants/${id}`, "PATCH", { watering_preference: "مرة بالأسبوع" });
+  check("edit plant details", patch.ok);
+  const log = await api(cookie, "/api/care-logs", "POST", { plantId: id, activity: "watering", notes: "اختبار" });
+  check("T8 care log via app route", log.ok);
+  const obs = await api(cookie, "/api/care-logs", "POST", { plantId: id, activity: "observation", notes: "اصفرار خفيف" });
+  check("health observation saved", obs.ok);
+  const future = await api(cookie, "/api/care-logs", "POST", { plantId: id, activity: "watering", occurredAt: new Date(Date.now() + 86_400_000).toISOString() });
+  check("future-dated care log rejected", future.status === 400);
+  const { data: logs } = await A.sb.from("care_logs").select("activity").eq("user_plant_id", id);
+  check("care history persisted", logs?.length === 2);
+
+  const { data: prod } = await A.sb.from("products").select("id").eq("sku", "PL-CHL-COM-S").single();
+  const w = await api(cookie, "/api/wishlist", "POST", { productId: prod!.id });
+  const wl = await (await api(cookie, "/api/wishlist", "GET")).json();
+  check("wishlist add + read via app", w.ok && wl.ids.includes(prod!.id));
+  const exp = await api(cookie, "/api/explored", "POST", { speciesSlug: "ficus-lyrata", source: "product_view" });
+  check("explored plant saved from product page", exp.ok);
+
+  await api(cookie, "/api/cart", "PUT", { lines: [{ productId: prod!.id, qty: 2 }] });
+  const cart = await (await api(cookie, "/api/cart", "GET")).json();
+  check("cart synced to account", cart.lines?.[0]?.qty === 2);
+  const bad = await api(cookie, "/api/checkout", "POST", { items: [{ product_id: prod!.id, quantity: 99 }], contact: { name: "T", city: "الرياض" } });
+  check("checkout rejects invalid quantity", bad.status === 400 || bad.status === 409);
+  const co = await api(cookie, "/api/checkout", "POST", { items: [{ product_id: prod!.id, quantity: 2 }], contact: { name: "Test", city: "الرياض" } });
+  const order = (await co.json()).order;
+  check("T12 demo checkout via app", co.ok && Boolean(order?.id), order?.order_number);
+  const cartAfter = await (await api(cookie, "/api/cart", "GET")).json();
+  check("cart cleared after order", cartAfter.lines?.length === 0);
+  const add1 = await (await api(cookie, `/api/orders/${order.id}/add-to-space`, "POST")).json();
+  const add2 = await (await api(cookie, `/api/orders/${order.id}/add-to-space`, "POST")).json();
+  check("T12 purchased plants → Green Space once per unit", add1.added === 2 && add2.added === 0, `${add1.added} then ${add2.added}`);
+
+  const steal = await api(B.cookie(), "/api/care-logs", "POST", { plantId: id, activity: "watering" });
+  const stealEdit = await api(B.cookie(), `/api/user-plants/${id}`, "PATCH", { nickname: "x" });
+  const stealDel = await api(B.cookie(), `/api/user-plants/${id}`, "DELETE");
+  check("T13 B cannot log/edit/delete A's plant via app", !steal.ok && !stealEdit.ok && !stealDel.ok);
+  const anonPlant = await fetch(`${APP}/api/user-plants`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ speciesSlug: "aloe-vera" }) });
+  check("visitor cannot write private data", anonPlant.status === 401);
+
+  const del = await api(cookie, `/api/user-plants/${id}`, "DELETE");
+  check("remove plant from Green Space", del.ok);
+  await A.sb.from("user_plants").delete().eq("user_id", A.userId);
+  await A.sb.from("wishlists").delete().eq("user_id", A.userId);
+  await A.sb.from("explored_plants").delete().eq("user_id", A.userId);
+  console.log(`\n${failures ? `${failures} FAILED` : "All app route checks passed"}.`);
+  process.exit(failures ? 1 : 0);
+}
+
 async function main() {
+  if (process.argv.includes("--no-ai")) return mainNoAi();
   // ── Guest: Test 1 (recommendations with pet safety) ──
   const guest: Ctx = { sessionId: null, context: null, history: [] };
   const t1 = await chat(null, guest, "أبي نبتة لغرفتي وإضاءتها ضعيفة وعندي قطة");

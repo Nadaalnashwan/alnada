@@ -97,9 +97,10 @@ async function translateToArabic(text: string): Promise<string | null> {
 /** Rejects outputs with stray non-Arabic script (e.g. a Vietnamese word) — only Arabic + basic Latin allowed. */
 export function isCleanArabic(text: string | null): text is string {
   if (!text) return false;
-  if (/[\u00C0-\u024F\u1E00-\u1EFF\u0400-\u04FF\u4E00-\u9FFF]/.test(text)) return false;
-  const arabic = (text.match(/[\u0600-\u06FF]/g) ?? []).length;
-  const letters = (text.match(/[\p{L}]/gu) ?? []).length;
+  // Allowlist: only Arabic-script letters and plain A–Z (Latin scientific names) are acceptable.
+  if (/(?![\p{Script=Arabic}A-Za-z])\p{L}/u.test(text)) return false;
+  const arabic = (text.match(/\p{Script=Arabic}/gu) ?? []).length;
+  const letters = (text.match(/\p{L}/gu) ?? []).length;
   return letters > 0 && arabic / letters > 0.8;
 }
 

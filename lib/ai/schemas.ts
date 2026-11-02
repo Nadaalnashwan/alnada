@@ -65,7 +65,11 @@ export type ChatRequest = z.infer<typeof ChatRequestSchema>;
 
 // ───────── rich UI payload returned to the client ─────────
 export interface ProductCardData { id: string; slug: string; name: string; scientific: string; price: number; image: string | null; stock: number; reasons: string[]; cautions: string[]; rank?: number }
-export interface UserPlantCardData { id: string; title: string; species: string; image: string | null; location: string | null; light: string | null; lastWatered: string | null; source: string }
+export interface UserPlantCardData {
+  id: string; title: string; species: string; image: string | null; location: string | null; light: string | null; lastWatered: string | null; source: string;
+  /** Deterministic flags from saved data only (see lib/green-space/insights.ts). */
+  flags?: ("soil_check_due" | "light_mismatch" | "no_watering_recorded" | "recent_observation")[];
+}
 export interface SpeciesCardData { slug: string; name: string; scientific: string; image: string | null; facts: { label: string; value: string }[]; productSlug: string | null }
 export interface CareLogData { activity: string; occurred_at: string; notes: string | null }
 

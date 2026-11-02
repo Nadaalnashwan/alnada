@@ -278,3 +278,27 @@ describe("no false care records", () => {
     expect(logs.get(lulu.id)).toHaveLength(1);
   });
 });
+
+describe("script allowlist", () => {
+  it("flags kana, CJK, Cyrillic and Vietnamese in Arabic replies but allows Latin plant names", async () => {
+    const { hasStrayScript } = await import("@/lib/ai/nada");
+    for (const bad of ["غابة الجングル", "تدع顶", "داخل giống", "привет"]) expect(hasStrayScript(bad, "ar"), bad).toBe(true);
+    for (const ok of ["مونستيرا Monstera deliciosa 🌿 ✓ ٥ سم", "Nada AI"]) expect(hasStrayScript(ok, "ar"), ok).toBe(false);
+    expect(hasStrayScript("café is fine in English", "en")).toBe(false);
+  });
+});
+
+describe("customer-data integration", () => {
+  it("'how are my plants' includes record-based insights and status flags", async () => {
+    const { data } = memoryData([lulu, { ...lulu, id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", nickname: "صبورة", species_slug: "aloe-vera", light_condition: "low" }]);
+    await data.addCareLog(lulu.id, "watering", "2026-10-20T09:00:00Z", null);
+    const { llm, factsOf } = scriptedLlm({ intent: "get_my_plants", language: "ar" });
+    const r = await runNada({ ...base, message: "ندى، كيف حال نباتاتي؟" }, deps(llm, data));
+    const f = factsOf();
+    expect(f.user_plants[0].record_based_insights.days_since_recorded_watering).toBe(13);
+    expect(f.user_plants[0].record_based_insights.soil_check_due).toBe(true);
+    const cards = r.blocks.find((b) => b.type === "user_plants");
+    expect(cards?.type === "user_plants" && cards.items.find((c) => c.title.includes("لولو"))!.flags).toContain("soil_check_due");
+    expect(cards?.type === "user_plants" && cards.items.find((c) => c.title.includes("صبورة"))!.flags).toEqual(expect.arrayContaining(["light_mismatch", "no_watering_recorded"]));
+  });
+});
