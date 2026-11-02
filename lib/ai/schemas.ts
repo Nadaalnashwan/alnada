@@ -82,6 +82,8 @@ export interface ChatResponse {
   reply: string;
   /** True when actions/data succeeded but the Llama text reply failed; the UI shows an error note. */
   replyError?: boolean;
+  /** Development only: what the model understood and what the server used. Never set in production. */
+  debug?: { understanding: unknown; facts: unknown };
   blocks: ChatBlock[];
   context: ChatContext;
   sessionId: string | null;

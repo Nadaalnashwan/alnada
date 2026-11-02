@@ -107,7 +107,7 @@ async function translateChecked(text: string) {
   for (let i = 0; i < 3; i++) {
     const out = await translateToArabic(text);
     if (isCleanArabic(out)) return out;
-    if (process.env.DEBUG_TRANSLATE) console.log("      rejected:", JSON.stringify(out?.slice(0, 160)));
+    if (process.env.DEBUG_TRANSLATE) console.log("      rejected:", JSON.stringify(String(out ?? "").slice(0, 160)));
   }
   return null; // leave untranslated rather than store a broken translation
 }

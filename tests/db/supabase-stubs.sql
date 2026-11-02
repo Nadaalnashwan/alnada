@@ -15,5 +15,6 @@ create function storage.foldername(name text) returns text[] language sql immuta
   $$ select (string_to_array(name, '/'))[1:array_length(string_to_array(name, '/'), 1) - 1] $$;
 grant usage on schema public, auth, storage to anon, authenticated, service_role;
 grant execute on function auth.uid() to anon, authenticated;
-alter default privileges in schema public grant select, insert, update, delete on tables to anon, authenticated, service_role;
+-- Mirror the live project: NO default table privileges for API roles; migrations must grant explicitly.
+alter default privileges in schema public grant references, trigger, truncate on tables to anon, authenticated;
 grant select, insert, update, delete on storage.objects to anon, authenticated;

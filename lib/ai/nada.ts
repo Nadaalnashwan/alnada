@@ -11,7 +11,7 @@ import { DICTS } from "@/lib/i18n/dict";
 import type { ProductWithSpecies, Species } from "@/lib/plants/types";
 import { PreferencesSchema, recommend, type Preferences } from "@/lib/recommendations/engine";
 import type { LlamaChat, LlamaMessage } from "./llama";
-import { RESPOND_SYSTEM, UNDERSTAND_SYSTEM } from "./prompts";
+import { RESPOND_SYSTEM, RESPOND_SYSTEM_EN, UNDERSTAND_SYSTEM } from "./prompts";
 import {
   ChatContextSchema,
   UnderstandingSchema,
@@ -140,12 +140,12 @@ function speciesFacts(s: Species, locale: Locale) {
 }
 
 /** Compact botanical facts for the model (no personal data). */
-function speciesKnowledge(s: Species) {
+function speciesKnowledge(s: Species, locale: Locale = "ar") {
   return {
-    name_ar: s.name_ar, name_en: s.name_en, scientific: s.scientific_name, light: s.light, water: s.water, humidity: s.humidity,
+    name: locale === "ar" ? s.name_ar : s.name_en, scientific: s.scientific_name, light: s.light, water: s.water, humidity: s.humidity,
     temp_c: [s.temp_min_c, s.temp_max_c], placement: s.placement, difficulty: s.difficulty, heat_tolerant: s.heat_tolerant,
     pet_toxicity: { cats: s.toxicity.cats, dogs: s.toxicity.dogs, source: s.toxicity.source ?? "not listed by ASPCA" },
-    tips: s.tips_en, common_problems: s.problems_en,
+    tips: locale === "ar" ? s.tips_ar : s.tips_en, common_problems: locale === "ar" ? s.problems_ar : s.problems_en,
   };
 }
 
@@ -192,6 +192,22 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
     }
   }
   if (!u) u = UnderstandingSchema.parse({ intent: "clarify_request", language: /[؀-ۿ]/.test(input.message) ? "ar" : "en" });
+  // Deterministic backstop: clear symptom language always routes to the rescue workflow.
+  if ((u.intent === "get_plant_care" || u.intent === "general_question" || u.intent === "get_my_plants" || u.intent === "save_care_log" || u.intent === "clarify_request") && SYMPTOMS.test(input.message)) {
+    u = { ...u, intent: "investigate_plant_problem", symptoms: u.symptoms.length ? u.symptoms : [input.message.slice(0, 160)] };
+  }
+  // A care log is only written for a completed action in the past tense ("سقيت", "watered"), never for
+  // habits ("أسقيها يوميًا") or plans — otherwise we would store a false record.
+  if (u.intent === "save_care_log" && !CARE_DONE.test(input.message)) u = { ...u, intent: "get_plant_care" };
+  // Ordinal references ("الثانية", "the first") pick an exact product — never left to the model alone.
+  if ((u.intent === "save_to_wishlist" || u.intent === "add_to_cart") && ctx.last_recommended.length) {
+    const idx = detectOrdinal(input.message);
+    if (idx) u = { ...u, reference_index: idx };
+  }
+  // Reply language follows the user's own message script, not the model's guess.
+  const arabicChars = (input.message.match(/[\u0600-\u06FF]/g) ?? []).length;
+  const latinChars = (input.message.match(/[A-Za-z]/g) ?? []).length;
+  if (arabicChars || latinChars) u = { ...u, language: arabicChars >= latinChars ? "ar" : "en" };
   const locale: Locale = u.language;
   const ar = locale === "ar";
 
@@ -247,7 +263,7 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
       sp,
       logs,
       fact: {
-        nickname: p.nickname, species: sp ? speciesKnowledge(sp) : { unconfirmed_description: p.unconfirmed_label },
+        nickname: p.nickname, species: sp ? speciesKnowledge(sp, locale) : { unconfirmed_description: p.unconfirmed_label },
         location: p.location, light_condition: p.light_condition, watering_preference: p.watering_preference,
         source: p.source, added: p.created_at.slice(0, 10), last_watered: p.last_watered_at?.slice(0, 10) ?? null,
         recent_care_logs: logs.map((l) => ({ activity: l.activity, date: l.occurred_at.slice(0, 10), notes: l.notes })),
@@ -278,7 +294,7 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
     case "recommend_plant":
     case "cheaper_options": {
       ctx.workflow = ctx.workflow === "general" ? "finder" : ctx.workflow;
-      const merged: Preferences = PreferencesSchema.parse({ ...ctx.preferences, ...stripNulls(u.preferences) });
+      const merged: Preferences = PreferencesSchema.parse({ ...ctx.preferences, ...stripNulls(u.preferences), ...detectHardPreferences(input.message, u.preferences) });
       let excludeIds: string[] = [];
       let sort: "score" | "price_asc" = "score";
       if (u.intent === "cheaper_options" && ctx.last_recommended.length) {
@@ -301,7 +317,7 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
         items.map((i) => i.id),
       ).catch(() => {});
       facts.preferences_used = merged;
-      facts.recommendations = result.results.map((r) => ({ name: ar ? r.product.name_ar : r.product.name_en, scientific: r.product.species!.scientific_name, price_sar: r.product.price_sar, reasons: r.reasons_en, cautions: r.cautions_en }));
+      facts.recommendations = result.results.map((r) => ({ name: ar ? r.product.name_ar : r.product.name_en, scientific: r.product.species!.scientific_name, price_sar: r.product.price_sar, reasons: ar ? r.reasons_ar : r.reasons_en, cautions: ar ? r.cautions_ar : r.cautions_en }));
       facts.no_match = items.length === 0;
       facts.excluded_counts = result.excluded;
       facts.missing_preferences = (["placement", "light", "pets", "budget_max_sar"] as const).filter((k) => merged[k] === undefined);
@@ -332,7 +348,7 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
       if (sp) {
         ctx.focus_species = sp.slug;
         speciesBlock(sp);
-        facts.species = speciesKnowledge(sp);
+        facts.species = speciesKnowledge(sp, locale);
         blocks.push({ type: "checklist", title: rescue ? (ar ? "خطة فحص وإنقاذ آمنة" : "Safe check & rescue plan") : (ar ? "قائمة عناية" : "Care checklist"), items: rescue ? rescueChecklist(locale) : careChecklist(sp, locale), tone: rescue ? "rescue" : "care" });
         await recordExplored(sp, rescue ? (ar ? "سألت عن مشكلة فيها" : "Asked about a problem") : (ar ? "سألت عن العناية فيها" : "Asked about care"));
       } else {
@@ -439,7 +455,7 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
         }
         // The cart lives in the client (synced to the account); the UI performs this action and confirms.
         clientActions.push({ type: "add_to_cart", productId: product.id });
-        facts.action = { status: "pending_client", product: product.name_en };
+        facts.action = { status: "success", detail: "added to the customer's cart in the app", product: ar ? product.name_ar : product.name_en };
         blocks.push({ type: "products", title: ar ? "المنتج" : "Product", items: [productCard(product, locale)] });
       } else {
         if (!deps.user || !deps.data) { needAuth(); break; }
@@ -454,7 +470,7 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
     case "get_explored_history": {
       if (!deps.user || !deps.data) { needAuth(); break; }
       const rows = await deps.data.listExplored(u.time_range_days);
-      facts.explored = rows.map((r) => ({ plant: speciesBySlug.get(r.species_slug)?.name_en, reason: r.reason, date: r.last_explored_at.slice(0, 10) }));
+      facts.explored = rows.map((r) => ({ plant: (ar ? speciesBySlug.get(r.species_slug)?.name_ar : speciesBySlug.get(r.species_slug)?.name_en), reason: r.reason, date: r.last_explored_at.slice(0, 10) }));
       facts.no_records = rows.length === 0;
       facts.range_days = u.time_range_days;
       const items = rows
@@ -468,14 +484,14 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
     case "compare_plants": {
       const sps = u.species_mentions.map((m) => resolveSpecies(m, deps.species)).filter((s): s is Species => !!s);
       const unique = [...new Map(sps.map((s) => [s.slug, s])).values()].slice(0, 3);
-      facts.compare = unique.map(speciesKnowledge);
+      facts.compare = unique.map((x) => speciesKnowledge(x, locale));
       for (const s of unique) { speciesBlock(s); await recordExplored(s, ar ? "قارنتها مع نبتة ثانية" : "Compared with another plant"); }
       break;
     }
 
     case "general_question": {
       const sp = u.species_mentions.map((m) => resolveSpecies(m, deps.species)).find(Boolean);
-      if (sp) { facts.species = speciesKnowledge(sp); speciesBlock(sp); await recordExplored(sp, ar ? "سألت عنها" : "Asked about it"); }
+      if (sp) { facts.species = speciesKnowledge(sp, locale); speciesBlock(sp); await recordExplored(sp, ar ? "سألت عنها" : "Asked about it"); }
       break;
     }
 
@@ -488,22 +504,45 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
   // (e.g. a care log was saved), return the factual blocks with replyError instead of hiding it.
   const generate = () => deps.llm(
     [
-      { role: "system", content: RESPOND_SYSTEM },
+      { role: "system", content: ar ? RESPOND_SYSTEM : RESPOND_SYSTEM_EN },
+      { role: "system", content: ar ? "لغة الرد: العربية باللهجة السعودية." : "Reply language: English only." },
       { role: "system", content: `FACTS (authoritative, from AL NADA's database and botanical cache):\n${JSON.stringify(facts)}` },
       ...history.slice(-6).map((h) => ({ role: h.role, content: h.content }) as LlamaMessage),
       { role: "user", content: input.message },
     ],
     { temperature: 0.4, maxTokens: 700 },
   );
+  // Server-authored truth about actions: the model must restate it and may never contradict it.
+  const actionBlock = blocks.find((b): b is Extract<ChatBlock, { type: "action" }> => b.type === "action" && (b.status === "success" || b.status === "failed"));
+  const confirmation = clientActions.length ? (ar ? "أضفتها لسلتك ✓" : "Added to your cart ✓") : actionBlock?.message ?? null;
+  const succeeded = clientActions.length > 0 || actionBlock?.status === "success";
+  if (confirmation) facts.must_state = confirmation;
+  // A reply is unusable if it contradicts the real outcome or echoes internal context (FACTS/JSON).
+  const leaks = (text: string) => /FACTS|authoritative|"intent"\s*:|\{\s*"/.test(text);
+  const contradicts = (text: string) =>
+    leaks(text) || (confirmation !== null && (succeeded ? FAILURE_WORDS.test(text) : SUCCESS_WORDS.test(text) && !FAILURE_WORDS.test(text)));
+
   let reply: string;
   try {
     reply = (await generate()).trim();
+    if (contradicts(reply)) {
+      const retry = (await generate()).trim();
+      if (!contradicts(retry)) reply = retry;
+      else if (confirmation) reply = confirmation;
+      else return { reply: "", replyError: true, blocks, context: ctx, sessionId: input.sessionId, intent, clientActions, model: deps.model };
+    }
+    // Llama occasionally emits stray CJK/Cyrillic/Vietnamese glyphs inside Arabic: retry once, then strip.
+    if (STRAY_SCRIPT.test(reply)) {
+      const retry = (await generate()).trim();
+      reply = STRAY_SCRIPT.test(retry) ? retry.replace(STRAY_SCRIPT_G, "").replace(/\s{2,}/g, " ") : retry;
+    }
   } catch (e) {
     if (!blocks.length) throw e;
     return { reply: "", replyError: true, blocks, context: ctx, sessionId: input.sessionId, intent, clientActions, model: deps.model };
   }
 
-  return { reply, blocks, context: ctx, sessionId: input.sessionId, intent, clientActions, model: deps.model };
+  const debug = process.env.NODE_ENV === "development" ? { understanding: u, facts } : undefined;
+  return { reply, blocks, context: ctx, sessionId: input.sessionId, intent, clientActions, model: deps.model, debug };
 }
 
 /** Pulls the first JSON object out of a completion (models may wrap it in prose or ```json fences). */
@@ -513,6 +552,43 @@ export function extractJson(raw: string): string {
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
   return start >= 0 && end > start ? text.slice(start, end + 1) : text;
+}
+
+const CARE_DONE = /(^|[^\p{L}])(سقيت|سقيتها|سقيته|رويت|سمدت|سمّدت|سمدتها|قصيت|قلمت|قلّمت|نظفت|نظّفت|مسحت|غيرت|غيّرت|بدلت|نقلت|زرعت)(?=$|[^\p{L}])|\b(watered|fertili[sz]ed|fed|repotted|pruned|trimmed|cleaned|wiped|misted)\b/u;
+
+export function detectOrdinal(message: string): number | null {
+  const m = message.toLowerCase();
+  if (/(الاولى|الأولى|الاول|الأول|اول وحده|أول وحدة|\bfirst\b|\b1st\b)/.test(m)) return 1;
+  if (/(الثانية|الثانيه|الثاني|ثاني وحده|ثاني وحدة|\bsecond\b|\b2nd\b)/.test(m)) return 2;
+  if (/(الثالثة|الثالثه|الثالث|ثالث وحده|\bthird\b|\b3rd\b)/.test(m)) return 3;
+  return null;
+}
+
+const SYMPTOMS = /صفرا|صفراء|اصفر|ذبل|ذابل|تذبل|بنية|تعفن|عفن|حشرات|تساقط|تطيح|تموت|ميتة|تعبان|بقع|yellow|wilt|droop|brown|\brot(s|ting|ten)?\b|mold|mould|pests?\b|bugs\b|spots|dying|dropping/i;
+const FAILURE_WORDS = /لم أستطع|لم استطع|ما قدرت|ما قدرنا|لم يتم|لم تكتمل|فشل|تعذر|couldn['’]t|could not|failed|unable/i;
+const SUCCESS_WORDS = /تم |حفظت|أضفت|سجلت|سجّلت|saved|added|logged/i;
+
+const STRAY = "\\u0400-\\u04FF\\u3040-\\u30FF\\u3400-\\u4DBF\\u4E00-\\u9FFF\\uAC00-\\uD7AF\\u1EA0-\\u1EF9";
+const STRAY_SCRIPT = new RegExp(`[${STRAY}]`);
+const STRAY_SCRIPT_G = new RegExp(`[${STRAY}]`, "g");
+
+/**
+ * Deterministic backstop for constraints that affect safety or suitability, so they never depend
+ * solely on the model noticing them. Only fills values the model left empty.
+ */
+export function detectHardPreferences(message: string, fromModel: Partial<Preferences>): Partial<Preferences> {
+  const m = message.toLowerCase();
+  const out: Partial<Preferences> = {};
+  const pets = new Set(fromModel.pets ?? []);
+  // Unicode-aware boundaries: \b does not work for Arabic letters.
+  if (/(^|[^\p{L}])(قطة|قطه|قطط|قطتي|قطو|بس|بسة|بسه)(?=$|[^\p{L}])|(^|[^\p{L}])cats?(?=$|[^\p{L}])|kitten/u.test(m)) pets.add("cat");
+  if (/كلب|كلاب|\bdogs?\b|puppy/.test(m)) pets.add("dog");
+  if (pets.size && pets.size !== (fromModel.pets?.length ?? 0)) out.pets = [...pets];
+  // Explicit afternoon sun always wins (the model sometimes returns false for "الشمس تضربها العصر").
+  if (/العصر|عصرا|الغروب|afternoon|west[- ]facing|غربي/.test(m) && /شمس|sun/.test(m) && fromModel.afternoon_sun !== true) out.afternoon_sun = true;
+  if (!fromModel.placement && /بلكون|بلكونة|شرفة|balcony|terrace|تراس/.test(m)) out.placement = "balcony";
+  if (!fromModel.light && /(اضاءة|إضاءة|ضوء|نور)\S*\s*(ضعيف|خفيف|قليل)|ضعيفة الاضاءة|low light|dim|dark room/.test(m)) out.light = "low";
+  return out;
 }
 
 function stripNulls<T extends Record<string, unknown>>(o: T): Partial<T> {

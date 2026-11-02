@@ -67,6 +67,7 @@ Without Supabase env vars the storefront and recommendations run on the curated 
 ### Supabase setup
 1. Create a project named `alnada`.
 2. Apply `supabase/migrations/*.sql` in order (SQL editor, `supabase db push`, or the Supabase MCP).
+   Migration `…03_explicit_api_grants.sql` is required on newer projects that don't auto-grant table access to the API.
 3. Run `supabase/seed/seed.sql`.
 4. Auth → URL configuration: add `http://localhost:3000/auth/callback` and your Vercel URL `/auth/callback`.
 5. Make an admin: sign up, then run `supabase/admin/grant-admin.sql` with your email.
@@ -86,6 +87,8 @@ npm test          # vitest: recommendation engine, Nada pipeline (scripted model
 npm run lint
 npm run typecheck
 npm run build
+npm run test:live # live Supabase: auth, RLS isolation, Green Space, care logs, wishlist, checkout (needs TEST_* in .env.local)
+npm run test:app  # running app (npm run dev) + real Meta Llama: the brief's Nada AI scenarios end-to-end
 ```
 `tests/db/rls.test.ts` runs the real migrations and seed in PGlite (in-process Postgres) with
 Supabase `auth`/`storage` stubs and checks: customer isolation, role escalation, admin-only writes,

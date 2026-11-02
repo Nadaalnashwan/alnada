@@ -49,8 +49,9 @@ describe("public vs private access", () => {
   it("lets visitors read the catalogue but not private data", async () => {
     await as(null, async () => {
       expect(Number((await one("select count(*) c from public.products")).c)).toBe(76);
-      expect(Number((await one("select count(*) c from public.user_plants")).c)).toBe(0);
     });
+    // visitors have no privilege on private tables at all (stronger than RLS returning zero rows)
+    await expect(as(null, () => db.query("select count(*) from public.user_plants"))).rejects.toThrow(/permission denied/);
     await expect(as(null, () => db.query("insert into public.wishlists (user_id, product_id) values ($1, $2)", [A, crypto.randomUUID()]))).rejects.toThrow();
   });
 
@@ -160,5 +161,28 @@ describe("storage policies", () => {
     await as(B, async () => {
       expect(Number((await one("select count(*) c from storage.objects where bucket_id = 'plant-photos'")).c)).toBe(0);
     });
+  });
+});
+
+describe("advisor hardening", () => {
+  it("trigger function is not callable via the API", async () => {
+    await expect(as(A, () => db.query("select public.handle_new_user()"))).rejects.toThrow();
+  });
+  it("customers still cannot write the catalogue after the policy split", async () => {
+    await as(A, async () => {
+      const r = await db.query("update public.categories set sort = 99 where slug = 'indoor'");
+      expect(r.affectedRows).toBe(0);
+    });
+    await expect(as(A, () => db.query("insert into public.categories (slug, name_en, name_ar) values ('x','x','x')"))).rejects.toThrow();
+  });
+});
+
+describe("explicit API grants", () => {
+  it("API roles cannot TRUNCATE (which would bypass RLS)", async () => {
+    await expect(as(A, () => db.query("truncate public.care_logs"))).rejects.toThrow();
+    await expect(as(null, () => db.query("truncate public.products"))).rejects.toThrow();
+  });
+  it("visitors cannot write customer tables at the privilege level", async () => {
+    await expect(as(null, () => db.query("select * from public.user_plants"))).rejects.toThrow();
   });
 });

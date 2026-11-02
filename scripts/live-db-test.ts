@@ -8,7 +8,7 @@
  * Usage: npm run test:live
  */
 import { config } from "dotenv";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 
 config({ path: ".env.local", quiet: true });
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -39,7 +39,7 @@ async function main() {
   const { count: productCount } = await anon.from("products").select("id", { count: "exact", head: true });
   check("visitor can read catalogue", (productCount ?? 0) === 76, `${productCount} products`);
   const { data: anonPlants, error: anonErr } = await anon.from("user_plants").select("id");
-  check("visitor sees no private rows", !anonErr && (anonPlants ?? []).length === 0);
+  check("visitor sees no private rows", Boolean(anonErr) || (anonPlants ?? []).length === 0, anonErr ? "permission denied" : "0 rows");
 
   // ── authentication ──
   const A = await signIn(A_EMAIL);

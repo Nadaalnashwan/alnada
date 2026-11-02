@@ -89,3 +89,11 @@ describe("recommendation engine", () => {
     expect(names(r)).not.toContain("chlorophytum-comosum");
   });
 });
+
+describe("Saudi climate detection", () => {
+  it("recognises city names with or without the Arabic article and in English", async () => {
+    const { isHotClimate } = await import("@/lib/recommendations/engine");
+    for (const c of ["الرياض", "رياض", "Riyadh", "Riyadh, Saudi Arabia", "جدة", "جده", "الدمام", "Al-Khobar", "المدينة المنورة"]) expect(isHotClimate(c), c).toBe(true);
+    for (const c of ["أبها", "الطائف", "Abha", "London"]) expect(isHotClimate(c), c).toBe(false);
+  });
+});

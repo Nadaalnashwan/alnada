@@ -12,7 +12,7 @@ function scriptedLlm(understanding: Record<string, unknown> | string) {
     if (opts?.json) return typeof understanding === "string" ? understanding : JSON.stringify(understanding);
     return "رد ندى";
   };
-  const factsOf = () => JSON.parse(calls.find((c) => !c.json)!.messages[1].content.split("\n").slice(1).join("\n"));
+  const factsOf = () => JSON.parse(calls.find((c) => !c.json)!.messages.find((m) => m.content.startsWith("FACTS"))!.content.split("\n").slice(1).join("\n"));
   return { llm, calls, factsOf };
 }
 
@@ -190,5 +190,91 @@ describe("provider output handling", () => {
     const wrapped = 'Sure! ```json\n{"intent":"recommend_plant","language":"ar","preferences":{"light":"full_sun"}}\n```';
     const r = await runNada({ ...base, message: "x" }, deps(scriptedLlm(wrapped).llm, null, false));
     expect(r.intent).toBe("recommend_plant");
+  });
+});
+
+describe("safety backstops", () => {
+  it("detects afternoon sun, balcony and pets even if the model misses them", async () => {
+    const { detectHardPreferences } = await import("@/lib/ai/nada");
+    expect(detectHardPreferences("أبي نبتة لبلكونتي بالرياض والشمس تضربها العصر وعندي قطة", {})).toEqual({ pets: ["cat"], afternoon_sun: true, placement: "balcony" });
+    expect(detectHardPreferences("plant for a dim room, I have a dog", {})).toEqual({ pets: ["dog"], light: "low" });
+    expect(detectHardPreferences("عندي مونستيرا", {})).toEqual({});
+  });
+
+  it("Riyadh balcony with afternoon sun never recommends non-heat-tolerant plants", async () => {
+    const llm = scriptedLlm({ intent: "recommend_plant", language: "ar", preferences: { placement: "balcony", city: "الرياض" } }).llm;
+    const r = await runNada({ ...base, message: "أبي نبتة لبلكونتي بالرياض والشمس تضربها العصر" }, deps(llm, null, false));
+    const block = r.blocks.find((b) => b.type === "products");
+    expect(block?.type === "products" && block.items.length).toBeGreaterThan(0);
+    if (block?.type === "products") for (const i of block.items) expect(LOCAL_PRODUCTS.find((p) => p.id === i.id)!.species!.heat_tolerant).toBe(true);
+  });
+
+  it("removes stray non-Arabic glyphs from a reply after one retry", async () => {
+    let n = 0;
+    const llm: LlamaChat = async (_m, o) => (o?.json ? JSON.stringify({ intent: "general_question", language: "ar" }) : (n++, "خل顶 التربة تنشف"));
+    const r = await runNada({ ...base, message: "x" }, deps(llm, null, false));
+    expect(n).toBe(2);
+    expect(r.reply).toBe("خل التربة تنشف");
+  });
+});
+
+describe("action truthfulness guard", () => {
+  it("replaces a reply that contradicts a successful database action", async () => {
+    const first = await runNada({ ...base, message: "x" }, deps(scriptedLlm({ intent: "recommend_plant", language: "ar", preferences: { placement: "indoor" } }).llm, null, false));
+    const { data } = memoryData();
+    const liar: LlamaChat = async (_m, o) => (o?.json ? JSON.stringify({ intent: "save_to_wishlist", language: "ar", reference_index: 1 }) : "عفوًا، لم أستطع حفظها.");
+    const r = await runNada({ ...base, message: "احفظيها", context: first.context }, deps(liar, data));
+    expect(r.reply).not.toMatch(/لم أستطع/);
+    expect(r.reply).toContain("حفظت");
+  });
+});
+
+describe("context leak guard", () => {
+  it("never returns a reply that echoes the internal FACTS block", async () => {
+    const leaky: LlamaChat = async (_m, o) => (o?.json ? JSON.stringify({ intent: "general_question", language: "ar" }) : 'FACTS (authoritative...): {"intent":"x"}');
+    const r = await runNada({ ...base, message: "x" }, deps(leaky, null, false));
+    expect(r.reply).not.toMatch(/FACTS/);
+  });
+});
+
+describe("rescue routing backstop", () => {
+  it("routes clear symptoms to the rescue workflow even if the model says 'care'", async () => {
+    const { data } = memoryData([lulu]);
+    const r = await runNada({ ...base, message: "أوراق لولو صارت صفراء وأسقيها يوميًا" }, deps(scriptedLlm({ intent: "get_plant_care", language: "ar", plant_nickname: "لولو" }).llm, data));
+    expect(r.intent).toBe("investigate_plant_problem");
+    expect(r.blocks.some((b) => b.type === "checklist" && b.tone === "rescue")).toBe(true);
+    expect(r.blocks.some((b) => b.type === "save_observation")).toBe(true);
+  });
+});
+
+describe("reply language", () => {
+  it("uses English when the user writes in English, regardless of the model's guess", async () => {
+    const { llm, calls } = scriptedLlm({ intent: "recommend_plant", language: "ar", preferences: { light: "full_sun" } });
+    const r = await runNada({ ...base, message: "A plant for my Riyadh balcony with afternoon sun" }, deps(llm, null, false));
+    const products = r.blocks.find((b) => b.type === "products");
+    expect(products?.type === "products" && products.items[0].name).toMatch(/[A-Za-z]/);
+    expect(calls.find((c) => !c.json)!.messages[1].content).toContain("English");
+  });
+});
+
+describe("ordinal backstop", () => {
+  it("adds the exact first product even if the model omits reference_index", async () => {
+    const first = await runNada({ ...base, message: "x" }, deps(scriptedLlm({ intent: "recommend_plant", language: "ar", preferences: { light: "full_sun" } }).llm, null, false));
+    const r = await runNada({ ...base, message: "ضيفي النبتة الأولى للسلة", context: { ...first.context, focus_species: "aloe-vera" } }, deps(scriptedLlm({ intent: "add_to_cart", language: "ar", species_mentions: [] }).llm, null, false));
+    expect(r.clientActions).toEqual([{ type: "add_to_cart", productId: first.context.last_recommended[0] }]);
+  });
+});
+
+describe("no false care records", () => {
+  it("does not log watering for a habit description", async () => {
+    const { data, logs } = memoryData([lulu]);
+    const r = await runNada({ ...base, message: "أوراق لولو صارت صفراء وأسقيها يوميًا" }, deps(scriptedLlm({ intent: "save_care_log", language: "ar", plant_nickname: "لولو", care_activity: "watering" }).llm, data));
+    expect(logs.get(lulu.id) ?? []).toHaveLength(0);
+    expect(r.intent).toBe("investigate_plant_problem");
+  });
+  it("still logs a completed action", async () => {
+    const { data, logs } = memoryData([lulu]);
+    await runNada({ ...base, message: "سقيت لولو أمس" }, deps(scriptedLlm({ intent: "save_care_log", language: "ar", plant_nickname: "لولو", care_activity: "watering", activity_when: "yesterday" }).llm, data));
+    expect(logs.get(lulu.id)).toHaveLength(1);
   });
 });

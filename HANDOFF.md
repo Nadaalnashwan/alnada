@@ -5,75 +5,85 @@ _Last updated: 2026-11-02 by Claude Code (Opus 5.5)._ Read `CLAUDE.md` for rules
 ## Status at a glance
 | Area | State |
 |---|---|
-| Storefront (home, shop, categories, product pages) | ✅ Built, runs on curated local catalogue; visually checked in browser |
-| Catalogue data (50 species, 76 products, 21 categories) | ✅ Generated; ASPCA toxicity fetched & matched; Wikimedia images resolved |
-| Supabase schema, RLS, functions, storage policies | ✅ Written + tested in PGlite · ❌ **not yet applied to a real project** |
-| Auth, cart sync, checkout, orders, My Green Space, admin | ✅ Code complete, type-checked, builds · ⚠️ **untested against live Supabase** |
-| Nada AI pipeline (Meta Llama) | ✅ Implemented + 18 pipeline tests with scripted model · ❌ **no real Llama call yet** |
-| Cloudflare Workers AI provider | ✅ Configured in code · ❌ credentials not provided yet |
-| Perenual import | ✅ Script written · ❌ not run (no API key yet) |
-| Vercel deployment | ❌ Not deployed (no Vercel access in this session) |
+| Storefront (home, shop, categories, product pages) | ✅ Live on Supabase data; Arabic RTL + English checked in browser |
+| Catalogue (50 species, 76 products, 21 categories) | ✅ Seeded in Supabase `ALNADA`; ASPCA toxicity; Wikimedia photos; Perenual data for 40 species |
+| Supabase schema, RLS, functions, storage | ✅ **Applied to live project** (3 migrations) · advisors reviewed |
+| Auth, Green Space, care logs, wishlist, cart, checkout | ✅ **Tested live** (`npm run test:live`: 25/25) |
+| Nada AI with real Meta Llama (Cloudflare) | ✅ **Tested live** (`npm run test:app`: 20/20 on clean runs; see "LLM variance") |
+| Perenual import | ✅ 40/50 species matched, 16 with details, 15 Arabic translations (validated) |
+| Vercel deployment | ❌ Not deployed yet |
 
-- **Branch:** `main` · **Remote:** https://github.com/Nadaalnashwan/alnada
-- **Latest pushed commit:** see `git log -1 origin/main` (this file is committed in that push).
+- **Branch:** `main` · **Remote:** https://github.com/Nadaalnashwan/alnada · latest pushed commit: `git log -1 origin/main`.
+- **Local folder:** `~/Desktop/alnada` (Desktop is synced to iCloud — see Known issues).
 
-## Blockers (need the project owner)
-1. **Supabase project `alnada`** — free-tier limit reached (2 active projects). Owner will free a slot.
-   Then: create project → apply `supabase/migrations/20261102000001_init_schema.sql` → run `supabase/seed/seed.sql`
-   → set `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` → add auth redirect URLs → grant admin
-   (`supabase/admin/grant-admin.sql`). Do **not** use the existing `nada` or `Hudhud AI` projects.
-2. **Cloudflare Workers AI** — fill `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` (Workers AI Read+Edit) in
-   `.env.local`, then `npm run verify:llama` (lists Meta models from the live catalogue + Arabic test).
-   Default model `@cf/meta/llama-3.3-70b-instruct-fp8-fast` is **unverified** until that script passes.
-3. **Perenual** — fill `PERENUAL_API_KEY`, run `npm run data:perenual` (free plan ≈100 req/day; resumable),
-   then `npm run data:build` and re-run the seed.
+## Live services
+| Service | Configuration | Verified |
+|---|---|---|
+| Meta Llama | Cloudflare Workers AI, `LLAMA_MODEL=@cf/meta/llama-3.3-70b-instruct-fp8-fast` | `npm run verify:llama` lists 7 Meta models incl. this one; Arabic completion OK (~3.4 s) |
+| Supabase | Project **ALNADA** `sujsqssuwxveztugtiwu` (eu-west-2), publishable key `sb_publishable_…` | REST + Auth reachable; migrations + seed applied via Supabase MCP |
+| Perenual | Free plan (100 req/day; details only for ids ≤ 3000) | Import run on 2026-11-02 |
 
-## Architecture summary
-- `lib/catalog/repo.ts`: catalogue from Supabase (anon, cached 60 s, tag `catalog`) or `data/generated/catalog.json`.
-- `lib/recommendations/engine.ts`: hard constraints (stock, ASPCA pet safety, placement, light, Saudi heat, budget) → weighted score.
-- `lib/ai/nada.ts`: `runNada()` — Llama JSON intent → Zod → per-intent server logic via `NadaData` (RLS-scoped,
-  `lib/ai/supabase-data.ts`) → Llama reply grounded in FACTS → UI blocks. Intents: recommend_plant, cheaper_options,
-  get_plant_care, investigate_plant_problem, get_my_plants, get_plant_history, get_explored_history, save_care_log,
-  save_plant, save_to_wishlist, add_to_cart (client action), compare_plants, general_question, clarify_request.
-- `app/api/chat/route.ts`: rate limit (in-memory), session persistence (`chat_sessions.context` holds prefs,
-  last_recommended ids, focus plant), error codes `AI_NOT_CONFIGURED|AI_TIMEOUT|AI_UPSTREAM|AI_RATE_LIMITED`.
-- Checkout: `place_demo_order(p_items, p_contact)` (SECURITY DEFINER) prices from DB, locks + decrements stock,
-  clears cart. `add_order_plants_to_space(order_id)` — one `user_plants` row per unit, idempotent.
+Other Meta models available on the account: `llama-4-scout-17b-16e-instruct` and `llama-3.2-11b-vision-instruct`
+(multimodal) — candidates for the optional plant-photo feature; not implemented yet.
 
-## Supabase schema (public)
-profiles (role protected) · plant_species (botanical cache, toxicity, perenual_data) · categories · products ·
-product_categories · carts · cart_items · orders · order_items · wishlists · explored_plants (unique user+species) ·
-user_plants (source store_purchase|manual, unconfirmed IDs, photo_path, unique order_item_id+unit_index) ·
-care_logs · chat_sessions · chat_messages · recommendation_logs (non-sensitive criteria).
-Functions: is_admin, handle_new_user (trigger), place_demo_order, add_order_plants_to_space, admin_store_stats.
-Storage: `plant-photos` (private, `<uid>/…`), `product-images` (public read, admin write).
+## Database (live)
+Migrations applied (in order) — files in `supabase/migrations/`:
+1. `20261102000001_init_schema.sql` — tables, RLS, `place_demo_order`, `add_order_plants_to_space`, `admin_store_stats`, storage buckets/policies.
+2. `20261102000002_advisor_hardening.sql` — trigger fn not callable via API, FK indexes, split admin policies.
+3. `20261102000003_explicit_api_grants.sql` — **required**: this project does not auto-grant table privileges to
+   `anon`/`authenticated`; grants are explicit and least-privilege; `TRUNCATE/TRIGGER/REFERENCES` revoked (TRUNCATE bypasses RLS).
 
-## AI model & provider
-Meta Llama via Cloudflare Workers AI OpenAI-compatible endpoint
-`https://api.cloudflare.com/client/v4/accounts/<id>/ai/v1/chat/completions`. Groq kept as `LLAMA_PROVIDER=groq`.
-**Real API call: not yet performed** (no credentials). Vision/photo ID: not implemented (future work).
+Seed: `supabase/seed/seed.sql` (76 products / 50 species / 21 categories / 383 links). It was loaded by fetching the
+file from GitHub at commit `24467b8` inside Postgres with a SHA-256 check, then the `http` extension was dropped.
 
-## Environment variables
-See `.env.example`. Server-only: `LLAMA_PROVIDER`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`, `LLAMA_MODEL`,
-`GROQ_API_KEY`, `PERENUAL_API_KEY`. Public: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+Remaining advisor notes (intentional): `place_demo_order`, `add_order_plants_to_space`, `admin_store_stats`, `is_admin`
+are SECURITY DEFINER RPCs callable by signed-in users by design (each checks `auth.uid()`/admin internally).
+`rls_auto_enable()` is created by Supabase itself — left untouched.
+
+**Test accounts:** `alnada.test.a@example.com`, `alnada.test.b@example.com` (customers; created directly in `auth.users`,
+no email sent; password only in the owner's `.env.local` as `TEST_PASSWORD`). Delete them before a public launch:
+`delete from auth.users where email like 'alnada.test.%@example.com';`
+**Admin:** none yet — run `supabase/admin/grant-admin.sql` with the owner's email after signing up.
+
+## Bugs found during live testing (all fixed + covered by tests)
+- Missing API grants on the new Supabase project → catalogue/private reads failed → migration 3 (+ PGlite stubs now mirror it).
+- `anon` lacked EXECUTE on `is_admin()` used in public policies (fixed earlier).
+- Perenual: paywall placeholder strings, plan-restricted ids misread as quota exhaustion, loose genus match for hybrids.
+- Llama translation/replies contained stray CJK/Vietnamese glyphs → validation + retry (+ strip as last resort).
+- Llama returned `city: "رياض"` → Riyadh not detected as hot → mint recommended for afternoon sun. City matching normalised.
+- Llama sometimes omitted/negated `afternoon_sun`, pets, `reference_index` → deterministic backstops (`detectHardPreferences`, `detectOrdinal`).
+- Llama said "لم أستطع" after a successful DB write, and once echoed the FACTS block → truthfulness + leak guards
+  (`must_state`, regenerate, fall back to the server confirmation).
+- Llama copied a style example verbatim (invented "لولو" for a guest) → example removed; English uses `RESPOND_SYSTEM_EN`.
+- English questions got Arabic replies → reply language is set from the user's message script.
+- "أسقيها يوميًا" could be logged as a watering → care logs require past-tense completed actions (`CARE_DONE`).
+
+## LLM variance (honest note)
+`npm run test:app` drives 20 checks through real Llama. After the fixes, clean runs pass 20/20 (twice in a row);
+individual runs occasionally failed on a model routing choice before the matching backstop existed. Cloudflare's
+free tier returned **429 (`AI_RATE_LIMITED`)** after many back-to-back calls — the UI shows the error, never a fake reply
+(this exercised brief Test 14 for real). Re-run the suite after the daily allowance resets.
 
 ## Test results (executed 2026-11-02)
-- `npm test`: **38/38 passed** — recommendations (10), Nada pipeline (18, scripted model), DB/RLS/checkout in PGlite (10).
-- `npm run lint`: clean · `npm run typecheck`: clean · `npm run build`: success (34 routes).
-- Browser check (dev): home, product page, Nada AI page (shows "not configured" state) rendered correctly.
-- **Not yet tested:** live Supabase auth/RLS, real Llama responses, mobile layouts in detail, Arabic prompt quality.
+- `npm test`: **53/53** (recommendations 11, Nada pipeline 26 with scripted model, DB/RLS/grants in PGlite 16).
+- `npm run test:live`: **25/25** against Supabase ALNADA with the publishable key.
+- `npm run test:app`: **20/20** on clean runs against the running app with real Llama (see variance note).
+- `npm run lint`: clean · `npm run typecheck`: clean · `npm run build`: see latest commit message.
+- Browser: Arabic & English chat, recommendation cards, product pages, mobile shop layout.
 
 ## Known issues / limitations
-- Rate limiting is per-instance memory. Product images hot-link Wikimedia (consider mirroring to Storage).
-- A few Wikimedia lead images are botanical illustrations (e.g. lavender) rather than photos.
-- Cloudflare compat endpoint is called without JSON mode; `extractJson()` + Zod handle wrapped JSON.
-- Admin image management takes a URL (allowed hosts) rather than file upload to `product-images`.
+- **Project lives in iCloud-synced Desktop** → `node_modules` syncing makes tsc/builds hang. Move to e.g. `~/Developer/alnada`.
+- Rate limiting is in-memory per instance; Cloudflare free-tier quota is the practical AI limit.
+- Perenual descriptions are marketing-style and its pet flags conflict with ASPCA (e.g. Aloe vera, Ficus lyrata) —
+  stored in `plant_species.perenual_data` for cross-checking only, never shown as pet-safety info.
+- 10 species have no Perenual match on the free plan (cached as misses).
+- Admin product image = URL (allowed hosts), not file upload. No plant-photo identification yet.
 
 ## Exact next tasks
-1. Once credentials exist: `npm run verify:llama` → set `LLAMA_MODEL` to a listed `@cf/meta/*` model → run the
-   16 test scenarios from the brief in the browser (Arabic), tune `lib/ai/prompts.ts` if intent extraction misses.
-2. Create Supabase `alnada`, apply migration + seed, run `get_advisors` (security/performance), test two-user isolation live.
-3. `npm run data:perenual -- --translate`, review Arabic translations, `npm run data:build`, re-seed.
-4. Deploy to Vercel with env vars; add the URL to Supabase Auth redirects.
-5. Polish: mobile QA pass, admin product image upload to `product-images`, optional Llama vision (only if a
-   Meta multimodal model is verified on the provider).
+1. Move the repo out of iCloud Desktop; `npm ci`.
+2. Sign up the owner account, run `supabase/admin/grant-admin.sql`, check `/admin` live.
+3. Deploy to Vercel: env vars from `.env.example` (no TEST_* vars), add `<vercel-url>/auth/callback` to Supabase Auth redirect URLs.
+4. Re-run `npm run test:app` after the Cloudflare quota resets; consider `@cf/meta/llama-3.1-8b-instruct-fp8` for the cheap
+   intent-JSON call and keep 70B for replies, to cut neuron usage.
+5. Optional: plant-photo analysis with `@cf/meta/llama-4-scout-17b-16e-instruct` (verify vision input on Workers AI first).
+6. Delete the two test users before public launch.

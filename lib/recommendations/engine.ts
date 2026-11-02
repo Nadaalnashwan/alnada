@@ -52,13 +52,19 @@ export interface RecommendationResult {
 }
 
 // Lowland Saudi cities with extreme summer heat; highland cities (Abha, Taif, Al Baha) are milder.
-const HOT_CITIES = ["riyadh", "الرياض", "jeddah", "جدة", "dammam", "الدمام", "khobar", "الخبر", "makkah", "mecca", "مكة", "madinah", "medina", "المدينة",
-  "qassim", "القصيم", "buraidah", "بريدة", "hail", "حائل", "tabuk", "تبوك", "jazan", "جازان", "najran", "نجران", "ahsa", "الأحساء", "hofuf", "الهفوف", "jubail", "الجبيل", "yanbu", "ينبع"];
+// Stored normalised (no "ال", unified alef/taa marbuta) so "الرياض", "رياض" and "Riyadh" all match.
+const HOT_CITIES = ["riyadh", "رياض", "jeddah", "jiddah", "جده", "dammam", "دمام", "khobar", "خبر", "makkah", "mecca", "مكه", "madinah", "medina", "مدينه",
+  "qassim", "قصيم", "buraidah", "buraydah", "بريده", "hail", "حايل", "حائل", "tabuk", "تبوك", "jazan", "jizan", "جازان", "najran", "نجران", "ahsa", "hasa", "احساء", "hofuf", "هفوف",
+  "jubail", "جبيل", "yanbu", "ينبع", "kharj", "خرج", "dhahran", "ظهران", "qatif", "قطيف", "unaizah", "عنيزه", "majmaah", "مجمعه", "zulfi", "زلفي"];
+
+const normCity = (s: string) =>
+  s.toLowerCase().normalize("NFKD").replace(/[\u064B-\u065F\u0670]/g, "").replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي")
+    .split(/[\s,،-]+/).map((w) => w.replace(/^(ال|al-|al |el-)/, "")).join(" ");
 
 export function isHotClimate(city?: string) {
   if (!city) return false;
-  const c = city.toLowerCase();
-  return HOT_CITIES.some((h) => c.includes(h));
+  const c = normCity(city);
+  return HOT_CITIES.some((h) => c.split(" ").includes(h) || c.includes(h));
 }
 
 function lightOk(s: Species, light?: LightLevel) {
