@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 64" role="img" aria-label="AL NADA — الندى">
+  <path d="M30 6C30 6 14 25 14 36.5a16 16 0 0 0 32 0C46 25 30 6 30 6Z" fill="#006C35"/>
+  <path d="M23.3 35.8c0-4.1 2.3-8.2 4.6-11.4" stroke="#EAF5EE" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+  <text x="58" y="34" font-family="IBM Plex Sans Arabic, sans-serif" font-size="28" font-weight="700" fill="#004D26">الندى</text>
+  <text x="58" y="54" font-family="IBM Plex Sans, sans-serif" font-size="11" font-weight="600" letter-spacing="4" fill="#006C35">AL NADA</text>
+</svg>

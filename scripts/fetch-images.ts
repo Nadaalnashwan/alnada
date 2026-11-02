@@ -63,7 +63,7 @@ async function commonsInfo(fileTitle: string) {
   const imageUrl = clean(info.thumburl ?? info.url);
   return {
     url: imageUrl,
-    thumb_url: imageUrl.replace(/\/\d+px-/, "/400px-"),
+    thumb_url: imageUrl.replace(/\/\d+px-/, "/500px-"),
     license: meta.LicenseShortName?.value ?? null,
     attribution: meta.Artist ? stripHtml(meta.Artist.value) : null,
     source_url: info.descriptionurl ?? null,
@@ -91,7 +91,7 @@ async function main() {
     const cached = out[key] as { source_url?: string } | null | undefined;
     const overrideApplied = override && cached?.source_url?.endsWith(encodeURI(override.replace(/ /g, "_")));
     if (cached && !force && (!override || overrideApplied)) continue;
-    let file = override ?? (await leadImageFile(article));
+    let file: string | null = override ?? (await leadImageFile(article));
     let info = file ? await commonsInfo(file) : null;
     if (!info) {
       // Lead image may be a local (non-Commons) file; fall back to a Commons photo of the species.

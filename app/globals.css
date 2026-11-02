@@ -1,26 +1,84 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* AL NADA design tokens — Saudi Botanical Minimalism */
+@theme {
+  --color-saudi: #006c35;
+  --color-deep: #004d26;
+  --color-soft: #eaf5ee;
+  --color-white: #ffffff;
+  --color-ink: #0f2a1c;
+  --color-muted: #5b6f63;
+  --color-line: #dbe8df;
+  --color-warn: #8a5a00;
+  --color-warn-bg: #fff6e0;
+  --color-danger: #b42318;
+  --color-danger-bg: #fdecea;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-sans: var(--font-plex-arabic), var(--font-plex-sans), system-ui, sans-serif;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --radius-card: 1.25rem;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgb(0 77 38 / 0.05), 0 8px 24px -12px rgb(0 77 38 / 0.18);
+  --shadow-lift: 0 2px 4px rgb(0 77 38 / 0.06), 0 18px 40px -18px rgb(0 77 38 / 0.32);
+
+  --animate-dew: dew 3.6s ease-in-out infinite;
+  --animate-rise: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-pulse-dot: pulse-dot 1.2s ease-in-out infinite;
+
+  @keyframes dew {
+    0%, 100% { transform: translateY(0) scale(1); opacity: 0.9; }
+    50% { transform: translateY(3px) scale(0.96); opacity: 1; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 0.25; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1); }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+html { background: var(--color-white); color: var(--color-ink); }
+body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+
+:focus-visible { outline: 2px solid var(--color-saudi); outline-offset: 2px; border-radius: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+@utility container-x {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-[var(--radius-pill)] px-5 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
+}
+@utility btn-primary {
+  @apply btn bg-saudi text-white hover:bg-deep;
+}
+@utility btn-outline {
+  @apply btn border border-saudi text-saudi hover:bg-soft;
+}
+@utility btn-ghost {
+  @apply btn text-deep hover:bg-soft;
+}
+@utility card {
+  @apply rounded-[var(--radius-card)] bg-white shadow-[var(--shadow-card)];
+}
+@utility chip {
+  @apply inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-soft px-3 py-1 text-xs font-medium text-deep;
+}
+@utility input {
+  @apply w-full rounded-xl border border-line bg-white px-4 py-2.5 text-sm outline-none transition focus:border-saudi focus:ring-2 focus:ring-saudi/15;
+}
+@utility label {
+  @apply mb-1.5 block text-sm font-medium text-deep;
+}
+@utility section-title {
+  @apply text-2xl font-bold tracking-tight text-deep sm:text-3xl;
+}
+@utility demo-badge {
+  @apply inline-flex items-center rounded-[var(--radius-pill)] border border-warn/30 bg-warn-bg px-2.5 py-0.5 text-[11px] font-semibold text-warn;
 }

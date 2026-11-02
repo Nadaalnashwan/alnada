@@ -2,7 +2,6 @@
 -- Botanical knowledge (plant_species) is kept separate from commerce (products).
 -- All private customer tables are protected by Row Level Security keyed on auth.uid().
 
-create extension if not exists pgcrypto;
 
 -- ─────────────────────────────── helpers ───────────────────────────────
 create or replace function public.set_updated_at() returns trigger
@@ -32,8 +31,9 @@ create or replace function public.is_admin() returns boolean
 language sql stable security definer set search_path = '' as $$
   select exists (select 1 from public.profiles where id = (select auth.uid()) and role = 'admin');
 $$;
-revoke execute on function public.is_admin() from public, anon;
-grant execute on function public.is_admin() to authenticated;
+-- anon needs execute too: public catalogue policies reference is_admin() (it simply returns false).
+revoke execute on function public.is_admin() from public;
+grant execute on function public.is_admin() to anon, authenticated;
 
 create or replace function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = '' as $$

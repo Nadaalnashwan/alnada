@@ -20,6 +20,11 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
+  {
+    // Data scripts and tests handle raw external JSON / SQL rows.
+    files: ["scripts/**", "tests/**"],
+    rules: { "@typescript-eslint/no-explicit-any": "off" },
+  },
 ];
 
 export default eslintConfig;
