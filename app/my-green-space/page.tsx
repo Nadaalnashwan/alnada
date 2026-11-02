@@ -3,12 +3,13 @@ import Link from "next/link";
 import { Bookmark, Droplets, Heart, LogIn, Plus, Sparkles, Sprout } from "lucide-react";
 import { Leaf } from "@/components/brand/Decor";
 import { DewDrop } from "@/components/brand/Logo";
-import { Garden, type GardenPlant, type GardenStatus } from "@/components/my-green-space/Garden";
+import { Garden } from "@/components/my-green-space/Garden";
 import { ClearExploredButton, ExploredPlantCard, WishlistCard, type ExploredCard, type WishCard } from "@/components/my-green-space/PlantCards";
 import { Pot } from "@/components/my-green-space/PottedPlant";
 import { Reveal } from "@/components/ui/Reveal";
 import { getAllProducts, getAllSpecies } from "@/lib/catalog/repo";
 import { loadOwnedPlants } from "@/lib/green-space/data";
+import { buildGarden } from "@/lib/green-space/garden";
 import { getDict } from "@/lib/i18n/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getSupabase, getUser } from "@/lib/supabase/server";
@@ -37,14 +38,6 @@ function EmptyShelf({ title, body, cta }: { title: string; body: string; cta?: R
       {cta && <div className="mt-7 flex flex-wrap justify-center gap-2">{cta}</div>}
     </div>
   );
-}
-
-function statusOf(p: Awaited<ReturnType<typeof loadOwnedPlants>>[number]): GardenStatus {
-  if (p.identification_status === "unconfirmed") return "unconfirmed";
-  if (p.insights.soil_check_due) return "soil_check_due";
-  if (p.insights.light_matches === false) return "light_mismatch";
-  if (p.insights.no_watering_recorded) return "no_watering_recorded";
-  return "on_track";
 }
 
 export default async function GreenSpacePage({ searchParams }: { searchParams: Promise<{ tab?: string; plant?: string }> }) {
@@ -97,30 +90,7 @@ export default async function GreenSpacePage({ searchParams }: { searchParams: P
     supabase.from("chat_sessions").select("id, title, updated_at, context").order("updated_at", { ascending: false }).limit(60).then((r) => r.data ?? []),
   ]);
 
-  const garden: GardenPlant[] = ownedRaw.map((p) => {
-    const s = p.species;
-    const sName = s ? (ar ? s.name_ar : s.name_en) : p.unconfirmed_label ?? "?";
-    const status = statusOf(p);
-    return {
-      id: p.id, nickname: p.nickname, speciesName: sName, scientific: s?.scientific_name ?? null, speciesSlug: s?.slug ?? null,
-      productSlug: s ? products.find((x) => x.species_slug === s.slug && x.kind === "plant")?.slug ?? null : null,
-      image: p.photo_url ?? s?.image?.url ?? null, ownPhoto: Boolean(p.photo_url), speciesImage: s?.image?.url ?? null,
-      habit: s?.habit ?? "bushy", size: s?.size ?? "medium",
-      location: p.location, lightCondition: p.light_condition,
-      lightLabel: p.light_condition ? t.attr.light[p.light_condition as keyof typeof t.attr.light] : null,
-      needsLight: s ? s.light.map((l) => t.attr.light[l]) : [],
-      waterNeed: s ? t.attr.water[s.water] : null, humidity: s ? t.attr.humidity[s.humidity] : null,
-      temp: s ? `${s.temp_min_c}–${s.temp_max_c}°C` : null, difficulty: s ? t.attr.difficulty[s.difficulty] : null,
-      source: p.source, addedAt: p.created_at, acquiredAt: p.acquired_at, wateringPreference: p.watering_preference, notes: p.notes,
-      unconfirmed: p.identification_status === "unconfirmed", status,
-      daysSinceWatering: p.insights.days_since_watering, checkInterval: p.insights.typical_check_interval_days, lastWatered: p.last_watered_at,
-      suggestions: ar ? p.insights.suggestions_ar : p.insights.suggestions_en,
-      tips: s ? (ar ? s.tips_ar : s.tips_en) : [], problems: s ? (ar ? s.problems_ar : s.problems_en) : [],
-      observations: p.insights.recent_observations, logs: p.logs,
-      consultations: sessions.filter((c) => (c.context as { focus_user_plant?: string } | null)?.focus_user_plant === p.id).slice(0, 5)
-        .map((c) => ({ id: c.id, title: c.title, updated_at: c.updated_at })),
-    };
-  });
+  const garden = buildGarden(ownedRaw, { products, sessions, t, ar });
   const attention = garden.filter((p) => p.status === "soil_check_due" || p.status === "light_mismatch").length;
 
   let explored: ExploredCard[] = [];

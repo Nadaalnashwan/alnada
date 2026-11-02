@@ -27,6 +27,9 @@ recolour or redraw it; on dark surfaces it sits on an ivory badge (`DewDrop tone
 `app/icon.png`, `app/apple-icon.png`, `app/manifest.ts`, `public/brand/alnada-app-icon-*.png`.
 My Green Space = one shared garden shelf (`components/my-green-space/Garden.tsx`, `PottedPlant.tsx`): every owned
 plant in its own pot side by side; selecting one shows its full details below (no page reload).
+The same component is the homepage hero (`<Garden variant="hero" intro=…>`): the signed-in customer's own plants
+(mapped by `lib/green-space/garden.ts` `buildGarden`, shared with /my-green-space), or for visitors/empty gardens a
+read-only `sampleGarden` from public catalogue data, labelled "نبتة نموذجية" — never another customer's plants.
 Shared pieces: `components/brand/Logo.tsx` (official mark + wordmark), `components/brand/Decor.tsx` (Leaf, Sprig,
 Blob, DewCluster, Pot — decorative, aria-hidden), `components/ui/Reveal.tsx` (scroll reveal; content visible
 without JS), `components/ui/SectionHeading.tsx`, `components/my-green-space/PlantBox.tsx` (plant "planted" in a pot).

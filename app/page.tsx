@@ -3,9 +3,9 @@ import {
   ArrowLeft, ArrowRight, BadgeCheck, CalendarHeart, Droplets, Gift, HeartPulse, Leaf as LeafIcon, MessageCircle, PawPrint,
   Search, ShieldCheck, Sparkles, Sprout, Sun, ThermometerSun, Flower2,
 } from "lucide-react";
-import { Blob, DewCluster, Leaf, Sprig } from "@/components/brand/Decor";
+import { Blob, Leaf, Sprig } from "@/components/brand/Decor";
 import { DewDrop } from "@/components/brand/Logo";
-import { PlantBox } from "@/components/my-green-space/PlantBox";
+import { Garden, type GardenPlant } from "@/components/my-green-space/Garden";
 import { PlantImage } from "@/components/store/PlantImage";
 import { ProductCard, ProductGrid } from "@/components/store/ProductCard";
 import { Reveal } from "@/components/ui/Reveal";
@@ -13,16 +13,44 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { toCard } from "@/lib/catalog/card";
 import { filterProducts } from "@/lib/catalog/filter";
 import { getAllProducts, getCategories } from "@/lib/catalog/repo";
+import { loadOwnedPlants } from "@/lib/green-space/data";
+import { buildGarden, sampleGarden } from "@/lib/green-space/garden";
+import type { Dict } from "@/lib/i18n/dict";
 import { getDict } from "@/lib/i18n/server";
 import { formatSAR } from "@/lib/i18n/format";
 import type { ProductWithSpecies } from "@/lib/plants/types";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { getSupabase, getUser } from "@/lib/supabase/server";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic"; // the hero shows the signed-in customer's own garden
 
-export default async function Home() {
+/** The signed-in customer's own plants (RLS-scoped to them), or [] for visitors / on failure. */
+async function loadMyGarden(products: ProductWithSpecies[], t: Dict, ar: boolean): Promise<GardenPlant[]> {
+  const supabase = await getSupabase();
+  if (!supabase) return [];
+  try {
+    const [owned, sessions] = await Promise.all([
+      loadOwnedPlants(supabase),
+      supabase.from("chat_sessions").select("id, title, updated_at, context").order("updated_at", { ascending: false }).limit(60).then((r) => r.data ?? []),
+    ]);
+    return buildGarden(owned, { products, sessions, t, ar });
+  } catch {
+    return [];
+  }
+}
+
+export default async function Home({ searchParams }: { searchParams: Promise<{ plant?: string }> }) {
   const { t, locale } = await getDict();
   const ar = locale === "ar";
-  const [all, categories] = await Promise.all([getAllProducts(), getCategories()]);
+  const sp = await searchParams;
+  const [all, categories, user] = await Promise.all([getAllProducts(), getCategories(), isSupabaseConfigured() ? getUser() : null]);
+  const myGarden = user ? await loadMyGarden(all, t, ar) : [];
+  // Visitors (and customers with no plants yet) get a clearly-labelled sample garden from public catalogue data only.
+  const sample = myGarden.length === 0;
+  const gardenPlants = sample ? sampleGarden(all, { t, ar }) : myGarden;
+  const addHref = user ? "/my-green-space/add" : "/account/signup?next=/my-green-space/add";
+  const firstName = user?.fullName?.trim().split(/\s+/)[0];
+  const attention = myGarden.filter((p) => p.status === "soil_check_due" || p.status === "light_mismatch").length;
   const Arrow = ar ? ArrowLeft : ArrowRight;
   const bySlug = (slug: string) => all.find((p) => p.slug === slug);
   const card = (p: ProductWithSpecies) => toCard(p, locale);
@@ -36,11 +64,6 @@ export default async function Home() {
     return out;
   };
 
-  const hero = bySlug("monstera-deliciosa-xl") ?? plants[0];
-  const heroSide = bySlug("jasminum-sambac") ?? plants[1];
-  const heroImg = hero.image?.url?.replace("/960px-", "/1280px-") ?? null;
-  used.add(hero.id);
-
   const featuredCats = ["indoor", "outdoor", "pet-friendly", "low-light", "cacti-succulents", "flowering", "balcony", "gifts"]
     .map((s) => categories.find((c) => c.slug === s)).filter((c): c is NonNullable<typeof c> => !!c);
   const countIn = (slug: string) => all.filter((p) => p.category_slugs.includes(slug)).length;
@@ -53,7 +76,6 @@ export default async function Home() {
   const newIn = pick(all.filter((p) => p.is_new), 4);
   const gift = bySlug("gift-orchid-ceramic");
   const potsHero = bySlug("ceramic-pot-white-20");
-  const greenhouse = ["monstera-deliciosa", "chlorophytum-comosum", "salvia-rosmarinus"].map(bySlug).filter((p): p is ProductWithSpecies => !!p);
   const nadaPicks = inCat("balcony").filter((p) => p.species?.heat_tolerant && p.species.water === "low").slice(0, 3);
 
   const promises = ar
@@ -81,48 +103,44 @@ export default async function Home() {
         { icon: Sprout, title: "Drainage first", body: "Use a pot with a drainage hole and empty the saucer 15 minutes after watering." },
       ];
 
+  const intro = (
+    <div className="pb-2 lg:pb-10">
+      {user && (
+        <p className="mb-2 animate-rise text-sm font-semibold text-saudi sm:text-base">
+          {firstName ? (ar ? `أهلًا ${firstName} 🌿` : `Welcome back, ${firstName} 🌿`) : (ar ? "أهلًا بك من جديد 🌿" : "Welcome back 🌿")}
+        </p>
+      )}
+      <h1 className="animate-rise text-[2rem] font-bold leading-[1.2] tracking-tight text-forest sm:text-5xl lg:text-[3.35rem]">
+        {sample
+          ? (ar ? <>ادخل حديقتك… <span className="bg-gradient-to-l from-leaf to-saudi bg-clip-text text-transparent">حياة تبدأ بقطرة</span></> : <>Step into your garden, <span className="bg-gradient-to-r from-leaf to-saudi bg-clip-text text-transparent">life begins with a drop</span></>)
+          : (ar ? <>حديقتك الصغيرة <span className="bg-gradient-to-l from-leaf to-saudi bg-clip-text text-transparent">بانتظارك</span></> : <>Your little garden <span className="bg-gradient-to-r from-leaf to-saudi bg-clip-text text-transparent">is waiting</span></>)}
+      </h1>
+      <p className="lead mt-3 max-w-xl animate-rise text-[0.95rem] leading-7 sm:mt-5 sm:text-lg sm:leading-8 [animation-delay:90ms]">
+        {sample
+          ? t.hero.body
+          : ar ? "اضغط على أي نبتة لتشوف حالتها، سجّل الري، واسأل ندى عنها باسمها." : "Tap any plant to see how it's doing, log a watering, or ask Nada about it by name."}
+      </p>
+      {!sample && attention > 0 && (
+        <p className="mt-3 inline-flex animate-rise items-center gap-2 rounded-full bg-warn-bg px-3.5 py-1.5 text-xs font-bold text-warn [animation-delay:120ms]">
+          <Droplets className="size-3.5" />{ar ? (attention === 1 ? "نبتة وحدة تحتاج انتباهك" : `${attention} نباتات تحتاج انتباهك`) : `${attention} need${attention === 1 ? "s" : ""} your attention`}
+        </p>
+      )}
+      <div className="mt-5 flex animate-rise flex-wrap gap-2 sm:mt-8 sm:gap-3 [animation-delay:180ms]">
+        <Link href="/nada-ai" className="btn-primary px-4 py-2.5 text-sm sm:px-7 sm:py-3.5 sm:text-base lg:px-5 xl:px-6"><span className="shine animate-shimmer" /><MessageCircle className="size-5" />{t.hero.ctaAi}</Link>
+        <Link href="/shop" className="btn-outline px-4 py-2.5 text-sm sm:px-7 sm:py-3.5 sm:text-base lg:px-5 xl:px-6">{t.hero.ctaShop}<Arrow className="size-4" /></Link>
+      </div>
+      <Link href={sample ? addHref : "/my-green-space"} className="group mt-4 inline-flex animate-rise sm:mt-5 items-center gap-2 text-sm font-bold text-saudi [animation-delay:240ms]">
+        <span className="grid size-7 place-items-center rounded-full bg-white text-saudi shadow-sm ring-1 ring-saudi/10 transition group-hover:bg-saudi group-hover:text-white"><Sprout className="size-4" /></span>
+        {sample ? (user ? t.space.addPlant : ar ? "أنشئ مساحتك الخضراء مجانًا" : "Create your own Green Space") : ar ? "افتح مساحتي الخضراء كاملة" : "Open my full Green Space"}
+        <Arrow className="size-3.5 transition group-hover:-translate-x-0.5 ltr:group-hover:translate-x-0.5" />
+      </Link>
+    </div>
+  );
+
   return (
     <>
-      {/* ══════════════════ HERO ══════════════════ */}
-      <section className="relative -mt-[5.25rem] overflow-hidden rounded-b-[2.5rem] bg-botanical pt-[5.25rem] sm:rounded-b-[3.5rem]">
-        <Blob variant={2} className="absolute -end-40 -top-40 size-[38rem] text-dew/70" />
-        <Leaf className="absolute start-[46%] top-28 hidden h-28 w-14 origin-bottom animate-sway text-sprout/40 lg:block" />
-        <div className="container-x relative grid items-center gap-12 pb-16 pt-8 lg:grid-cols-[1.05fr_1fr] lg:pb-24 lg:pt-12">
-          <div>
-            <h1 className="display animate-rise">
-              {ar ? <>حياة خضراء <span className="relative inline-block bg-gradient-to-l from-leaf to-saudi bg-clip-text text-transparent">تبدأ بقطرة</span></> : <>A greener life <span className="bg-gradient-to-r from-leaf to-saudi bg-clip-text text-transparent">begins with a drop</span></>}
-            </h1>
-            <p className="lead mt-6 max-w-xl animate-rise [animation-delay:90ms]">{t.hero.body}</p>
-            <div className="mt-9 flex animate-rise flex-wrap gap-3 [animation-delay:180ms]">
-              <Link href="/nada-ai" className="btn-primary px-7 py-3.5 text-base"><span className="shine animate-shimmer" /><MessageCircle className="size-5" />{t.hero.ctaAi}</Link>
-              <Link href="/shop" className="btn-outline px-7 py-3.5 text-base">{t.hero.ctaShop}<Arrow className="size-4" /></Link>
-            </div>
-          </div>
-
-          {/* composition */}
-          <div className="relative mx-auto w-full max-w-[34rem]">
-            <div className="relative ms-auto aspect-[4/5] w-[82%] overflow-hidden arch bg-soft shadow-[var(--shadow-lift)] ring-[6px] ring-white">
-              <PlantImage src={heroImg} alt={ar ? hero.name_ar : hero.name_en} sizes="(min-width:1024px) 36vw, 80vw" priority />
-              <span className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-forest/40 to-transparent" />
-            </div>
-            <div className="absolute -bottom-6 start-0 w-[42%] overflow-hidden rounded-[1.75rem] bg-soft shadow-[var(--shadow-lift)] ring-[5px] ring-white sm:w-[40%]">
-              <div className="relative aspect-square"><PlantImage src={heroSide?.image?.thumb_url ?? null} alt={heroSide ? (ar ? heroSide.name_ar : heroSide.name_en) : ""} sizes="240px" /></div>
-            </div>
-            {/* floating living cards */}
-            <div className="glass absolute -start-2 top-[10%] max-w-[15.5rem] animate-float rounded-2xl p-3.5 shadow-[var(--shadow-card)] ring-1 ring-white sm:-start-8">
-              <p className="flex items-center gap-2 text-[11px] font-bold text-saudi"><span className="size-2 animate-pulse-dot rounded-full bg-leaf" />{t.nav.nada}</p>
-              <p className="mt-1.5 text-[13px] leading-6 text-deep">{ar ? "«غرفتك ضوءها خفيف وعندك قطة؟ عندي لك خيارات آمنة.»" : "“Dim room and a cat? I have safe picks for you.”"}</p>
-            </div>
-            <div className="glass absolute -end-1 bottom-[22%] animate-float-slow rounded-2xl p-3 shadow-[var(--shadow-card)] ring-1 ring-white sm:-end-6">
-              <p className="flex items-center gap-2 text-xs font-semibold text-deep"><span className="grid size-8 place-items-center rounded-xl bg-soft"><Droplets className="size-4 text-saudi" /></span>
-                <span>{ar ? "تذكير العناية" : "Care check"}<span className="block text-[11px] font-normal text-muted">{ar ? "افحص التربة قبل الري" : "Check soil before watering"}</span></span>
-              </p>
-            </div>
-            <span className="absolute -top-3 end-[8%] animate-pop rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-saudi shadow-[var(--shadow-card)]"><PawPrint className="me-1 inline size-3.5" />ASPCA</span>
-            <DewCluster className="absolute -top-6 start-[22%] hidden sm:block" />
-          </div>
-        </div>
-      </section>
+      {/* ══════════════════ HERO — MY LIVING GARDEN ══════════════════ */}
+      <Garden variant="hero" plants={gardenPlants} sample={sample} addHref={addHref} initialId={sp.plant ?? null} intro={intro} />
 
       {/* ══════════════════ PROMISES MARQUEE ══════════════════ */}
       <section className="overflow-hidden py-8" aria-label={ar ? "وعود الندى" : "Our promises"}>
@@ -248,43 +266,6 @@ export default async function Home() {
         <div className="container-x">
           <Reveal><SectionHeading eyebrow={ar ? "مناخنا" : "OUR CLIMATE"} title={t.home.saudi} lead={t.home.saudiBody} href="/categories/low-maintenance" linkLabel={t.home.viewAll} locale={locale} /></Reveal>
           <Reveal><ProductGrid products={saudi.map(card)} row /></Reveal>
-        </div>
-      </section>
-
-      {/* ══════════════════ MY GREEN SPACE TEASER ══════════════════ */}
-      <section className="py-10">
-        <div className="container-x">
-          <div className="relative overflow-hidden rounded-[2.5rem] bg-cream px-5 py-12 ring-1 ring-[#ece4cf] sm:px-10 lg:py-16">
-            <Blob variant={3} className="absolute -start-28 -bottom-28 size-[26rem] text-white/80" />
-            <div className="relative grid items-center gap-10 lg:grid-cols-[1fr_1.15fr]">
-              <Reveal>
-                <p className="mb-3 text-xs font-bold tracking-[0.18em] text-leaf">{ar ? "حديقتك الرقمية" : "YOUR DIGITAL GREENHOUSE"}</p>
-                <h2 className="section-title">{t.home.spaceTitle}</h2>
-                <p className="lead mt-4 max-w-md">{t.home.spaceBody}</p>
-                <ul className="mt-6 space-y-3 text-sm text-deep">
-                  {(ar ? ["كل نبتة لها صفحتها: اسمها، مكانها، وسجل عنايتها", "تذكير بفحص التربة حسب سجلاتك", "اسأل ندى عن نبتتك باسمها"] : ["Every plant gets its own profile: nickname, spot and care log", "Soil-check reminders based on your records", "Ask Nada about your plant by name"]).map((x) => (
-                    <li key={x} className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-saudi text-white"><BadgeCheck className="size-3.5" /></span>{x}</li>
-                  ))}
-                </ul>
-                <Link href="/my-green-space" className="btn-primary mt-8 px-6 py-3">{t.nav.space}<Arrow className="size-4" /></Link>
-              </Reveal>
-              <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                {greenhouse.map((p, i) => (
-                  <Reveal key={p.id} delay={i * 110} className={i === 1 ? "translate-y-6" : ""}>
-                    <div className="group rounded-[1.75rem] bg-white p-2 shadow-[var(--shadow-card)]">
-                      <PlantBox id={p.id + "home"} image={p.image?.thumb_url ?? null} alt={ar ? p.name_ar : p.name_en} size="sm" />
-                      <div className="px-1.5 pb-1.5 pt-2.5">
-                        <p className="truncate text-xs font-bold text-forest sm:text-sm">{ar ? ["لولو", "زيزي", "روزي"][i] : ["Lulu", "Zizi", "Rosie"][i]}</p>
-                        <p className="truncate text-[10px] text-muted sm:text-[11px]">{ar ? p.name_ar : p.name_en}</p>
-                        <p className="mt-1.5 flex items-center gap-1 text-[10px] text-saudi"><Droplets className="size-3" />{ar ? ["سُقيت اليوم", "قبل ٣ أيام", "افحص التربة"][i] : ["Watered today", "3 days ago", "Check soil"][i]}</p>
-                      </div>
-                    </div>
-                  </Reveal>
-                ))}
-                <p className="col-span-3 mt-6 text-center text-[11px] text-muted">{ar ? "مثال توضيحي لشكل مساحتك الخضراء" : "Illustrative example of your Green Space"}</p>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 

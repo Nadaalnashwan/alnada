@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle, CalendarClock, Camera, Check, ChevronLeft, ChevronRight, ClipboardList, Droplets, ExternalLink, Gauge, Info, MapPin,
-  MessageCircle, NotebookPen, Sparkles, Sprout, Store, Sun, Thermometer, Waves,
+  MessageCircle, NotebookPen, Plus, Sparkles, Sprout, Store, Sun, Thermometer, Waves, X,
 } from "lucide-react";
 import { Leaf } from "@/components/brand/Decor";
 import { useT } from "@/components/layout/Providers";
@@ -67,33 +67,54 @@ export function gardenStatusLabel(s: GardenStatus, ar: boolean) {
 
 /* ─────────────────────────────── garden ─────────────────────────────── */
 
-export function Garden({ plants, initialId }: { plants: GardenPlant[]; initialId?: string | null }) {
+export interface GardenProps {
+  plants: GardenPlant[];
+  initialId?: string | null;
+  /** "hero" renders the garden as the homepage's first screen, with `intro` beside the shelf and details collapsed until a plant is picked. */
+  variant?: "page" | "hero";
+  intro?: React.ReactNode;
+  /** Sample plants from the public catalogue (visitors / empty gardens): read-only, no records, never another customer's plants. */
+  sample?: boolean;
+  addHref?: string;
+}
+
+export function Garden({ plants, initialId, variant = "page", intro, sample = false, addHref = "/my-green-space/add" }: GardenProps) {
   const { locale } = useT();
   const ar = locale === "ar";
+  const hero = variant === "hero";
   const router = useRouter();
-  const [selectedId, setSelectedId] = useState<string | null>(() => (initialId && plants.some((p) => p.id === initialId) ? initialId : defaultPick(plants)));
+  const valid = (id: string | null | undefined) => (id && plants.some((p) => p.id === id) ? id : null);
+  const [selectedId, setSelectedId] = useState<string | null>(() => valid(initialId) ?? (hero ? null : defaultPick(plants)));
   const [wateringId, setWateringId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const shelfRef = useRef<HTMLUListElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
+  const lastShown = useRef<GardenPlant | null>(null);
   const [canScroll, setCanScroll] = useState({ start: false, end: false });
 
   // Keep the selection valid when the server data refreshes (e.g. after removing a plant).
   useEffect(() => {
-    if (!plants.some((p) => p.id === selectedId)) setSelectedId(defaultPick(plants));
-  }, [plants, selectedId]);
+    if (selectedId ? !plants.some((p) => p.id === selectedId) : !hero && plants.length > 0) setSelectedId(hero ? null : defaultPick(plants));
+  }, [plants, selectedId, hero]);
 
   const selected = useMemo(() => plants.find((p) => p.id === selectedId) ?? null, [plants, selectedId]);
+  if (selected) lastShown.current = selected;
+  const shown = selected ?? lastShown.current; // keeps content in place while the panel collapses
 
-  const select = (id: string) => {
-    setSelectedId(id);
+  const select = (id: string | null) => {
+    const next = hero && id === selectedId ? null : id; // in the hero, tapping the open plant folds its details away
+    setSelectedId(next);
     const url = new URL(window.location.href);
-    url.searchParams.set("plant", id);
+    if (next) url.searchParams.set("plant", next);
+    else url.searchParams.delete("plant");
     window.history.replaceState(null, "", url);
-    // On small screens bring the details into view without hiding the whole garden.
+    if (!next) return;
+    // Bring the details into view while keeping part of the garden visible above them.
     requestAnimationFrame(() => {
       const el = detailsRef.current;
-      if (el && el.getBoundingClientRect().top > window.innerHeight * 0.8) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (!el) return;
+      const top = el.getBoundingClientRect().top;
+      if (top > window.innerHeight * 0.8) window.scrollBy({ top: top - window.innerHeight * 0.4, behavior: "smooth" });
     });
   };
 
@@ -129,50 +150,72 @@ export function Garden({ plants, initialId }: { plants: GardenPlant[]; initialId
     setTimeout(() => setToast(null), 2600);
   };
 
+  const sampleLabel = ar ? "نبتة نموذجية" : "Sample plant";
+  const shelf = (
+    <div className="relative min-w-0">
+      {/* shelf scroll controls (only when the shelf overflows) */}
+      {(canScroll.start || canScroll.end) && (
+        <div className={`absolute end-0 z-30 hidden gap-1.5 sm:flex ${hero ? "-top-1" : "top-0"}`}>
+          <button type="button" onClick={() => scrollBy(-1)} disabled={!canScroll.start} className="grid size-9 place-items-center rounded-full bg-white/90 text-deep shadow-sm transition hover:bg-white disabled:opacity-40" aria-label={ar ? "السابق" : "Previous"}><ChevronRight className="size-4 ltr:rotate-180" /></button>
+          <button type="button" onClick={() => scrollBy(1)} disabled={!canScroll.end} className="grid size-9 place-items-center rounded-full bg-white/90 text-deep shadow-sm transition hover:bg-white disabled:opacity-40" aria-label={ar ? "التالي" : "Next"}><ChevronLeft className="size-4 ltr:rotate-180" /></button>
+        </div>
+      )}
+      <div className="relative">
+        <ul ref={shelfRef} onScroll={updateScroll}
+          className={`relative z-10 flex snap-x snap-mandatory items-end gap-1 overflow-x-auto pb-1 [scrollbar-width:none] sm:gap-5 [&::-webkit-scrollbar]:hidden ${hero
+            ? "px-2 pt-2 [--plant-scale:0.8] sm:px-4 sm:pt-12 sm:[--plant-scale:1] lg:[--plant-scale:1.12] xl:[--plant-scale:1.28]"
+            : "px-4 pt-8 [--plant-scale:0.78] sm:px-10 sm:pt-12 sm:[--plant-scale:1]"}`}
+          aria-label={sample ? (ar ? "نباتات نموذجية" : "Sample plants") : ar ? "نباتاتي" : "My plants"}>
+          {plants.map((p, i) => (
+            <PottedPlant key={p.id} index={i} id={p.id} image={p.image} label={p.nickname ?? p.speciesName}
+              sublabel={sample ? sampleLabel : p.nickname ? p.speciesName : (p.location ?? "")}
+              habit={p.habit} size={p.size} status={p.status} statusLabel={sample ? sampleLabel : gardenStatusLabel(p.status, ar)}
+              selected={p.id === selectedId} watering={p.id === wateringId} onSelect={() => select(p.id)} />
+          ))}
+          <AddPlantPot href={addHref} label={sample ? (ar ? "ازرع نبتتك" : "Plant yours") : ar ? "أضف نبتة" : "Add a plant"}
+            hint={sample ? (ar ? "ابدأ مساحتك الخضراء" : "Start your Green Space") : ar ? "ازرع نبتة جديدة" : "Plant a new one"} />
+          <li aria-hidden className="w-2 shrink-0" />
+        </ul>
+        {/* soft edge fades hint that the shelf scrolls; opaque at the outer edge: RTL start = right, end = left */}
+        {canScroll.start && <span aria-hidden className="pointer-events-none absolute inset-y-0 start-0 z-20 w-10 bg-gradient-to-r from-transparent to-[#f6f2e8]/90 ltr:bg-gradient-to-l" />}
+        {canScroll.end && <span aria-hidden className="pointer-events-none absolute inset-y-0 end-0 z-20 w-10 bg-gradient-to-l from-transparent to-[#f6f2e8]/90 ltr:bg-gradient-to-r" />}
+        {/* the shelf the pots stand on */}
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-[4.2rem] z-0 h-0">
+          <div className="mx-3 h-4 rounded-full bg-gradient-to-b from-[#e8d9b9] to-[#d2bd94] shadow-[0_14px_22px_-10px_rgb(91_70_40/0.45)] sm:mx-6" />
+          <div className="mx-6 h-2 rounded-b-full bg-[#c4ad82]/70 sm:mx-9" />
+        </div>
+      </div>
+      <p className={`relative z-10 pb-5 pt-2 text-center text-[11px] text-muted ${hero ? "px-2" : "px-6 sm:px-10"}`}>
+        {sample
+          ? (ar ? "نباتات نموذجية من متجرنا — اضغط على أي نبتة لتتعرف على عنايتها" : "Sample plants from our store — tap any plant to see its care")
+          : ar ? "اضغط على أي نبتة لعرض تفاصيلها وسجل عنايتها" : "Tap any plant to see its details and care history"}
+      </p>
+    </div>
+  );
+
   return (
     <div>
       {/* The shared garden wall + shelf */}
-      <section aria-label={ar ? "حديقتي" : "My garden"} className="relative overflow-hidden rounded-[2.5rem] bg-[linear-gradient(180deg,#fbf8f1_0%,#f6f3ea_55%,#efe9db_100%)] ring-1 ring-[#ebe2cc]">
+      <section aria-label={sample ? (ar ? "حديقة نموذجية" : "Sample garden") : ar ? "حديقتي" : "My garden"}
+        className={`relative overflow-clip bg-[linear-gradient(180deg,#fbf8f1_0%,#f6f3ea_55%,#efe9db_100%)] ${hero
+          ? "-mt-[5.25rem] rounded-b-[2.5rem] pt-[5.25rem] sm:rounded-b-[3.5rem]"
+          : "rounded-[2.5rem] ring-1 ring-[#ebe2cc]"}`}>
         {/* window light & leaf shadows */}
         <span aria-hidden className="pointer-events-none absolute -top-24 start-[8%] h-80 w-[26rem] rotate-[-14deg] rounded-[3rem] bg-gradient-to-b from-white/90 to-transparent blur-2xl" />
         <span aria-hidden className="pointer-events-none absolute -top-10 end-[12%] h-64 w-40 rotate-12 rounded-[2rem] bg-white/50 blur-xl" />
+        {hero && <span aria-hidden className="pointer-events-none absolute -end-32 top-10 size-[30rem] rounded-full bg-[radial-gradient(closest-side,rgb(255_214_120/0.28),transparent)]" />}
         <Leaf className="pointer-events-none absolute end-[6%] top-4 h-40 w-20 rotate-[24deg] text-saudi/[0.05] blur-[1px]" />
         <Leaf className="pointer-events-none absolute end-[14%] top-14 h-28 w-14 -rotate-[18deg] text-saudi/[0.04] blur-[1px]" />
         <Leaf className="pointer-events-none absolute start-[30%] -top-6 h-32 w-16 rotate-[160deg] text-saudi/[0.04] blur-[1px]" />
 
-        {/* shelf scroll controls (only when the shelf overflows) */}
-        {(canScroll.start || canScroll.end) && (
-          <div className="absolute end-4 top-4 z-20 hidden gap-1.5 sm:flex">
-            <button type="button" onClick={() => scrollBy(-1)} disabled={!canScroll.start} className="grid size-9 place-items-center rounded-full bg-white/90 text-deep shadow-sm transition hover:bg-white disabled:opacity-40" aria-label={ar ? "السابق" : "Previous"}><ChevronRight className="size-4 ltr:rotate-180" /></button>
-            <button type="button" onClick={() => scrollBy(1)} disabled={!canScroll.end} className="grid size-9 place-items-center rounded-full bg-white/90 text-deep shadow-sm transition hover:bg-white disabled:opacity-40" aria-label={ar ? "التالي" : "Next"}><ChevronLeft className="size-4 ltr:rotate-180" /></button>
+        {hero ? (
+          <div className="container-x relative grid items-center gap-0 pt-4 sm:pt-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.55fr)] lg:gap-6 lg:pb-6 lg:pt-10">
+            <div className="relative z-10">{intro}</div>
+            {shelf}
           </div>
+        ) : (
+          <div className="relative pt-0">{shelf}</div>
         )}
-
-        <div className="relative">
-          <ul ref={shelfRef} onScroll={updateScroll}
-            className="relative z-10 flex snap-x snap-mandatory items-end gap-1 overflow-x-auto px-4 pb-1 pt-8 [--plant-scale:0.78] sm:[--plant-scale:1] [scrollbar-width:none] sm:gap-5 sm:px-10 sm:pt-12 [&::-webkit-scrollbar]:hidden"
-            aria-label={ar ? "نباتاتي" : "My plants"}>
-            {plants.map((p, i) => (
-              <PottedPlant key={p.id} index={i} id={p.id} image={p.image} label={p.nickname ?? p.speciesName} sublabel={p.nickname ? p.speciesName : (p.location ?? "")}
-                habit={p.habit} size={p.size} status={p.status} statusLabel={gardenStatusLabel(p.status, ar)}
-                selected={p.id === selectedId} watering={p.id === wateringId} onSelect={() => select(p.id)} />
-            ))}
-            <AddPlantPot href="/my-green-space/add" label={ar ? "أضف نبتة" : "Add a plant"} hint={ar ? "ازرع نبتة جديدة" : "Plant a new one"} />
-            <li aria-hidden className="w-2 shrink-0" />
-          </ul>
-          {/* soft edge fades hint that the shelf scrolls */}
-          {/* fades are opaque at the outer edge: RTL start = right, end = left */}
-          {canScroll.start && <span aria-hidden className="pointer-events-none absolute inset-y-0 start-0 z-20 w-10 bg-gradient-to-r from-transparent to-[#f6f2e8]/90 ltr:bg-gradient-to-l" />}
-          {canScroll.end && <span aria-hidden className="pointer-events-none absolute inset-y-0 end-0 z-20 w-10 bg-gradient-to-l from-transparent to-[#f6f2e8]/90 ltr:bg-gradient-to-r" />}
-          {/* the shelf the pots stand on */}
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-[4.2rem] z-0 h-0">
-            <div className="mx-3 h-4 rounded-full bg-gradient-to-b from-[#e8d9b9] to-[#d2bd94] shadow-[0_14px_22px_-10px_rgb(91_70_40/0.45)] sm:mx-6" />
-            <div className="mx-6 h-2 rounded-b-full bg-[#c4ad82]/70 sm:mx-9" />
-          </div>
-        </div>
-        <p className="relative z-10 px-6 pb-5 pt-2 text-center text-[11px] text-muted sm:px-10">
-          {ar ? "اضغط على أي نبتة لعرض تفاصيلها وسجل عنايتها" : "Tap any plant to see its details and care history"}
-        </p>
       </section>
 
       {/* toast */}
@@ -180,9 +223,22 @@ export function Garden({ plants, initialId }: { plants: GardenPlant[]; initialId
         {toast && <p className="animate-pop rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-lift)]">{toast}</p>}
       </div>
 
-      {/* Details of the selected plant */}
-      <div ref={detailsRef} id="plant-details" className="scroll-mt-28">
-        {selected && <PlantDetails key={selected.id} p={selected} onWater={() => waterNow(selected.id)} watering={wateringId === selected.id} />}
+      {/* Details of the selected plant — in the hero they unfold below the garden only once a plant is picked */}
+      <div ref={detailsRef} id="plant-details" className={`scroll-mt-28 ${hero ? "container-x" : ""}`}>
+        {hero ? (
+          <div className={`grid transition-[grid-template-rows,opacity] duration-500 ease-[var(--ease-organic)] ${selected ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`} aria-hidden={!selected}>
+            <div className="min-h-0 overflow-hidden" inert={!selected}>
+              {shown && (
+                <div className="relative pb-2">
+                  <button type="button" onClick={() => select(null)} className="absolute end-4 top-10 z-20 grid size-9 place-items-center rounded-full bg-white/90 text-deep shadow-sm ring-1 ring-saudi/10 transition hover:bg-white sm:end-6 sm:top-12" aria-label={ar ? "إغلاق التفاصيل" : "Close details"}><X className="size-4" /></button>
+                  {sample ? <SampleDetails key={shown.id} p={shown} addHref={addHref} /> : <PlantDetails key={shown.id} p={shown} onWater={() => waterNow(shown.id)} watering={wateringId === shown.id} />}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          selected && (sample ? <SampleDetails key={selected.id} p={selected} addHref={addHref} /> : <PlantDetails key={selected.id} p={selected} onWater={() => waterNow(selected.id)} watering={wateringId === selected.id} />)
+        )}
       </div>
     </div>
   );
@@ -363,6 +419,66 @@ function PlantDetails({ p, onWater, watering }: { p: GardenPlant; onWater: () =>
               {p.productSlug && <Link href={`/products/${p.productSlug}`} className="inline-flex items-center gap-1 font-semibold text-saudi hover:underline"><Store className="size-3.5" />{t.product.care}</Link>}
             </div>
           </div>
+        </section>
+      </div>
+    </article>
+  );
+}
+
+/* ─────────────────────────── sample details ─────────────────────────── */
+
+/** Read-only care card for a sample plant: catalogue data only, plus what the visitor unlocks with their own garden. */
+function SampleDetails({ p, addHref }: { p: GardenPlant; addHref: string }) {
+  const { t, locale } = useT();
+  const ar = locale === "ar";
+  const unlocks = ar
+    ? [{ i: Droplets, l: "سجل الري بضغطة" }, { i: CalendarClock, l: "تذكير بفحص التربة حسب سجلاتك" }, { i: NotebookPen, l: "ملاحظات وصور نبتتك" }, { i: Sparkles, l: "اسأل ندى عن نبتتك باسمها" }]
+    : [{ i: Droplets, l: "One-tap watering log" }, { i: CalendarClock, l: "Soil-check reminders from your records" }, { i: NotebookPen, l: "Notes and photos of your plant" }, { i: Sparkles, l: "Ask Nada about your plant by name" }];
+
+  return (
+    <article className="relative mt-6 animate-settle overflow-hidden rounded-[2.5rem] bg-white shadow-[var(--shadow-lift)] ring-1 ring-saudi/[0.08]" aria-label={p.speciesName}>
+      <header className="relative grid gap-6 bg-botanical p-5 sm:grid-cols-[auto_1fr] sm:p-8">
+        <Leaf className="pointer-events-none absolute end-6 top-4 h-32 w-16 rotate-12 text-saudi/[0.06]" />
+        <div className="relative mx-auto aspect-[4/5] w-40 overflow-hidden arch bg-soft shadow-[var(--shadow-lift)] ring-[5px] ring-white sm:mx-0 sm:w-44">
+          <PlantImage src={p.image} alt={p.speciesName} sizes="176px" />
+        </div>
+        <div className="relative min-w-0">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-bold text-saudi"><Info className="size-3.5" />{ar ? "نبتة نموذجية من متجرنا — ليست من حديقة أحد" : "A sample plant from our store — not from anyone's garden"}</span>
+          <h2 className="mt-3 text-3xl font-bold text-forest sm:text-4xl">{p.speciesName}</h2>
+          {p.scientific && <p className="mt-1 text-muted"><bdi className="italic">{p.scientific}</bdi></p>}
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Link href={addHref} className="btn-primary px-5 py-3"><Sprout className="size-5" />{ar ? "أنشئ مساحتك الخضراء" : "Create your Green Space"}</Link>
+            {p.productSlug && <Link href={`/products/${p.productSlug}`} className="btn-outline px-5 py-3"><Store className="size-4" />{ar ? "شوفها في المتجر" : "View in store"}</Link>}
+            <Link href="/nada-ai" className="btn-light px-4 py-3 ring-1 ring-saudi/10"><MessageCircle className="size-4" />{t.product.askNada}</Link>
+          </div>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-3 sm:px-8 lg:grid-cols-5">
+        <Stat icon={Sun} label={ar ? "الإضاءة المطلوبة" : "Light it needs"} value={p.needsLight.join(ar ? "، " : ", ") || "—"} />
+        <Stat icon={Gauge} label={t.product.water} value={p.waterNeed ?? "—"} />
+        <Stat icon={Waves} label={t.product.humidity} value={p.humidity ?? "—"} />
+        <Stat icon={Thermometer} label={t.product.temperature} value={p.temp ?? "—"} />
+        <Stat icon={Sprout} label={t.product.difficulty} value={p.difficulty ?? "—"} />
+      </div>
+
+      <div className="grid gap-5 px-5 pb-6 sm:px-8 lg:grid-cols-[1.1fr_1fr]">
+        <section className="rounded-[1.75rem] bg-mist/70 p-5 ring-1 ring-saudi/[0.06]">
+          <h3 className="flex items-center gap-2 font-bold text-forest"><ClipboardList className="size-4 text-saudi" />{t.product.tips}</h3>
+          <ul className="mt-3 space-y-2 text-sm leading-6 text-ink">{p.tips.map((x) => <li key={x} className="flex gap-2"><Check className="mt-1 size-4 shrink-0 text-saudi" />{x}</li>)}</ul>
+          {p.problems.length > 0 && (
+            <div className="mt-4 rounded-2xl bg-white p-3.5">
+              <p className="flex items-center gap-1.5 text-xs font-bold text-warn"><AlertTriangle className="size-3.5" />{t.product.problems}</p>
+              <ul className="mt-1.5 space-y-1 text-xs leading-5 text-muted">{p.problems.map((x) => <li key={x}>• {x}</li>)}</ul>
+            </div>
+          )}
+        </section>
+        <section className="rounded-[1.75rem] bg-cream p-5 ring-1 ring-[#ebe2cc]">
+          <h3 className="flex items-center gap-2 font-bold text-forest"><Sprout className="size-4 text-saudi" />{ar ? "في مساحتك الخضراء تقدر:" : "In your own Green Space you can:"}</h3>
+          <ul className="mt-3 space-y-2.5 text-sm text-deep">
+            {unlocks.map(({ i: I, l }) => <li key={l} className="flex items-center gap-3"><span className="grid size-8 shrink-0 place-items-center rounded-xl bg-white text-saudi shadow-sm"><I className="size-4" /></span>{l}</li>)}
+          </ul>
+          <Link href={addHref} className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-saudi hover:underline"><Plus className="size-4" />{ar ? "ابدأ بأول نبتة" : "Start with your first plant"}</Link>
         </section>
       </div>
     </article>
