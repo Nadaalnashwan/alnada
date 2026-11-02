@@ -1,0 +1,452 @@
+{
+  "monstera-deliciosa": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "monstera deliciosa",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "monstera-adansonii": {
+    "cats": "unknown",
+    "dogs": "unknown",
+    "source": null,
+    "source_url": null,
+    "matched_name": null,
+    "match_level": null,
+    "verified_at": null
+  },
+  "epipremnum-aureum": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "epipremnum aureum",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "dracaena-trifasciata": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "sansevieria trifasciata",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "zamioculcas-zamiifolia": {
+    "cats": "unknown",
+    "dogs": "unknown",
+    "source": null,
+    "source_url": null,
+    "matched_name": null,
+    "match_level": null,
+    "verified_at": null
+  },
+  "chlorophytum-comosum": {
+    "cats": "non_toxic",
+    "dogs": "non_toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "chlorophytum comosum",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "spathiphyllum-wallisii": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "spathiphyllum",
+    "match_level": "genus",
+    "verified_at": "2026-11-02"
+  },
+  "ficus-elastica": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "ficus",
+    "match_level": "genus",
+    "verified_at": "2026-11-02"
+  },
+  "ficus-lyrata": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "ficus",
+    "match_level": "genus",
+    "verified_at": "2026-11-02"
+  },
+  "chamaedorea-elegans": {
+    "cats": "non_toxic",
+    "dogs": "non_toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "chamaedorea elegans",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "peperomia-obtusifolia": {
+    "cats": "non_toxic",
+    "dogs": "non_toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "peperomia obtusifolia",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "pilea-peperomioides": {
+    "cats": "unknown",
+    "dogs": "unknown",
+    "source": null,
+    "source_url": null,
+    "matched_name": null,
+    "match_level": null,
+    "verified_at": null
+  },
+  "maranta-leuconeura": {
+    "cats": "unknown",
+    "dogs": "unknown",
+    "source": null,
+    "source_url": null,
+    "matched_name": null,
+    "match_level": null,
+    "verified_at": null
+  },
+  "goeppertia-orbifolia": {
+    "cats": "non_toxic",
+    "dogs": "non_toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "calathea",
+    "match_level": "genus",
+    "verified_at": "2026-11-02"
+  },
+  "aloe-vera": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "aloe vera",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "haworthiopsis-attenuata": {
+    "cats": "non_toxic",
+    "dogs": "non_toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "haworthia fasciata",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "echeveria-elegans": {
+    "cats": "non_toxic",
+    "dogs": "non_toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "echeveria elegans",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "crassula-ovata": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "crassula argentea",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "beaucarnea-recurvata": {
+    "cats": "non_toxic",
+    "dogs": "non_toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "beaucarnea recurvata",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "bougainvillea-glabra": {
+    "cats": "unknown",
+    "dogs": "unknown",
+    "source": null,
+    "source_url": null,
+    "matched_name": null,
+    "match_level": null,
+    "verified_at": null
+  },
+  "salvia-rosmarinus": {
+    "cats": "non_toxic",
+    "dogs": "non_toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "rosmarinus officinalis",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "ocimum-basilicum": {
+    "cats": "non_toxic",
+    "dogs": "non_toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "ocimum basilicum",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "mentha-spicata": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "mentha",
+    "match_level": "genus",
+    "verified_at": "2026-11-02"
+  },
+  "aglaonema-commutatum": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "aglaonema modestum",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "philodendron-hederaceum": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "philodendron hederaceum",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "dypsis-lutescens": {
+    "cats": "non_toxic",
+    "dogs": "non_toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "dypsis lutescens",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "strelitzia-reginae": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "strelitzia reginae",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "hoya-carnosa": {
+    "cats": "non_toxic",
+    "dogs": "non_toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "hoya carnosa",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "nephrolepis-exaltata": {
+    "cats": "non_toxic",
+    "dogs": "non_toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "nephrolepis exaltata",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "jasminum-sambac": {
+    "cats": "non_toxic",
+    "dogs": "non_toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "jasminum",
+    "match_level": "genus",
+    "verified_at": "2026-11-02"
+  },
+  "lavandula-angustifolia": {
+    "cats": "unknown",
+    "dogs": "unknown",
+    "source": null,
+    "source_url": null,
+    "matched_name": null,
+    "match_level": null,
+    "verified_at": null
+  },
+  "catharanthus-roseus": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "vinca rosea",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "nerium-oleander": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "nerium oleander",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "phoenix-roebelenii": {
+    "cats": "non_toxic",
+    "dogs": "non_toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "phoenix robellinii",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "ixora-coccinea": {
+    "cats": "non_toxic",
+    "dogs": "non_toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "ixora coccinea",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "portulaca-grandiflora": {
+    "cats": "unknown",
+    "dogs": "unknown",
+    "source": null,
+    "source_url": null,
+    "matched_name": null,
+    "match_level": null,
+    "verified_at": null
+  },
+  "echinocactus-grusonii": {
+    "cats": "unknown",
+    "dogs": "unknown",
+    "source": null,
+    "source_url": null,
+    "matched_name": null,
+    "match_level": null,
+    "verified_at": null
+  },
+  "curio-rowleyanus": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "senecio",
+    "match_level": "genus",
+    "verified_at": "2026-11-02"
+  },
+  "tradescantia-zebrina": {
+    "cats": "unknown",
+    "dogs": "unknown",
+    "source": null,
+    "source_url": null,
+    "matched_name": null,
+    "match_level": null,
+    "verified_at": null
+  },
+  "phalaenopsis-hybrid": {
+    "cats": "non_toxic",
+    "dogs": "non_toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "phalaenopsis",
+    "match_level": "genus",
+    "verified_at": "2026-11-02"
+  },
+  "anthurium-andraeanum": {
+    "cats": "unknown",
+    "dogs": "unknown",
+    "source": null,
+    "source_url": null,
+    "matched_name": null,
+    "match_level": null,
+    "verified_at": null
+  },
+  "dracaena-marginata": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "dracaena marginata",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "pelargonium-graveolens": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "pelargonium",
+    "match_level": "genus",
+    "verified_at": "2026-11-02"
+  },
+  "hedera-helix": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "hedera helix",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "kalanchoe-blossfeldiana": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "kalanchoe",
+    "match_level": "genus",
+    "verified_at": "2026-11-02"
+  },
+  "gardenia-jasminoides": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "gardenia jasminoides",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "adenium-obesum": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "adenium obesum",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "ficus-benjamina": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "ficus benjamina",
+    "match_level": "species",
+    "verified_at": "2026-11-02"
+  },
+  "schefflera-arboricola": {
+    "cats": "toxic",
+    "dogs": "toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "schefflera",
+    "match_level": "genus",
+    "verified_at": "2026-11-02"
+  },
+  "calathea-makoyana": {
+    "cats": "non_toxic",
+    "dogs": "non_toxic",
+    "source": "ASPCA Toxic and Non-Toxic Plant List",
+    "source_url": "https://www.aspca.org/pet-care/animal-poison-control/toxic-and-non-toxic-plants",
+    "matched_name": "calathea",
+    "match_level": "genus",
+    "verified_at": "2026-11-02"
+  }
+}
