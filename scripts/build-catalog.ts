@@ -19,7 +19,7 @@ import type { Category, ImageInfo, PetToxicity, Product, Species } from "../lib/
 const readJson = (p: string) => (existsSync(p) ? JSON.parse(readFileSync(p, "utf8")) : {});
 const toxicity: Record<string, PetToxicity> = readJson("data/generated/toxicity.json");
 const images: Record<string, ImageInfo | null> = readJson("data/generated/images.json");
-const perenual: Record<string, { id: number; image?: ImageInfo | null }> = readJson("data/generated/perenual.json");
+const perenual: Record<string, { id: number; image?: ImageInfo | null; details?: Record<string, unknown> | null; description_ar?: string | null }> = readJson("data/generated/perenual.json");
 
 function uuidFromSku(sku: string) {
   const h = createHash("sha1").update(`alnada:product:${sku}`).digest("hex");
@@ -147,11 +147,12 @@ const sql: string[] = [
   "insert into public.plant_species (slug, scientific_name, family, name_en, name_ar, description_en, description_ar, light, water, humidity,",
   "  temp_min_c, temp_max_c, placement, difficulty, size, habit, heat_tolerant, flowering, aromatic, succulent, tips_en, tips_ar,",
   "  problems_en, problems_ar, perenual_id, botanical_references, toxicity_cats, toxicity_dogs, toxicity_source, toxicity_source_url,",
-  "  toxicity_matched_name, toxicity_verified_at, image, last_verified_at) values",
+  "  toxicity_matched_name, toxicity_verified_at, image, last_verified_at, perenual_data) values",
   species.map((s) => row([s.slug, s.scientific_name, s.family, s.name_en, s.name_ar, s.description_en, s.description_ar, s.light, s.water, s.humidity,
     s.temp_min_c, s.temp_max_c, s.placement, s.difficulty, s.size, s.habit, s.heat_tolerant, s.flowering, s.aromatic, s.succulent, s.tips_en, s.tips_ar,
     s.problems_en, s.problems_ar, s.perenual_id, s.references, s.toxicity.cats, s.toxicity.dogs, s.toxicity.source, s.toxicity.source_url,
-    s.toxicity.matched_name, s.toxicity.verified_at, s.image, new Date().toISOString().slice(0, 10)])).join(",\n"),
+    s.toxicity.matched_name, s.toxicity.verified_at, s.image, new Date().toISOString().slice(0, 10),
+    perenual[s.slug]?.details ? { ...perenual[s.slug].details, description_ar: perenual[s.slug].description_ar ?? null } : null])).join(",\n"),
   "on conflict (slug) do update set scientific_name = excluded.scientific_name, family = excluded.family, name_en = excluded.name_en,",
   "  name_ar = excluded.name_ar, description_en = excluded.description_en, description_ar = excluded.description_ar, light = excluded.light,",
   "  water = excluded.water, humidity = excluded.humidity, temp_min_c = excluded.temp_min_c, temp_max_c = excluded.temp_max_c,",
@@ -161,7 +162,8 @@ const sql: string[] = [
   "  perenual_id = coalesce(excluded.perenual_id, plant_species.perenual_id), botanical_references = excluded.botanical_references,",
   "  toxicity_cats = excluded.toxicity_cats, toxicity_dogs = excluded.toxicity_dogs, toxicity_source = excluded.toxicity_source,",
   "  toxicity_source_url = excluded.toxicity_source_url, toxicity_matched_name = excluded.toxicity_matched_name,",
-  "  toxicity_verified_at = excluded.toxicity_verified_at, image = excluded.image, last_verified_at = excluded.last_verified_at;",
+  "  toxicity_verified_at = excluded.toxicity_verified_at, image = excluded.image, last_verified_at = excluded.last_verified_at,",
+  "  perenual_data = coalesce(excluded.perenual_data, plant_species.perenual_data);",
   "",
   "insert into public.products (id, sku, slug, kind, species_id, name_en, name_ar, description_en, description_ar, variant_en, variant_ar,",
   "  price_sar, compare_at_sar, stock, is_active, is_featured, is_best_seller, is_new, image) values",
