@@ -89,27 +89,14 @@ export default async function Home() {
         <Leaf className="absolute start-[46%] top-28 hidden h-28 w-14 origin-bottom animate-sway text-sprout/40 lg:block" />
         <div className="container-x relative grid items-center gap-12 pb-16 pt-8 lg:grid-cols-[1.05fr_1fr] lg:pb-24 lg:pt-12">
           <div>
-            <p className="eyebrow animate-rise"><DewDrop className="h-4 w-3.5" />{ar ? "متجر نباتات ذكي · ندى AI مدعومة بـ Meta Llama" : "A smart plant store · Nada AI powered by Meta Llama"}</p>
-            <h1 className="display mt-6 animate-rise [animation-delay:80ms]">
+            <h1 className="display animate-rise">
               {ar ? <>حياة خضراء <span className="relative inline-block bg-gradient-to-l from-leaf to-saudi bg-clip-text text-transparent">تبدأ بقطرة</span></> : <>A greener life <span className="bg-gradient-to-r from-leaf to-saudi bg-clip-text text-transparent">begins with a drop</span></>}
             </h1>
-            <p className="lead mt-6 max-w-xl animate-rise [animation-delay:160ms]">{t.hero.body}</p>
-            <div className="mt-9 flex animate-rise flex-wrap gap-3 [animation-delay:240ms]">
+            <p className="lead mt-6 max-w-xl animate-rise [animation-delay:90ms]">{t.hero.body}</p>
+            <div className="mt-9 flex animate-rise flex-wrap gap-3 [animation-delay:180ms]">
               <Link href="/nada-ai" className="btn-primary px-7 py-3.5 text-base"><span className="shine animate-shimmer" /><MessageCircle className="size-5" />{t.hero.ctaAi}</Link>
               <Link href="/shop" className="btn-outline px-7 py-3.5 text-base">{t.hero.ctaShop}<Arrow className="size-4" /></Link>
             </div>
-            <dl className="mt-11 grid max-w-lg animate-rise grid-cols-3 gap-3 [animation-delay:320ms]">
-              {[
-                { v: new Set(plants.map((p) => p.species_slug)).size, l: ar ? "نوع نباتي موثق" : "verified species" },
-                { v: categories.length, l: ar ? "قسمًا منسقًا" : "curated categories" },
-                { v: all.length, l: ar ? "منتجًا (تجريبي)" : "products (demo)" },
-              ].map((s) => (
-                <div key={s.l} className="rounded-2xl bg-white/70 p-3.5 ring-1 ring-saudi/10 backdrop-blur">
-                  <dd className="text-2xl font-bold text-saudi sm:text-3xl">{s.v}</dd>
-                  <dt className="mt-0.5 text-[11px] leading-4 text-muted sm:text-xs">{s.l}</dt>
-                </div>
-              ))}
-            </dl>
           </div>
 
           {/* composition */}
