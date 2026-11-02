@@ -61,7 +61,7 @@ describe("Nada AI pipeline", () => {
     if (block?.type === "products") for (const i of block.items) {
       const p = LOCAL_PRODUCTS.find((x) => x.id === i.id)!;
       expect(p.species!.toxicity.cats).toBe("non_toxic");
-      expect(i.image).toMatch(/^https:/);
+      expect(i.image).toMatch(/^(\/images\/catalog\/.+\.webp|https:)/);
     }
     expect(r.context.last_recommended.length).toBeGreaterThan(0);
     expect(factsOf().recommendations.length).toBeGreaterThan(0);

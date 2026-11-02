@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { AlertCircle, CheckCircle2, ClipboardList, Droplets, Heart, LogIn, MapPin, ShoppingBag, Sun } from "lucide-react";
+import { AlertCircle, Check, CheckCircle2, ClipboardList, Droplets, Heart, LogIn, MapPin, ShoppingBag, Sprout } from "lucide-react";
 import { useCart, useT, useWishlist } from "@/components/layout/Providers";
+import { PlantBox } from "@/components/my-green-space/PlantBox";
 import { PlantImage } from "@/components/store/PlantImage";
 import { formatDate, formatSAR } from "@/lib/i18n/format";
 import type { ChatBlock, ProductCardData } from "@/lib/ai/schemas";
@@ -38,10 +39,10 @@ function ProductMini({ p }: { p: ProductCardData }) {
   const wish = useWishlist();
   const [state, setState] = useState<string | null>(null);
   return (
-    <div className="card flex flex-col overflow-hidden">
-      <Link href={`/products/${p.slug}`} className="relative aspect-[4/3] bg-soft">
-        <PlantImage src={p.image} alt={p.name} sizes="240px" />
-        {p.rank && <span className="absolute start-2 top-2 grid size-7 place-items-center rounded-full bg-saudi text-xs font-bold text-white">{p.rank}</span>}
+    <div className="group flex flex-col rounded-[1.5rem] bg-white p-1.5 shadow-[var(--shadow-card)] ring-1 ring-saudi/[0.06] transition duration-500 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]">
+      <Link href={`/products/${p.slug}`} className="relative aspect-[5/4] overflow-hidden rounded-[1.2rem] bg-gradient-to-b from-mist to-soft">
+        <PlantImage src={p.image} alt={p.name} sizes="260px" className="transition duration-700 group-hover:scale-105" />
+        {p.rank && <span className="absolute start-2.5 top-2.5 grid size-8 place-items-center rounded-full bg-white text-sm font-bold text-saudi shadow-[var(--shadow-inner-dew)] ring-1 ring-saudi/10">{p.rank}</span>}
       </Link>
       <div className="flex flex-1 flex-col gap-1.5 p-3">
         <Link href={`/products/${p.slug}`} className="font-semibold text-deep hover:text-saudi">{p.name}</Link>
@@ -52,8 +53,8 @@ function ProductMini({ p }: { p: ProductCardData }) {
           <span className="text-sm font-bold text-deep">{formatSAR(p.price, locale)} <span className="demo-badge ms-1 align-middle">{t.common.demo}</span></span>
         </div>
         <div className="flex gap-1.5">
-          <button className="btn-primary flex-1 px-2 py-1.5 text-xs" disabled={p.stock < 1} onClick={() => { cart.add(p.id); setState(t.product.added); }}>
-            <ShoppingBag className="size-3.5" />{p.stock < 1 ? t.product.outOfStock : t.product.addToCart}
+          <button className="btn-primary flex-1 whitespace-nowrap px-2 py-1.5 text-xs" disabled={p.stock < 1} aria-label={`${t.product.addToCart}: ${p.name}`} onClick={() => { cart.add(p.id); setState(t.product.added); }}>
+            <ShoppingBag className="size-3.5 shrink-0" /><span className="hidden min-[420px]:inline">{p.stock < 1 ? t.product.outOfStock : t.product.addToCart}</span>
           </button>
           <button className="btn-outline px-2.5 py-1.5" aria-label={t.product.wishlist} onClick={async () => {
             const r = await wish.toggle(p.id);
@@ -68,6 +69,29 @@ function ProductMini({ p }: { p: ProductCardData }) {
   );
 }
 
+function Checklist({ title, items, tone }: { title: string; items: string[]; tone: "care" | "rescue" }) {
+  const [done, setDone] = useState<Set<number>>(new Set());
+  const toggle = (i: number) => setDone((d) => { const n = new Set(d); if (n.has(i)) n.delete(i); else n.add(i); return n; });
+  return (
+    <section className={`rounded-[1.5rem] p-4 ring-1 ${tone === "rescue" ? "bg-warn-bg/60 ring-warn/15" : "bg-white ring-saudi/10"}`}>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h4 className="flex items-center gap-2 text-sm font-bold text-forest"><ClipboardList className={`size-4 ${tone === "rescue" ? "text-warn" : "text-saudi"}`} />{title}</h4>
+        <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-muted ring-1 ring-line">{done.size}/{items.length}</span>
+      </div>
+      <ul className="space-y-1.5 text-sm">
+        {items.map((it, i) => (
+          <li key={i}>
+            <button type="button" onClick={() => toggle(i)} aria-pressed={done.has(i)} className="flex w-full items-start gap-2.5 rounded-xl p-1.5 text-start transition hover:bg-mist">
+              <span className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full ring-1 transition ${done.has(i) ? "bg-saudi text-white ring-saudi" : "bg-white ring-sage"}`}>{done.has(i) && <Check className="size-3 animate-pop" />}</span>
+              <span className={`leading-6 transition ${done.has(i) ? "text-muted line-through" : "text-ink"}`}>{it}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export function ChatBlockView({ block, onChoose }: { block: ChatBlock; onChoose: (plantId: string, label: string) => void }) {
   const { t, locale } = useT();
   const [saved, setSaved] = useState<"idle" | "saving" | "ok" | "err">("idle");
@@ -77,25 +101,24 @@ export function ChatBlockView({ block, onChoose }: { block: ChatBlock; onChoose:
       return (
         <section>
           <h4 className="mb-2 text-sm font-semibold text-deep">{block.title}</h4>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{block.items.map((p) => <ProductMini key={p.id} p={p} />)}</div>
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 xl:grid-cols-3">{block.items.map((p) => <ProductMini key={p.id} p={p} />)}</div>
         </section>
       );
     case "user_plants":
       return (
         <section>
-          <h4 className="mb-2 text-sm font-semibold text-deep">{block.title}</h4>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <h4 className="mb-2.5 flex items-center gap-2 text-sm font-bold text-forest"><Sprout className="size-4 text-saudi" />{block.title}</h4>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {block.items.map((p) => (
-              <Link key={p.id} href={`/my-green-space/plants/${p.id}`} className="card flex gap-3 overflow-hidden p-2 transition hover:shadow-[var(--shadow-lift)]">
-                <div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-soft"><PlantImage src={p.image} alt={p.title} sizes="80px" /></div>
-                <div className="min-w-0 py-1 text-xs text-muted">
-                  <p className="truncate text-sm font-semibold text-deep">{p.title}</p>
-                  <p className="italic" dir="ltr">{p.species}</p>
-                  {p.location && <p className="mt-1 flex items-center gap-1"><MapPin className="size-3" />{p.location}</p>}
-                  {p.light && <p className="flex items-center gap-1"><Sun className="size-3" />{p.light}</p>}
-                  <p className="flex items-center gap-1"><Droplets className="size-3" />{p.lastWatered ? formatDate(p.lastWatered, locale, { day: "numeric", month: "long" }) : t.space.noWatering}</p>
+              <Link key={p.id} href={`/my-green-space/plants/${p.id}`} className="group rounded-[1.5rem] bg-white p-1.5 shadow-[var(--shadow-card)] ring-1 ring-saudi/[0.06] transition duration-500 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]">
+                <PlantBox id={p.id} image={p.image} alt={p.title} size="sm" />
+                <div className="px-1.5 pb-1.5 pt-2.5 text-[11px] text-muted">
+                  <p className="truncate text-sm font-bold text-forest">{p.title}</p>
+                  <p className="truncate italic" dir="ltr">{p.species}</p>
+                  <p className="mt-1.5 flex items-center gap-1"><Droplets className="size-3 text-saudi" />{p.lastWatered ? formatDate(p.lastWatered, locale, { day: "numeric", month: "long" }) : t.space.noWatering}</p>
+                  {p.location && <p className="flex items-center gap-1"><MapPin className="size-3 text-saudi" />{p.location}</p>}
                   {!!p.flags?.length && (
-                    <div className="mt-1 flex flex-wrap gap-1">
+                    <div className="mt-1.5 flex flex-wrap gap-1">
                       {p.flags.map((f) => <span key={f} className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${f === "light_mismatch" || f === "soil_check_due" ? "bg-warn-bg text-warn" : "bg-soft text-saudi"}`}>{FLAG_LABEL[locale][f]}</span>)}
                     </div>
                   )}
@@ -120,16 +143,7 @@ export function ChatBlockView({ block, onChoose }: { block: ChatBlock; onChoose:
         </section>
       );
     case "checklist":
-      return (
-        <section className={`rounded-2xl p-4 ${block.tone === "rescue" ? "bg-warn-bg/70" : "bg-soft"}`}>
-          <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold text-deep"><ClipboardList className="size-4" />{block.title}</h4>
-          <ul className="space-y-1.5 text-sm">
-            {block.items.map((i, n) => (
-              <li key={n}><label className="flex cursor-pointer items-start gap-2"><input type="checkbox" className="mt-1 size-4 accent-saudi" /><span>{i}</span></label></li>
-            ))}
-          </ul>
-        </section>
-      );
+      return <Checklist title={block.title} items={block.items} tone={block.tone} />;
     case "care_logs":
       return (
         <section className="rounded-2xl border border-line p-4">

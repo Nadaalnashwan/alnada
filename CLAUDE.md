@@ -16,11 +16,20 @@ collection ("My Green Space") and an assistant, **Nada AI**. Tagline: حياة �
   mapped to explicit server functions in `lib/ai/nada.ts`. Confirm actions only after DB success.
 - Secrets live only in `.env.local` / Vercel env. Never commit them. No service-role key in the app.
 
-## Brand
-Colours (exact): Saudi Green `#006C35` (primary), Deep Green `#004D26` (text/contrast),
-Soft Green `#EAF5EE` (surfaces), White `#FFFFFF` (dominant background).
-No burgundy, maroon, purple, beige-dominant themes, heavy gradients or cartoon plants.
-Font: IBM Plex Sans Arabic. RTL-first; English via `locale` cookie. Tokens in `app/globals.css`.
+## Brand & design system ("Living Botanical")
+Brand colours (exact): Saudi Green `#006C35` (primary), Deep Green `#004D26`, Soft Green `#EAF5EE`, White `#FFFFFF`
+(dominant background). Supporting tokens in `app/globals.css`: `forest` (dark bands/footer), `leaf`/`sprout`
+(fresh accents), `sage`, `mist` (light section bg), `dew`, `cream` (warm surface — sparingly, never dominant),
+`sun` (tiny accent only). No burgundy, maroon, purple, beige-dominant themes, heavy gradients or cartoon plants.
+Font: IBM Plex Sans Arabic. RTL-first; English via `locale` cookie; use logical props (`ms/me/start/end`).
+Shared pieces: `components/brand/Logo.tsx` (dew-drop + leaf mark), `components/brand/Decor.tsx` (Leaf, Sprig,
+Blob, DewCluster, Pot — decorative, aria-hidden), `components/ui/Reveal.tsx` (scroll reveal; content visible
+without JS), `components/ui/SectionHeading.tsx`, `components/my-green-space/PlantBox.tsx` (plant "planted" in a pot).
+Utilities: `btn-*`, `card`, `chip`, `eyebrow`, `display`, `section-title`, `lead`, `arch`, `glass`, `bg-botanical`,
+`bg-forest-glow`. Motion: `animate-rise|float|sway|dew|pop|shimmer|marquee` — subtle; all disabled by
+`prefers-reduced-motion`.
+Catalogue photos are mirrored to `public/images/catalog` (`npm run data:mirror`) — never hot-link Wikimedia
+(it rate-limits); licence/attribution stays in `data/generated/images.json` and on product pages.
 
 ## Stack
 Next.js 15 App Router · TypeScript · Tailwind v4 · Lucide · Zod · Supabase (Postgres, Auth, Storage, RLS)

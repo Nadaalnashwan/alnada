@@ -16,7 +16,8 @@
     "data:build": "tsx scripts/build-catalog.ts",
     "test:live": "tsx scripts/live-db-test.ts",
     "test:app": "tsx scripts/live-app-test.ts",
-    "test:routes": "tsx scripts/live-app-test.ts --no-ai"
+    "test:routes": "tsx scripts/live-app-test.ts --no-ai",
+    "data:mirror": "tsx scripts/mirror-images.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

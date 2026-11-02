@@ -17,6 +17,8 @@ export interface CardProduct {
   isBest: boolean;
   petSafe: boolean;
   speciesSlug: string | null;
+  /** Care-at-a-glance for plants (null for accessories). */
+  care: { light: string; water: "low" | "moderate" | "high"; difficulty: "easy" | "moderate" | "hard" } | null;
 }
 
 export function toCard(p: ProductWithSpecies, locale: Locale): CardProduct {
@@ -35,5 +37,6 @@ export function toCard(p: ProductWithSpecies, locale: Locale): CardProduct {
     isBest: p.is_best_seller,
     petSafe: !!p.species && p.species.toxicity.cats === "non_toxic" && p.species.toxicity.dogs === "non_toxic",
     speciesSlug: p.species?.slug ?? null,
+    care: p.species ? { light: p.species.light[0], water: p.species.water, difficulty: p.species.difficulty } : null,
   };
 }

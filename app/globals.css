@@ -1,84 +1,180 @@
 @import "tailwindcss";
 
-/* AL NADA design tokens — Saudi Botanical Minimalism */
+/* ───────────────────────────────────────────────────────────────────────────
+   AL NADA design system — "Living Botanical"
+   Brand greens (exact): Saudi #006C35 · Deep #004D26 · Soft #EAF5EE · White #FFFFFF
+   Supporting tones add depth without leaving the green family; cream is a quiet
+   warm surface used sparingly — white stays the dominant background.
+   ─────────────────────────────────────────────────────────────────────────── */
 @theme {
+  /* brand */
   --color-saudi: #006c35;
   --color-deep: #004d26;
   --color-soft: #eaf5ee;
   --color-white: #ffffff;
+  /* supporting botanical palette */
+  --color-forest: #0b3a22;   /* richest dark: hero bands, footer */
+  --color-leaf: #3e9b4f;     /* fresh accent: highlights, success, sprouts */
+  --color-sprout: #8cc56f;   /* light new-growth accent on dark surfaces */
+  --color-sage: #b9d4bd;     /* muted foliage: borders on tint, illustration fills */
+  --color-mist: #f3f8f4;     /* very light botanical section background */
+  --color-cream: #fbf8f1;    /* warm off-white surface (sparingly) */
+  --color-dew: #dff1e6;      /* dew-drop highlight tint */
+  --color-sun: #e3ad3a;      /* tiny warm accent (stars, "new"), never a theme */
+  /* text & lines */
   --color-ink: #0f2a1c;
-  --color-muted: #5b6f63;
+  --color-muted: #587063;
   --color-line: #dbe8df;
+  /* states */
   --color-warn: #8a5a00;
-  --color-warn-bg: #fff6e0;
+  --color-warn-bg: #fff4dc;
   --color-danger: #b42318;
   --color-danger-bg: #fdecea;
 
   --font-sans: var(--font-plex-arabic), var(--font-plex-sans), system-ui, sans-serif;
 
-  --radius-card: 1.25rem;
+  --radius-card: 1.5rem;
   --radius-pill: 999px;
+  --radius-arch: 999px 999px 1.5rem 1.5rem;
 
-  --shadow-card: 0 1px 2px rgb(0 77 38 / 0.05), 0 8px 24px -12px rgb(0 77 38 / 0.18);
-  --shadow-lift: 0 2px 4px rgb(0 77 38 / 0.06), 0 18px 40px -18px rgb(0 77 38 / 0.32);
+  --shadow-card: 0 1px 2px rgb(11 58 34 / 0.04), 0 10px 30px -14px rgb(11 58 34 / 0.18);
+  --shadow-lift: 0 2px 6px rgb(11 58 34 / 0.06), 0 26px 50px -22px rgb(11 58 34 / 0.38);
+  --shadow-glow: 0 10px 30px -8px rgb(0 108 53 / 0.45);
+  --shadow-inner-dew: inset 0 -6px 14px rgb(0 108 53 / 0.14), inset 0 4px 10px rgb(255 255 255 / 0.9);
+
+  --ease-organic: cubic-bezier(0.22, 0.8, 0.26, 1);
 
   --animate-dew: dew 3.6s ease-in-out infinite;
-  --animate-rise: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-rise: rise 0.7s var(--ease-organic) both;
   --animate-pulse-dot: pulse-dot 1.2s ease-in-out infinite;
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-float-slow: float 11s ease-in-out infinite;
+  --animate-sway: sway 6s ease-in-out infinite;
+  --animate-marquee: marquee 38s linear infinite;
+  --animate-shimmer: shimmer 2.4s ease-in-out infinite;
+  --animate-pop: pop 0.45s var(--ease-organic) both;
 
   @keyframes dew {
-    0%, 100% { transform: translateY(0) scale(1); opacity: 0.9; }
+    0%, 100% { transform: translateY(0) scale(1); opacity: 0.92; }
     50% { transform: translateY(3px) scale(0.96); opacity: 1; }
   }
   @keyframes rise {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(18px); }
     to { opacity: 1; transform: translateY(0); }
   }
   @keyframes pulse-dot {
     0%, 100% { opacity: 0.25; transform: scale(0.8); }
     50% { opacity: 1; transform: scale(1); }
   }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(1.5deg); }
+  }
+  @keyframes sway {
+    0%, 100% { transform: rotate(-4deg); }
+    50% { transform: rotate(4deg); }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-120%) skewX(-18deg); }
+    60%, 100% { transform: translateX(220%) skewX(-18deg); }
+  }
+  @keyframes pop {
+    0% { transform: scale(0.6); opacity: 0; }
+    70% { transform: scale(1.12); opacity: 1; }
+    100% { transform: scale(1); }
+  }
 }
 
-html { background: var(--color-white); color: var(--color-ink); }
-body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+html { background: var(--color-white); color: var(--color-ink); scroll-behavior: smooth; }
+body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+::selection { background: var(--color-dew); color: var(--color-deep); }
 
-:focus-visible { outline: 2px solid var(--color-saudi); outline-offset: 2px; border-radius: 6px; }
+:focus-visible { outline: 2px solid var(--color-saudi); outline-offset: 3px; border-radius: 10px; }
+
+/* RTL: mirror directional decor & marquee automatically */
+[dir="rtl"] .flip-rtl { transform: scaleX(-1); }
+[dir="rtl"] .animate-marquee { animation-direction: reverse; }
+
+/* Scroll-reveal (components/ui/Reveal.tsx toggles data-shown) */
+.js [data-reveal] { opacity: 0; transform: translateY(22px); transition: opacity 0.8s var(--ease-organic), transform 0.8s var(--ease-organic); transition-delay: var(--reveal-delay, 0ms); }
+.js [data-reveal][data-shown="true"] { opacity: 1; transform: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  .js [data-reveal] { opacity: 1; transform: none; }
 }
 
+/* ─────────────────────────── utilities ─────────────────────────── */
 @utility container-x {
   @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
 }
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-[var(--radius-pill)] px-5 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
+  @apply relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-[var(--radius-pill)] px-5 py-2.5 text-sm font-semibold transition duration-300 ease-out active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50;
 }
 @utility btn-primary {
-  @apply btn bg-saudi text-white hover:bg-deep;
+  @apply btn bg-gradient-to-b from-[#0a7a3f] to-saudi text-white shadow-[0_6px_18px_-8px_rgb(0_108_53/0.7)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-glow)];
 }
 @utility btn-outline {
-  @apply btn border border-saudi text-saudi hover:bg-soft;
+  @apply btn border border-saudi/30 bg-white text-saudi hover:-translate-y-0.5 hover:border-saudi hover:bg-soft;
 }
 @utility btn-ghost {
   @apply btn text-deep hover:bg-soft;
 }
+@utility btn-light {
+  @apply btn bg-white text-deep shadow-sm hover:-translate-y-0.5 hover:bg-cream;
+}
 @utility card {
   @apply rounded-[var(--radius-card)] bg-white shadow-[var(--shadow-card)];
 }
+@utility card-lift {
+  @apply transition duration-500 ease-out hover:-translate-y-1 hover:shadow-[var(--shadow-lift)];
+}
 @utility chip {
-  @apply inline-flex items-center gap-1 rounded-[var(--radius-pill)] bg-soft px-3 py-1 text-xs font-medium text-deep;
+  @apply inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] bg-soft px-3 py-1 text-xs font-medium text-deep;
+}
+@utility eyebrow {
+  @apply inline-flex items-center gap-2 rounded-[var(--radius-pill)] border border-saudi/15 bg-white/80 px-3.5 py-1.5 text-xs font-semibold text-saudi backdrop-blur;
 }
 @utility input {
-  @apply w-full rounded-xl border border-line bg-white px-4 py-2.5 text-sm outline-none transition focus:border-saudi focus:ring-2 focus:ring-saudi/15;
+  @apply w-full rounded-2xl border border-line bg-white px-4 py-2.5 text-sm outline-none transition focus:border-saudi focus:ring-4 focus:ring-saudi/10;
 }
 @utility label {
   @apply mb-1.5 block text-sm font-medium text-deep;
 }
+@utility display {
+  @apply text-4xl font-bold leading-[1.2] tracking-tight text-forest sm:text-5xl lg:text-[4.1rem];
+}
 @utility section-title {
-  @apply text-2xl font-bold tracking-tight text-deep sm:text-3xl;
+  @apply text-[1.65rem] font-bold leading-snug tracking-tight text-forest sm:text-4xl;
+}
+@utility lead {
+  @apply text-base leading-8 text-muted sm:text-lg sm:leading-9;
 }
 @utility demo-badge {
-  @apply inline-flex items-center rounded-[var(--radius-pill)] border border-warn/30 bg-warn-bg px-2.5 py-0.5 text-[11px] font-semibold text-warn;
+  @apply inline-flex items-center rounded-[var(--radius-pill)] border border-warn/25 bg-warn-bg px-2.5 py-0.5 text-[11px] font-semibold text-warn;
+}
+@utility arch {
+  border-radius: var(--radius-arch);
+}
+@utility glass {
+  @apply bg-white/90 backdrop-blur-xl supports-[backdrop-filter]:bg-white/80;
+}
+@utility bg-botanical {
+  background-color: var(--color-mist);
+  background-image:
+    radial-gradient(60rem 30rem at 110% -10%, rgb(140 197 111 / 0.18), transparent 60%),
+    radial-gradient(50rem 28rem at -10% 110%, rgb(0 108 53 / 0.08), transparent 60%);
+}
+@utility bg-forest-glow {
+  background-color: var(--color-forest);
+  background-image:
+    radial-gradient(40rem 26rem at 85% 0%, rgb(62 155 79 / 0.35), transparent 65%),
+    radial-gradient(36rem 24rem at 0% 100%, rgb(0 108 53 / 0.45), transparent 60%);
+}
+@utility shine {
+  @apply pointer-events-none absolute inset-y-0 start-0 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent;
 }

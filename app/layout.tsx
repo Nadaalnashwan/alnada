@@ -21,9 +21,13 @@ export const viewport: Viewport = { themeColor: "#006C35" };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [{ locale, t, dir }, user, categories] = await Promise.all([getDict(), getUser(), getCategories()]);
-  const navCats = categories.map((c) => ({ slug: c.slug, name: locale === "ar" ? c.name_ar : c.name_en }));
+  const navCats = categories.map((c) => ({ slug: c.slug, name: locale === "ar" ? c.name_ar : c.name_en, image: c.image_url }));
   return (
-    <html lang={locale} dir={dir} className={`${plexArabic.variable} ${plexSans.variable}`}>
+    <html lang={locale} dir={dir} className={`${plexArabic.variable} ${plexSans.variable}`} suppressHydrationWarning>
+      <head>
+        {/* lets CSS animate scroll-reveal only when JS runs (content stays visible without JS) */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+      </head>
       <body className="min-h-dvh bg-white">
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-saudi focus:px-4 focus:py-2 focus:text-white">
           {locale === "ar" ? "تخطَّ إلى المحتوى" : "Skip to content"}

@@ -18,7 +18,11 @@ import type { Category, ImageInfo, PetToxicity, Product, Species } from "../lib/
 
 const readJson = (p: string) => (existsSync(p) ? JSON.parse(readFileSync(p, "utf8")) : {});
 const toxicity: Record<string, PetToxicity> = readJson("data/generated/toxicity.json");
-const images: Record<string, ImageInfo | null> = readJson("data/generated/images.json");
+// Serve the locally mirrored copy (scripts/mirror-images.ts) when present; keep licence/attribution.
+const rawImages: Record<string, (ImageInfo & { local_url?: string }) | null> = readJson("data/generated/images.json");
+const images: Record<string, ImageInfo | null> = Object.fromEntries(
+  Object.entries(rawImages).map(([k, v]) => [k, v && v.local_url ? { url: v.local_url, thumb_url: v.local_url, license: v.license, attribution: v.attribution, source_url: v.source_url } : v]),
+);
 const perenualRaw: Record<string, { miss?: boolean; id: number; image?: ImageInfo | null; details?: Record<string, unknown> | null; description_ar?: string | null }> = readJson("data/generated/perenual.json");
 // Confirmed misses are cached by the importer only to save quota; they carry no data.
 const perenual = Object.fromEntries(Object.entries(perenualRaw).filter(([, e]) => !e.miss && e.id > 0));

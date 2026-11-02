@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAllSpecies } from "@/lib/catalog/repo";
+import { plantInsights, type PlantInsights } from "./insights";
 import type { Species } from "@/lib/plants/types";
 
 export interface OwnedPlant {
@@ -19,6 +20,8 @@ export interface OwnedPlant {
   photo_url: string | null;
   last_watered_at: string | null;
   last_activity: { activity: string; occurred_at: string } | null;
+  /** Record-based insights (same logic Nada AI uses). */
+  insights: PlantInsights;
 }
 
 const COLS = "id, nickname, unconfirmed_label, identification_status, location, light_condition, watering_preference, notes, source, acquired_at, created_at, photo_path, species:plant_species(slug)";
@@ -32,8 +35,8 @@ export async function loadOwnedPlants(sb: SupabaseClient, onlyId?: string): Prom
   const species = await getAllSpecies();
   const ids = (data ?? []).map((p) => p.id);
   const { data: logs } = ids.length
-    ? await sb.from("care_logs").select("user_plant_id, activity, occurred_at").in("user_plant_id", ids).order("occurred_at", { ascending: false }).limit(1000)
-    : { data: [] as { user_plant_id: string; activity: string; occurred_at: string }[] };
+    ? await sb.from("care_logs").select("user_plant_id, activity, occurred_at, notes").in("user_plant_id", ids).order("occurred_at", { ascending: false }).limit(1000)
+    : { data: [] as { user_plant_id: string; activity: string; occurred_at: string; notes: string | null }[] };
   const paths = (data ?? []).map((p) => p.photo_path).filter(Boolean) as string[];
   const signed = new Map<string, string>();
   if (paths.length) {
@@ -43,13 +46,15 @@ export async function loadOwnedPlants(sb: SupabaseClient, onlyId?: string): Prom
   return (data ?? []).map((p) => {
     const slug = (p.species as unknown as { slug: string } | null)?.slug;
     const mine = (logs ?? []).filter((l) => l.user_plant_id === p.id);
+    const sp = species.find((s) => s.slug === slug) ?? null;
     return {
-      id: p.id, nickname: p.nickname, species: species.find((s) => s.slug === slug) ?? null, unconfirmed_label: p.unconfirmed_label,
+      id: p.id, nickname: p.nickname, species: sp, unconfirmed_label: p.unconfirmed_label,
       identification_status: p.identification_status, location: p.location, light_condition: p.light_condition, watering_preference: p.watering_preference,
       notes: p.notes, source: p.source, acquired_at: p.acquired_at, created_at: p.created_at,
       photo_url: p.photo_path ? signed.get(p.photo_path) ?? null : null,
       last_watered_at: mine.find((l) => l.activity === "watering")?.occurred_at ?? null,
       last_activity: mine[0] ? { activity: mine[0].activity, occurred_at: mine[0].occurred_at } : null,
+      insights: plantInsights(sp, p, mine),
     };
   });
 }

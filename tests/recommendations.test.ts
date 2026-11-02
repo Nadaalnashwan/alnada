@@ -12,7 +12,7 @@ describe("recommendation engine", () => {
     for (const x of r.results) {
       expect(x.product.species!.toxicity.cats).toBe("non_toxic");
       expect(x.product.species!.light).toContain("low");
-      expect(x.product.image?.url).toMatch(/^https:\/\//);
+      expect(x.product.image?.url).toMatch(/^(\/images\/catalog\/.+\.webp|https:\/\/)/);
     }
     // known cat-toxic low-light plants are excluded
     expect(names(r)).not.toContain("epipremnum-aureum");
@@ -95,5 +95,16 @@ describe("Saudi climate detection", () => {
     const { isHotClimate } = await import("@/lib/recommendations/engine");
     for (const c of ["الرياض", "رياض", "Riyadh", "Riyadh, Saudi Arabia", "جدة", "جده", "الدمام", "Al-Khobar", "المدينة المنورة"]) expect(isHotClimate(c), c).toBe(true);
     for (const c of ["أبها", "الطائف", "Abha", "London"]) expect(isHotClimate(c), c).toBe(false);
+  });
+});
+
+describe("catalogue images", () => {
+  it("every product image is a mirrored local file that exists", async () => {
+    const { existsSync } = await import("node:fs");
+    for (const p of LOCAL_PRODUCTS) {
+      expect(p.image?.url, p.slug).toMatch(/^\/images\/catalog\//);
+      expect(existsSync(`public${p.image!.url}`), p.slug).toBe(true);
+      expect(p.image?.license, p.slug).toBeTruthy(); // attribution metadata preserved
+    }
   });
 });

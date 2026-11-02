@@ -42,7 +42,7 @@ export default async function ProductPage({ params }: Props) {
 
       <div className="grid gap-10 lg:grid-cols-2">
         <div>
-          <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-soft shadow-[var(--shadow-card)]">
+          <div className={`relative aspect-[4/5] overflow-hidden bg-gradient-to-b from-mist to-soft shadow-[var(--shadow-lift)] ring-[6px] ring-white sm:aspect-square ${s ? "arch" : "rounded-[2rem]"}`}>
             <PlantImage src={p.image?.url ?? null} alt={ar ? p.name_ar : p.name_en} sizes="(min-width:1024px) 50vw, 100vw" priority />
           </div>
           {p.image?.source_url && (
@@ -57,7 +57,7 @@ export default async function ProductPage({ params }: Props) {
           <div className="flex flex-wrap gap-2">
             {p.category_slugs.filter((c) => c !== "all-plants").slice(0, 4).map((c) => <Link key={c} href={`/categories/${c}`} className="chip hover:bg-saudi hover:text-white">{catName(c)}</Link>)}
           </div>
-          <h1 className="mt-4 text-3xl font-bold text-deep sm:text-4xl">{ar ? p.name_ar : p.name_en}</h1>
+          <h1 className="mt-4 text-3xl font-bold text-forest sm:text-5xl">{ar ? p.name_ar : p.name_en}</h1>
           {s && <p className="mt-1 text-lg italic text-muted" dir="ltr">{s.scientific_name} <span className="not-italic text-sm">· {s.family}</span></p>}
           <p className="mt-4 leading-8 text-ink/80">{ar ? p.description_ar : p.description_en}</p>
           <div className="mt-6 flex flex-wrap items-center gap-3">

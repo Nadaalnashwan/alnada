@@ -1,11 +1,13 @@
 import Link from "next/link";
+import { SlidersHorizontal } from "lucide-react";
 import type { Dict } from "@/lib/i18n/dict";
 import type { CatalogFilter } from "@/lib/catalog/filter";
 
 /** Server-rendered GET form: works without JavaScript and keeps filters in the URL (shareable). */
 export function ShopFilters({ t, f, action, hideKind }: { t: Dict; f: CatalogFilter; action: string; hideKind?: boolean }) {
   return (
-    <form action={action} className="card space-y-5 p-5" aria-label={t.shop.filters}>
+    <form action={action} className="space-y-5 rounded-[1.75rem] bg-white p-5 shadow-[var(--shadow-card)] ring-1 ring-saudi/[0.06]" aria-label={t.shop.filters}>
+      <p className="flex items-center gap-2 text-sm font-bold text-forest"><SlidersHorizontal className="size-4 text-saudi" />{t.shop.filters}</p>
       {f.q && <input type="hidden" name="q" value={f.q} />}
       {!hideKind && (
         <fieldset>
