@@ -36,6 +36,18 @@ function containsPhrase(msg: string[], phrase: string[]): boolean {
   return false;
 }
 
+/**
+ * One typo: a single replaced letter or two neighbouring letters swapped, same length. Deliberately no
+ * dropped/added letters — "حبيبي" (an everyday word) must never be read as the nickname "حبيبتي".
+ */
+function oneTypo(a: string, b: string): boolean {
+  if (a.length !== b.length || a === b) return false;
+  const diff = [...a].map((ch, i) => (ch === b[i] ? -1 : i)).filter((i) => i >= 0);
+  if (diff.length === 1) return true;
+  return diff.length === 2 && diff[1] === diff[0] + 1 && a[diff[0]] === b[diff[1]] && a[diff[1]] === b[diff[0]];
+}
+const FUZZY_MIN = 5;
+
 export interface UserPlantMentions<T extends NamedPlant> {
   /** Plants whose nickname appears in the message (strongest signal). */
   byNickname: T[];
@@ -45,10 +57,21 @@ export interface UserPlantMentions<T extends NamedPlant> {
 
 export function findUserPlantMentions<T extends NamedPlant>(message: string, plants: T[], species: Species[]): UserPlantMentions<T> {
   const msg = tokens(message);
-  const byNickname = plants.filter((p) => {
+  let byNickname = plants.filter((p) => {
     const nick = p.nickname ? tokens(p.nickname) : [];
     return nick.length > 0 && nick.join("").length >= 2 && containsPhrase(msg, nick);
   });
+  // Typing slips ("صبوزة", "لولوو" is not one — length differs) only for longer one-word nicknames, only when
+  // nothing matched exactly, and only if exactly one of the customer's plants fits.
+  if (!byNickname.length) {
+    const fuzzy = plants.filter((p) => {
+      const nick = p.nickname ? tokens(p.nickname) : [];
+      if (nick.length !== 1 || bare(nick[0]).length < FUZZY_MIN) return false;
+      const target = bare(nick[0]);
+      return msg.some((w) => [...forms(w)].some((f) => oneTypo(bare(f), target)));
+    });
+    if (fuzzy.length === 1) byNickname = fuzzy;
+  }
   const bySpecies = plants.filter((p) => {
     const sp = p.species_slug ? species.find((s) => s.slug === p.species_slug) : null;
     if (!sp) return false;

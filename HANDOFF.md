@@ -72,7 +72,10 @@ interpretation — nicknames with Arabic variants (ة/ه, ى/ي, hamza forms, sh
 joined prefixes (و ف ب ل ك + ال), plus species names of plants they own. A typed nickname wins over the sidebar
 selection, the model's guess and earlier recommendations; duplicates ask which plant; the plant stays in focus for
 follow-ups ("أسقيها", "هي") via `last_focus` in `chat_sessions.context` (survives reloads). Llama now also gets
-nickname→species pairs. Tests: `tests/nada-user-plants.test.ts` (19, mocked). Live check: "لياسمينه" → saved ياسمينة.
+nickname→species pairs. One typing slip (replaced or swapped letter) is tolerated for one-word nicknames of 5+ letters
+when exactly one plant fits; dropped/added letters never match ("حبيبي" ≠ "حبيبتي").
+Tests: `tests/nada-user-plants.test.ts` (27, mocked, incl. the light → last watering → scientific name → log flow).
+Live check: "لياسمينه" → saved ياسمينة.
 
 ## Nada AI conversation memory (added 2026-11-03)
 **Bug:** after Nada listed Zinnia/Papaya in her reply, "قارني بين الأولى والثانية" showed an Aloe vera card and
@@ -133,7 +136,7 @@ free tier returned **429 (`AI_RATE_LIMITED`)** after many back-to-back calls —
 (this exercised brief Test 14 for real). Re-run the suite after the daily allowance resets.
 
 ## Test results
-**2026-11-03 (design branch):** `npm test` **132/132** (incl. 41 reference, 19 personal-plant, 9 care-task tests), lint/typecheck clean, production build OK.
+**2026-11-03 (design branch):** `npm test` **140/140** (incl. 41 reference, 27 personal-plant, 9 care-task tests), lint/typecheck clean, production build OK.
 
 **2026-11-02 (from ~/Developer/alnada):**
 - `npm test`: **59/59** (recommendations 11, insights 4, Nada pipeline 28 with scripted model, DB/RLS/grants in PGlite 16).
