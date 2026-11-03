@@ -66,7 +66,7 @@ export function NadaChat({ plants, aiReady, initialPrompt, initialPlantId }: { p
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const err = data.error === "AI_NOT_CONFIGURED" ? t.nada.notConfigured : data.error === "RATE_LIMITED" || data.error === "AI_RATE_LIMITED" ? t.nada.rateLimited : t.nada.error;
+        const err = data.error === "AI_NOT_CONFIGURED" ? t.nada.notConfigured : data.error === "AI_QUOTA_EXHAUSTED" ? t.nada.quotaExhausted : data.error === "RATE_LIMITED" || data.error === "AI_RATE_LIMITED" ? t.nada.rateLimited : t.nada.error;
         setMessages((m) => [...m, { role: "assistant", content: "", error: err }]);
         return;
       }

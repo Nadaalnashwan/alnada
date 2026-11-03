@@ -9,7 +9,7 @@ export { isLlamaConfigured } from "./provider";
 export const LLAMA_MODEL = llamaConfig().model;
 
 export class LlamaError extends Error {
-  constructor(public code: "NOT_CONFIGURED" | "TIMEOUT" | "RATE_LIMITED" | "UPSTREAM" | "BAD_OUTPUT", message: string) {
+  constructor(public code: "NOT_CONFIGURED" | "TIMEOUT" | "RATE_LIMITED" | "QUOTA_EXHAUSTED" | "UPSTREAM" | "BAD_OUTPUT", message: string) {
     super(message);
   }
 }
@@ -39,7 +39,13 @@ export const llamaChat: LlamaChat = async (messages, { json = false, temperature
       signal: ctrl.signal,
       cache: "no-store",
     });
-    if (res.status === 429) throw new LlamaError("RATE_LIMITED", "Llama provider rate limit");
+    if (res.status === 429) {
+      // Cloudflare's free tier answers 429 with code 4006 once the daily neuron allocation is used up
+      // (resets 00:00 UTC) — a different situation from a short burst limit, so report it as such.
+      const text = await res.text().catch(() => "");
+      if (/"code"\s*:\s*4006|daily free allocation/i.test(text)) throw new LlamaError("QUOTA_EXHAUSTED", "Llama provider daily quota exhausted");
+      throw new LlamaError("RATE_LIMITED", "Llama provider rate limit");
+    }
     if (!res.ok) throw new LlamaError("UPSTREAM", `Llama provider HTTP ${res.status}`);
     const data = await res.json();
     const content = data?.choices?.[0]?.message?.content;

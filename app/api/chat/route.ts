@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ...result, sessionId });
   } catch (e) {
     if (e instanceof LlamaError) {
-      const status = e.code === "RATE_LIMITED" ? 429 : e.code === "NOT_CONFIGURED" ? 503 : 502;
+      const status = e.code === "RATE_LIMITED" || e.code === "QUOTA_EXHAUSTED" ? 429 : e.code === "NOT_CONFIGURED" ? 503 : 502;
       return jsonError(status, `AI_${e.code}`);
     }
     console.error("chat route failed", (e as Error).message);
