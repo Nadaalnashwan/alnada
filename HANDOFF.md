@@ -11,9 +11,9 @@ _Last updated: 2026-11-03 by Claude Code (Opus 5.5)._ Read `CLAUDE.md` for rules
 | Auth, Green Space, care logs, wishlist, cart, checkout | ✅ **Tested live** (`npm run test:live`: 25/25) |
 | Nada AI with real Meta Llama (Cloudflare) | ✅ **Tested live** (`npm run test:app`: 20/20 on clean runs; see "LLM variance") |
 | Perenual import | ✅ 40/50 species matched, 16 with details (all preserved in Supabase), 15 Arabic translations (Aglaonema pending, see below) |
-| Vercel deployment | ❌ Not deployed yet |
+| Vercel deployment | 🟡 Project `alnada` connected to GitHub `main`; **ready to deploy** (env vars below) |
 
-- **Branch:** `main` · **Remote:** https://github.com/Nadaalnashwan/alnada · latest pushed commit: `git log -1 origin/main`.
+- **Branch:** `main` (design branch merged 2026-11-03, fast-forward) · **Remote:** https://github.com/Nadaalnashwan/alnada · latest pushed commit: `git log -1 origin/main`.
 - **Local folder:** `~/Developer/alnada` (moved out of iCloud-synced Desktop on 2026-11-02; Git history, `.env.local`
   and all sources preserved; `npm ci` re-run). The old `~/Desktop/alnada` copy is obsolete — delete it once you're happy.
 
@@ -46,7 +46,7 @@ no email sent; password only in the owner's `.env.local` as `TEST_PASSWORD`). De
 `delete from auth.users where email like 'alnada.test.%@example.com';`
 **Admin:** none yet — run `supabase/admin/grant-admin.sql` with the owner's email after signing up.
 
-## Design branch `design/botanical-redesign` (not merged to main yet)
+## Design branch `design/botanical-redesign` (merged into `main` on 2026-11-03)
 "Living Botanical" design system, redesigned homepage/shop/Nada AI, official logo + icons, and My Green Space as a
 shared interactive garden shelf with a selectable details panel (real Supabase data; watering updates the DB and UI).
 Catalogue photos are mirrored locally (`npm run data:mirror`). The homepage hero **is** the garden (customer's own
@@ -141,8 +141,17 @@ free tier returned **429 (`AI_RATE_LIMITED`)** after many back-to-back calls —
 - 10 species have no Perenual match on the free plan (cached as misses).
 - Admin product image = URL (allowed hosts), not file upload. No plant-photo identification yet.
 
+## Vercel production
+Environment variables (Production scope):
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — public by design (publishable key; RLS protects data).
+- `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` — **secret**, server-only (no `NEXT_PUBLIC_` prefix).
+- Optional: `LLAMA_PROVIDER=cloudflare`, `LLAMA_MODEL=@cf/meta/llama-3.3-70b-instruct-fp8-fast` (these are the defaults).
+- Do **not** add `TEST_*`, `PERENUAL_API_KEY` (import scripts only) or `GROQ_API_KEY` (unused provider).
+After the first deploy: add `https://<vercel-domain>` as Supabase Auth **Site URL** and `https://<vercel-domain>/auth/callback`
+to **Redirect URLs** (sign-up confirmation / password reset links), then smoke-test home, shop, sign-in, Nada AI.
+
 ## Exact next tasks
-1. Review the design branch and open the PR to `main` (owner approval required).
+1. Deploy `main` on Vercel with the env vars above; set Supabase Auth Site URL + redirect URL to the Vercel domain.
 2. `npm run test:app` (real Llama, ~40 calls) once before release; `npm run data:perenual -- --translate` (Aglaonema),
    `npm run data:build`, update that one row. Optionally try `LLAMA_INTENT_MODEL=@cf/meta/llama-3.1-8b-instruct-fp8` to cut cost.
 3. Sign up the owner account, run `supabase/admin/grant-admin.sql`, check `/admin` live.
