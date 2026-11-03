@@ -2,23 +2,26 @@
 
 /* ───────────────────────────────────────────────────────────────────────────
    AL NADA design system — "Living Botanical"
-   Brand greens (exact): Saudi #006C35 · Deep #004D26 · Soft #EAF5EE · White #FFFFFF
-   Supporting tones add depth without leaving the green family; cream is a quiet
-   warm surface used sparingly — white stays the dominant background.
+   Brand greens (exact): Saudi #006C35 · Deep #004D26 · Soft #EAF5EE
+   Page: Warm Botanical Ivory #F6F1E7 · secondary: Soft Sage Mist #EEF4EC ·
+   card surface #FFFCF6 (the `white` token, so every card/button surface is warm) ·
+   deep botanical green #103D28 for dark bands. No stark white full-page backgrounds.
    ─────────────────────────────────────────────────────────────────────────── */
 @theme {
   /* brand */
   --color-saudi: #006c35;
   --color-deep: #004d26;
   --color-soft: #eaf5ee;
-  --color-white: #ffffff;
+  --color-white: #fffcf6;     /* card surface */
+  --color-ivory: #f6f1e7;     /* page background */
+  --color-sage-mist: #eef4ec; /* secondary sections */
   /* supporting botanical palette */
-  --color-forest: #0b3a22;   /* richest dark: hero bands, footer */
+  --color-forest: #103d28;   /* deep botanical green: dark bands, footer */
   --color-leaf: #3e9b4f;     /* fresh accent: highlights, success, sprouts */
   --color-sprout: #8cc56f;   /* light new-growth accent on dark surfaces */
   --color-sage: #b9d4bd;     /* muted foliage: borders on tint, illustration fills */
-  --color-mist: #f3f8f4;     /* very light botanical section background */
-  --color-cream: #fbf8f1;    /* warm off-white surface (sparingly) */
+  --color-mist: #eef4ec;     /* soft sage mist section background */
+  --color-cream: #fbf6ec;    /* warm surface, a touch lighter than the page */
   --color-dew: #dff1e6;      /* dew-drop highlight tint */
   --color-sun: #e3ad3a;      /* tiny warm accent (stars, "new"), never a theme */
   /* text & lines */
@@ -112,7 +115,7 @@
   }
 }
 
-html { background: var(--color-white); color: var(--color-ink); scroll-behavior: smooth; }
+html { background: var(--color-ivory); color: var(--color-ink); scroll-behavior: smooth; }
 body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 ::selection { background: var(--color-dew); color: var(--color-deep); }
 
@@ -191,6 +194,10 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; text-
   background-image:
     radial-gradient(60rem 30rem at 110% -10%, rgb(140 197 111 / 0.18), transparent 60%),
     radial-gradient(50rem 28rem at -10% 110%, rgb(0 108 53 / 0.08), transparent 60%);
+}
+/* Homepage garden hero / garden walls: very subtle ivory → sage mist. */
+@utility bg-garden {
+  background-image: linear-gradient(135deg, #f6f1e7 0%, #eef4ec 100%);
 }
 @utility bg-forest-glow {
   background-color: var(--color-forest);

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  ArrowLeft, ArrowRight, BadgeCheck, CalendarHeart, Droplets, Gift, HeartPulse, Leaf as LeafIcon, MessageCircle, PawPrint,
+  ArrowLeft, ArrowRight, BadgeCheck, CalendarHeart, Droplets, Gift, HeartPulse, MessageCircle, PawPrint,
   Search, ShieldCheck, Sparkles, Sprout, Sun, ThermometerSun, Flower2,
 } from "lucide-react";
 import { Blob, Leaf, Sprig } from "@/components/brand/Decor";
@@ -78,10 +78,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
   const potsHero = bySlug("ceramic-pot-white-20");
   const nadaPicks = inCat("balcony").filter((p) => p.species?.heat_tolerant && p.species.water === "low").slice(0, 3);
 
-  const promises = ar
-    ? ["٥٠ نوعًا نباتيًا موثقًا", "سمية الحيوانات من قائمة ASPCA", "نباتات تناسب حر السعودية", "خطة عناية شخصية مع ندى AI", "صور مرخّصة لكل نبتة", "مساحتك الخضراء الرقمية"]
-    : ["50 verified species", "Pet safety from the ASPCA list", "Plants for Saudi heat", "Personal care plans with Nada AI", "Licensed photo of every plant", "Your digital green space"];
-
   const why = [
     { icon: BadgeCheck, title: ar ? "معلومات نباتية موثقة" : "Verified botanical data", body: ar ? "أسماء علمية صحيحة وإرشادات عناية مراجعة مع RHS وحديقة ميزوري النباتية وبيانات Perenual." : "Correct scientific names and care guidance cross-checked with RHS, Missouri Botanical Garden and Perenual." },
     { icon: PawPrint, title: ar ? "أمان حيواناتك أولًا" : "Pet safety first", body: ar ? "نعرض سمية كل نبتة للقطط والكلاب حسب ASPCA، وغير المؤكد ما نسميه آمن." : "Cat and dog toxicity from the ASPCA for every plant — unconfirmed is never called safe." },
@@ -142,19 +138,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
       {/* ══════════════════ HERO — MY LIVING GARDEN ══════════════════ */}
       <Garden variant="hero" plants={gardenPlants} sample={sample} addHref={addHref} initialId={sp.plant ?? null} intro={intro} />
 
-      {/* ══════════════════ PROMISES MARQUEE ══════════════════ */}
-      <section className="overflow-hidden py-8" aria-label={ar ? "وعود الندى" : "Our promises"}>
-        <div className="flex w-max animate-marquee gap-3">
-          {[...promises, ...promises].map((p, i) => (
-            <span key={i} className="flex items-center gap-2 rounded-full border border-saudi/10 bg-white px-5 py-2.5 text-sm font-medium text-deep shadow-sm" aria-hidden={i >= promises.length}>
-              <LeafIcon className="size-4 text-leaf" />{p}
-            </span>
-          ))}
-        </div>
-      </section>
-
       {/* ══════════════════ CATEGORIES ══════════════════ */}
-      <section className="py-12">
+      <section className="pb-12 pt-14 sm:pt-16">
         <div className="container-x">
           <Reveal><SectionHeading eyebrow={ar ? "تسوّق حسب أسلوب حياتك" : "SHOP BY LIFESTYLE"} title={t.home.categories} lead={ar ? "من ركن مكتبك المظلل إلى بلكونة تضربها شمس العصر." : "From a shaded desk corner to a balcony in the afternoon sun."} href="/categories" linkLabel={t.home.viewAll} locale={locale} /></Reveal>
           <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-3 sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0 lg:grid-cols-8">

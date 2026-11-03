@@ -14,6 +14,10 @@ import { dayCount, formatDate } from "@/lib/i18n/format";
 import { CareLogForm, DeleteLogButton, PlantEditor } from "./PlantManager";
 import { AddPlantPot, PottedPlant, type Habit, type Size } from "./PottedPlant";
 
+// Shelf geometry: the slot label block is 3.25rem and the list has 0.5rem bottom padding; the 0.75rem gap above
+// the labels is where the shelf board sits, so every pot base rests exactly on its top surface.
+const SHELF_BOTTOM = "calc(3.25rem + 0.5rem)";
+
 export type GardenStatus = "on_track" | "soil_check_due" | "light_mismatch" | "no_watering_recorded" | "unconfirmed";
 
 /** Everything the garden needs for one owned plant — all from the user's Supabase records. */
@@ -162,27 +166,27 @@ export function Garden({ plants, initialId, variant = "page", intro, sample = fa
       )}
       <div className="relative">
         <ul ref={shelfRef} onScroll={updateScroll}
-          className={`relative z-10 flex snap-x snap-mandatory items-end gap-1 overflow-x-auto pb-1 [scrollbar-width:none] sm:gap-5 [&::-webkit-scrollbar]:hidden ${hero
-            ? "px-2 pt-2 [--plant-scale:0.8] sm:px-4 sm:pt-12 sm:[--plant-scale:1] lg:[--plant-scale:1.12] xl:[--plant-scale:1.28]"
-            : "px-4 pt-8 [--plant-scale:0.78] sm:px-10 sm:pt-12 sm:[--plant-scale:1]"}`}
+          className={`relative z-10 flex snap-x snap-mandatory items-end gap-4 overflow-x-auto pb-2 [scrollbar-width:none] sm:gap-7 [&::-webkit-scrollbar]:hidden ${hero
+            ? "px-3 pt-8 [--plant-scale:0.82] sm:px-6 sm:pt-10 sm:[--plant-scale:0.95] lg:[--plant-scale:1.02] xl:[--plant-scale:1.14]"
+            : "px-5 pt-8 [--plant-scale:0.82] sm:px-10 sm:pt-12 sm:[--plant-scale:1]"}`}
           aria-label={sample ? (ar ? "نباتات نموذجية" : "Sample plants") : ar ? "نباتاتي" : "My plants"}>
           {plants.map((p, i) => (
             <PottedPlant key={p.id} index={i} id={p.id} image={p.image} label={p.nickname ?? p.speciesName}
               sublabel={sample ? sampleLabel : p.nickname ? p.speciesName : (p.location ?? "")}
-              habit={p.habit} size={p.size} status={p.status} statusLabel={sample ? sampleLabel : gardenStatusLabel(p.status, ar)}
+              status={p.status} statusLabel={sample ? sampleLabel : gardenStatusLabel(p.status, ar)}
               selected={p.id === selectedId} watering={p.id === wateringId} onSelect={() => select(p.id)} />
           ))}
-          <AddPlantPot href={addHref} label={sample ? (ar ? "ازرع نبتتك" : "Plant yours") : ar ? "أضف نبتة" : "Add a plant"}
+          <AddPlantPot index={plants.length} href={addHref} label={sample ? (ar ? "ازرع نبتتك" : "Plant yours") : ar ? "أضف نبتة" : "Add a plant"}
             hint={sample ? (ar ? "ابدأ مساحتك الخضراء" : "Start your Green Space") : ar ? "ازرع نبتة جديدة" : "Plant a new one"} />
           <li aria-hidden className="w-2 shrink-0" />
         </ul>
         {/* soft edge fades hint that the shelf scrolls; opaque at the outer edge: RTL start = right, end = left */}
-        {canScroll.start && <span aria-hidden className="pointer-events-none absolute inset-y-0 start-0 z-20 w-10 bg-gradient-to-r from-transparent to-[#f6f2e8]/90 ltr:bg-gradient-to-l" />}
-        {canScroll.end && <span aria-hidden className="pointer-events-none absolute inset-y-0 end-0 z-20 w-10 bg-gradient-to-l from-transparent to-[#f6f2e8]/90 ltr:bg-gradient-to-r" />}
-        {/* the shelf the pots stand on */}
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-[4.2rem] z-0 h-0">
-          <div className="mx-3 h-4 rounded-full bg-gradient-to-b from-[#e8d9b9] to-[#d2bd94] shadow-[0_14px_22px_-10px_rgb(91_70_40/0.45)] sm:mx-6" />
-          <div className="mx-6 h-2 rounded-b-full bg-[#c4ad82]/70 sm:mx-9" />
+        {canScroll.start && <span aria-hidden className="pointer-events-none absolute inset-y-0 start-0 z-20 w-10 bg-gradient-to-r from-transparent to-[#f2f3ea] ltr:bg-gradient-to-l" />}
+        {canScroll.end && <span aria-hidden className="pointer-events-none absolute inset-y-0 end-0 z-20 w-10 bg-gradient-to-l from-transparent to-[#f2f3ea] ltr:bg-gradient-to-r" />}
+        {/* the shelf the pots stand on: a light oak board with a soft front edge and a natural cast shadow */}
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 z-0 h-3" style={{ bottom: SHELF_BOTTOM }}>
+          <div className="mx-1 h-full rounded-[0.6rem] bg-[linear-gradient(180deg,#efe3c8_0%,#e2d0ad_55%,#cfb98f_100%)] shadow-[0_18px_24px_-14px_rgb(70_52_28/0.45),inset_0_1px_0_rgb(255_255_255/0.7)] sm:mx-3" />
+          <div className="mx-5 h-3 rounded-b-[2rem] bg-[radial-gradient(60%_100%_at_50%_0%,rgb(70_52_28/0.14),transparent)] sm:mx-10" />
         </div>
       </div>
       <p className={`relative z-10 pb-5 pt-2 text-center text-[11px] text-muted ${hero ? "px-2" : "px-6 sm:px-10"}`}>
@@ -197,9 +201,9 @@ export function Garden({ plants, initialId, variant = "page", intro, sample = fa
     <div>
       {/* The shared garden wall + shelf */}
       <section aria-label={sample ? (ar ? "حديقة نموذجية" : "Sample garden") : ar ? "حديقتي" : "My garden"}
-        className={`relative overflow-clip bg-[linear-gradient(180deg,#fbf8f1_0%,#f6f3ea_55%,#efe9db_100%)] ${hero
+        className={`relative overflow-clip bg-garden ${hero
           ? "-mt-[5.25rem] rounded-b-[2.5rem] pt-[5.25rem] sm:rounded-b-[3.5rem]"
-          : "rounded-[2.5rem] ring-1 ring-[#ebe2cc]"}`}>
+          : "rounded-[2.5rem] shadow-[var(--shadow-card)] ring-1 ring-[#e7dfcc]"}`}>
         {/* window light & leaf shadows */}
         <span aria-hidden className="pointer-events-none absolute -top-24 start-[8%] h-80 w-[26rem] rotate-[-14deg] rounded-[3rem] bg-gradient-to-b from-white/90 to-transparent blur-2xl" />
         <span aria-hidden className="pointer-events-none absolute -top-10 end-[12%] h-64 w-40 rotate-12 rounded-[2rem] bg-white/50 blur-xl" />

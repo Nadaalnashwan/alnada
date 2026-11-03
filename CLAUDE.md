@@ -17,16 +17,18 @@ collection ("My Green Space") and an assistant, **Nada AI**. Tagline: حياة �
 - Secrets live only in `.env.local` / Vercel env. Never commit them. No service-role key in the app.
 
 ## Brand & design system ("Living Botanical")
-Brand colours (exact): Saudi Green `#006C35` (primary), Deep Green `#004D26`, Soft Green `#EAF5EE`, White `#FFFFFF`
-(dominant background). Supporting tokens in `app/globals.css`: `forest` (dark bands/footer), `leaf`/`sprout`
-(fresh accents), `sage`, `mist` (light section bg), `dew`, `cream` (warm surface — sparingly, never dominant),
-`sun` (tiny accent only). No burgundy, maroon, purple, beige-dominant themes, heavy gradients or cartoon plants.
+Brand colours (exact): Saudi Green `#006C35` (primary), Deep Green `#004D26`, Soft Green `#EAF5EE`. Page background is
+Warm Botanical Ivory `ivory` `#F6F1E7` (never stark white); secondary Soft Sage Mist `mist`/`sage-mist` `#EEF4EC`; the
+`white` token is the card surface `#FFFCF6`; `forest` `#103D28` for dark bands/footer; `bg-garden` = the hero gradient.
+Other tokens in `app/globals.css`: `leaf`/`sprout` (fresh accents), `sage`, `dew`, `cream`, `sun` (tiny accent only). No burgundy, maroon, purple, beige-dominant themes, heavy gradients or cartoon plants.
 Font: IBM Plex Sans Arabic. RTL-first; English via `locale` cookie; use logical props (`ms/me/start/end`).
 Official logo: `public/brand/alnada-mark*.png` — the exact supplied artwork (only margins trimmed); never
 recolour or redraw it; on dark surfaces it sits on an ivory badge (`DewDrop tone="dark"`). Favicon/app icons:
 `app/icon.png`, `app/apple-icon.png`, `app/manifest.ts`, `public/brand/alnada-app-icon-*.png`.
 My Green Space = one shared garden shelf (`components/my-green-space/Garden.tsx`, `PottedPlant.tsx`): every owned
-plant in its own pot side by side; selecting one shows its full details below (no page reload).
+plant in its own pot side by side; selecting one shows its full details below (no page reload). Every slot is identical
+(`SLOT` in `PottedPlant.tsx`: same arched frame with object-cover photo, same ceramic pot, same label block) so pots
+always share one baseline on the shelf; only the photos differ.
 The same component is the homepage hero (`<Garden variant="hero" intro=…>`): the signed-in customer's own plants
 (mapped by `lib/green-space/garden.ts` `buildGarden`, shared with /my-green-space), or for visitors/empty gardens a
 read-only `sampleGarden` from public catalogue data, labelled "نبتة نموذجية" — never another customer's plants.

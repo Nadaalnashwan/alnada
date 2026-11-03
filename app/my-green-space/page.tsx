@@ -22,13 +22,13 @@ type Tab = "plants" | "explored" | "wishlist";
 /** Restrained empty state: an empty shelf with a few waiting pots. */
 function EmptyShelf({ title, body, cta }: { title: string; body: string; cta?: React.ReactNode }) {
   return (
-    <div className="relative overflow-hidden rounded-[2.5rem] bg-[linear-gradient(180deg,#fbf8f1_0%,#f3eee2_100%)] px-6 pb-10 pt-12 text-center ring-1 ring-[#ebe2cc]">
+    <div className="relative overflow-hidden rounded-[2.5rem] bg-garden px-6 pb-10 pt-12 text-center shadow-[var(--shadow-card)] ring-1 ring-[#e7dfcc]">
       <Leaf className="pointer-events-none absolute end-[8%] top-4 h-32 w-16 rotate-[24deg] text-saudi/[0.05]" />
       <div className="relative mx-auto flex max-w-sm items-end justify-center gap-6" aria-hidden>
         {["e1", "e2", "e3"].map((id, i) => (
           <div key={id} className="flex flex-col items-center" style={{ animation: `settle 0.6s var(--ease-organic) ${i * 90}ms both` }}>
             {i === 1 && <span className="-mb-2 h-8 w-1 rounded-full bg-leaf/50" />}
-            <Pot id={id} width={i === 1 ? 84 : 70} empty={i !== 1} />
+            <Pot id={id} width={80} empty={i !== 1} />
           </div>
         ))}
       </div>
