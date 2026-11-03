@@ -245,11 +245,9 @@ export function Garden({ plants: serverPlants, initialId, variant = "page", intr
         {/* soft edge fades hint that the shelf scrolls; opaque at the outer edge: RTL start = right, end = left */}
         {canScroll.start && <span aria-hidden className="pointer-events-none absolute inset-y-0 start-0 z-20 w-10 bg-gradient-to-r from-transparent to-[#e4f0e3] ltr:bg-gradient-to-l" />}
         {canScroll.end && <span aria-hidden className="pointer-events-none absolute inset-y-0 end-0 z-20 w-10 bg-gradient-to-l from-transparent to-[#e4f0e3] ltr:bg-gradient-to-r" />}
-        {/* the shelf the pots stand on: a light oak board with a soft front edge and a natural cast shadow */}
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 z-0 h-3" style={{ bottom: SHELF_BOTTOM }}>
-          <div className="mx-1 h-full rounded-[0.6rem] bg-[linear-gradient(180deg,#efe3c8_0%,#e2d0ad_55%,#cfb98f_100%)] shadow-[0_18px_24px_-14px_rgb(70_52_28/0.45),inset_0_1px_0_rgb(255_255_255/0.7)] sm:mx-3" />
-          <div className="mx-5 h-3 rounded-b-[2rem] bg-[radial-gradient(60%_100%_at_50%_0%,rgb(70_52_28/0.14),transparent)] sm:mx-10" />
-        </div>
+        {/* nursery display bench: slatted light-wood top at the same height as before (pot bases rest on it), with
+            slim end legs, a lower stretcher and a soft floor shadow drawn behind the label row — nothing moves */}
+        <NurseryBench />
       </div>
       <p className={`relative z-10 pb-5 pt-2 text-center text-[11px] text-muted ${hero ? "px-2" : "px-6 sm:px-10"}`}>
         {sample
@@ -308,6 +306,36 @@ export function Garden({ plants: serverPlants, initialId, variant = "page", intr
         ) : (
           selected && detailsFor(selected)
         )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A premium plant-nursery display bench in light ash wood. The top board sits exactly where the old shelf
+ * did (its upper surface is the pots' baseline); everything else hangs below it, behind the labels.
+ */
+function NurseryBench() {
+  const wood = "bg-[linear-gradient(180deg,#f3e7cd_0%,#e6d3ae_55%,#d6be92_100%)]";
+  const leg = "absolute top-3 bottom-0 w-[7px] rounded-b-[3px] bg-[linear-gradient(90deg,#d9c39a_0%,#ead9b8_45%,#cdb487_100%)] shadow-[2px_0_4px_-2px_rgb(70_52_28/0.3)]";
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-0" style={{ height: `calc(${SHELF_BOTTOM} + 0.75rem)` }}>
+      {/* soft floor shadow */}
+      <div className="absolute inset-x-[6%] -bottom-1 h-3 rounded-[50%] bg-[radial-gradient(closest-side,rgb(60_45_25/0.18),transparent)]" />
+      <div className="absolute inset-x-2 bottom-0 top-0 sm:inset-x-4">
+        {/* legs at both ends (inner supports would cross the plant labels as the shelf scrolls) */}
+        {["start-[3%]", "end-[3%]"].map((pos) => <span key={pos} className={`${leg} ${pos}`} />)}
+        {/* lower stretcher rail, just below the labels */}
+        <span className={`absolute inset-x-[3%] bottom-[0.35rem] h-[5px] rounded-full ${wood} opacity-90 shadow-[0_3px_5px_-3px_rgb(70_52_28/0.35)]`} />
+        {/* top: three slats seen from the front, with fine gaps and a sunlit edge */}
+        <div className={`absolute inset-x-0 top-0 h-3 overflow-hidden rounded-[0.5rem] ${wood} shadow-[0_14px_22px_-12px_rgb(70_52_28/0.42),inset_0_1px_0_rgb(255_255_255/0.75)]`}>
+          <span className="absolute inset-x-0 top-[4px] h-px bg-[#c9b083]/60" />
+          <span className="absolute inset-x-0 top-[8px] h-px bg-[#c9b083]/50" />
+          <span className="absolute inset-y-0 start-0 w-1/3 bg-gradient-to-l from-transparent via-white/25 to-transparent" />
+        </div>
+        {/* apron under the top with small corner brackets */}
+        <span className={`absolute inset-x-[2%] top-3 h-[6px] rounded-b-[4px] ${wood} brightness-95`} />
+        {["start-[3%]", "end-[3%]"].map((pos) => <span key={pos} className={`absolute top-[18px] size-2.5 ${pos} rounded-br-full bg-[#dcc59c] opacity-80 rtl:-scale-x-100`} />)}
       </div>
     </div>
   );
