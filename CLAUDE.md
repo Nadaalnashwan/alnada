@@ -18,7 +18,7 @@ collection ("My Green Space") and an assistant, **Nada AI**. Tagline: حياة �
 
 ## Brand & design system ("Living Botanical")
 Brand colours (exact): Saudi Green `#006C35` (primary), Deep Green `#004D26`, Soft Green `#EAF5EE`. Page background is
-Warm Botanical Ivory `ivory` `#F6F1E7` (never stark white); secondary Soft Sage Mist `mist`/`sage-mist` `#EEF4EC`; the
+fresh soft green `page` `#EAF4EA` (never stark white; `ivory` `#F6F1E7` stays as a warm accent); secondary Soft Sage Mist `mist`/`sage-mist` `#EEF4EC`; the
 `white` token is the card surface `#FFFCF6`; `forest` `#103D28` for dark bands/footer; `bg-garden` = the hero gradient.
 Other tokens in `app/globals.css`: `leaf`/`sprout` (fresh accents), `sage`, `dew`, `cream`, `sun` (tiny accent only). No burgundy, maroon, purple, beige-dominant themes, heavy gradients or cartoon plants.
 Font: IBM Plex Sans Arabic. RTL-first; English via `locale` cookie; use logical props (`ms/me/start/end`).

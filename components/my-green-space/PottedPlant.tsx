@@ -58,6 +58,8 @@ export interface PottedPlantProps {
   celebrate?: boolean;
   /** Care tasks due now, from its own records. */
   due?: number;
+  /** The plant was just added: it grows into its pot once. */
+  sprouting?: boolean;
   onSelect: () => void;
   index: number;
 }
@@ -72,7 +74,7 @@ function Slot({ children, label, index }: { children: React.ReactNode; label: Re
   );
 }
 
-export function PottedPlant({ id, image, label, sublabel, status, statusLabel, selected, watering, celebrate = false, due = 0, onSelect, index }: PottedPlantProps) {
+export function PottedPlant({ id, image, label, sublabel, status, statusLabel, selected, watering, celebrate = false, due = 0, sprouting = false, onSelect, index }: PottedPlantProps) {
   const alert = status === "soil_check_due" || status === "light_mismatch";
   const StatusIcon = status === "soil_check_due" ? Droplets : status === "light_mismatch" ? Sun : status === "unconfirmed" ? CircleHelp : null;
 
@@ -84,9 +86,15 @@ export function PottedPlant({ id, image, label, sublabel, status, statusLabel, s
       </button>
     }>
       <button type="button" onClick={onSelect} aria-pressed={selected} aria-controls="plant-details" aria-label={`${label} — ${statusLabel}${due ? ` · ${due}` : ""}`} data-plant-id={id}
-        className="group relative flex flex-col items-center rounded-[1.75rem] outline-none focus-visible:ring-2 focus-visible:ring-saudi/60 focus-visible:ring-offset-4 focus-visible:ring-offset-transparent">
+        className={`group relative flex flex-col items-center rounded-[1.75rem] outline-none transition-transform duration-500 ease-[var(--ease-organic)] focus-visible:ring-2 focus-visible:ring-saudi/60 focus-visible:ring-offset-4 focus-visible:ring-offset-transparent ${selected ? "-translate-y-1.5" : "hover:-translate-y-1"}`}>
         {/* soft light behind the selected plant */}
         <span aria-hidden className={`pointer-events-none absolute -inset-x-3 -top-3 bottom-6 rounded-full bg-[radial-gradient(closest-side,rgb(140_197_111/0.38),transparent)] transition duration-700 ${selected ? "animate-glow opacity-100" : "opacity-0 group-hover:opacity-60"}`} />
+        {watering && (
+          <span aria-hidden className="pointer-events-none absolute inset-x-0 z-30 flex justify-center" style={{ bottom: px(SLOT.potH - 8) }}>
+            <span className="absolute size-16 animate-ripple rounded-full border-2 border-sky-300/70" />
+            <span className="absolute size-16 animate-ripple rounded-full border-2 border-sky-200/60 [animation-delay:250ms]" />
+          </span>
+        )}
         {watering && (
           <span aria-hidden className="pointer-events-none absolute -top-2 z-30 flex gap-2">
             {[0, 1, 2].map((d) => <span key={d} className="block h-3.5 w-2.5 animate-drip rounded-[50%_50%_50%_50%/60%_60%_40%_40%] bg-gradient-to-b from-sky-200 to-sky-400 shadow-sm" style={{ animationDelay: `${d * 160}ms` }} />)}
@@ -105,8 +113,8 @@ export function PottedPlant({ id, image, label, sublabel, status, statusLabel, s
           </span>
         )}
         {/* identical arched frame for every plant; the photo always covers it */}
-        <span className={`relative z-0 block origin-bottom overflow-hidden rounded-t-full rounded-b-[1.1rem] bg-soft shadow-[0_16px_26px_-16px_rgb(16_61_40/0.55)] ring-[3px] transition duration-500 ease-[var(--ease-organic)] group-hover:animate-sway-soft ${selected ? "scale-[1.04] ring-white" : "ring-white/80 group-hover:scale-[1.02]"}`}
-          style={{ width: px(SLOT.frameW), height: px(SLOT.frameH), marginBottom: px(-SLOT.sink) }}>
+        <span className={`relative z-0 block origin-bottom overflow-hidden rounded-t-full rounded-b-[1.1rem] bg-soft ring-[3px] transition duration-500 ease-[var(--ease-organic)] ${sprouting ? "animate-sprout" : "animate-breathe group-hover:animate-sway-soft"} ${selected ? "scale-[1.05] shadow-[0_22px_34px_-16px_rgb(0_108_53/0.55),0_0_0_6px_rgb(140_197_111/0.25)] ring-white" : "shadow-[0_16px_26px_-16px_rgb(16_61_40/0.55)] ring-white/80 group-hover:scale-[1.03]"}`}
+          style={{ width: px(SLOT.frameW), height: px(SLOT.frameH), marginBottom: px(-SLOT.sink), animationDelay: sprouting ? undefined : `${(index % 5) * -1.1}s` }}>
           <PlantImage src={image} alt="" sizes={`${SLOT.frameW * 2}px`} className="object-[center_40%]" />
           <span className="absolute inset-0 bg-gradient-to-t from-forest/25 via-transparent to-white/10" />
         </span>

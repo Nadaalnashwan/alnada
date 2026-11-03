@@ -7,7 +7,7 @@ import {
   AlertTriangle, CalendarClock, Camera, Check, ChevronLeft, ChevronRight, ClipboardList, Droplets, ExternalLink, Gauge, History, Info, ListChecks,
   LoaderCircle, MapPin, MessageCircle, NotebookPen, Plus, Scissors, Shovel, Sparkles, Sprout, Store, Sun, Thermometer, Waves, X,
 } from "lucide-react";
-import { Leaf } from "@/components/brand/Decor";
+import { Blob, Leaf } from "@/components/brand/Decor";
 import { useT } from "@/components/layout/Providers";
 import { PlantImage } from "@/components/store/PlantImage";
 import { CARE_ACTIVITIES } from "@/lib/ai/schemas";
@@ -116,6 +116,16 @@ export function Garden({ plants: serverPlants, initialId, variant = "page", intr
   const [added, setAdded] = useState<Record<string, Log[]>>({});
   useEffect(() => setAdded({}), [serverPlants]);
   const plants = useMemo(() => serverPlants.map((p) => withSavedLogs(p, added[p.id] ?? [])), [serverPlants, added]);
+  // A plant added in the last few minutes sprouts into its pot once (client-only, so SSR markup stays stable).
+  const [sproutId, setSproutId] = useState<string | null>(null);
+  useEffect(() => {
+    if (sample) return;
+    const fresh = serverPlants.find((p) => p.addedAt && Date.now() - new Date(p.addedAt).getTime() < 5 * 60_000);
+    if (!fresh) return;
+    setSproutId(fresh.id);
+    const t = setTimeout(() => setSproutId(null), 2200);
+    return () => clearTimeout(t);
+  }, [serverPlants, sample]);
   const shelfRef = useRef<HTMLUListElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
   const lastShown = useRef<GardenPlant | null>(null);
@@ -226,15 +236,15 @@ export function Garden({ plants: serverPlants, initialId, variant = "page", intr
             <PottedPlant key={p.id} index={i} id={p.id} image={p.image} label={p.nickname ?? p.speciesName}
               sublabel={sample ? sampleLabel : p.nickname ? p.speciesName : (p.location ?? "")}
               status={p.status} statusLabel={sample ? sampleLabel : gardenStatusLabel(p.status, ar)}
-              selected={p.id === selectedId} watering={p.id === wateringId} celebrate={p.id === celebrateId} due={dueCount(p)} onSelect={() => select(p.id)} />
+              selected={p.id === selectedId} watering={p.id === wateringId} celebrate={p.id === celebrateId || p.id === sproutId} sprouting={p.id === sproutId} due={dueCount(p)} onSelect={() => select(p.id)} />
           ))}
           <AddPlantPot index={plants.length} href={addHref} label={sample ? (ar ? "ازرع نبتتك" : "Plant yours") : ar ? "أضف نبتة" : "Add a plant"}
             hint={sample ? (ar ? "ابدأ مساحتك الخضراء" : "Start your Green Space") : ar ? "ازرع نبتة جديدة" : "Plant a new one"} />
           <li aria-hidden className="w-2 shrink-0" />
         </ul>
         {/* soft edge fades hint that the shelf scrolls; opaque at the outer edge: RTL start = right, end = left */}
-        {canScroll.start && <span aria-hidden className="pointer-events-none absolute inset-y-0 start-0 z-20 w-10 bg-gradient-to-r from-transparent to-[#f2f3ea] ltr:bg-gradient-to-l" />}
-        {canScroll.end && <span aria-hidden className="pointer-events-none absolute inset-y-0 end-0 z-20 w-10 bg-gradient-to-l from-transparent to-[#f2f3ea] ltr:bg-gradient-to-r" />}
+        {canScroll.start && <span aria-hidden className="pointer-events-none absolute inset-y-0 start-0 z-20 w-10 bg-gradient-to-r from-transparent to-[#e4f0e3] ltr:bg-gradient-to-l" />}
+        {canScroll.end && <span aria-hidden className="pointer-events-none absolute inset-y-0 end-0 z-20 w-10 bg-gradient-to-l from-transparent to-[#e4f0e3] ltr:bg-gradient-to-r" />}
         {/* the shelf the pots stand on: a light oak board with a soft front edge and a natural cast shadow */}
         <div aria-hidden className="pointer-events-none absolute inset-x-0 z-0 h-3" style={{ bottom: SHELF_BOTTOM }}>
           <div className="mx-1 h-full rounded-[0.6rem] bg-[linear-gradient(180deg,#efe3c8_0%,#e2d0ad_55%,#cfb98f_100%)] shadow-[0_18px_24px_-14px_rgb(70_52_28/0.45),inset_0_1px_0_rgb(255_255_255/0.7)] sm:mx-3" />
@@ -259,7 +269,10 @@ export function Garden({ plants: serverPlants, initialId, variant = "page", intr
         {/* window light & leaf shadows */}
         <span aria-hidden className="pointer-events-none absolute -top-24 start-[8%] h-80 w-[26rem] rotate-[-14deg] rounded-[3rem] bg-gradient-to-b from-white/90 to-transparent blur-2xl" />
         <span aria-hidden className="pointer-events-none absolute -top-10 end-[12%] h-64 w-40 rotate-12 rounded-[2rem] bg-white/50 blur-xl" />
-        {hero && <span aria-hidden className="pointer-events-none absolute -end-32 top-10 size-[30rem] rounded-full bg-[radial-gradient(closest-side,rgb(255_214_120/0.28),transparent)]" />}
+        {hero && <span aria-hidden className="pointer-events-none absolute -end-32 top-10 size-[30rem] animate-breathe rounded-full bg-[radial-gradient(closest-side,rgb(255_214_120/0.3),transparent)]" />}
+        {hero && <Blob variant={2} className="pointer-events-none absolute -start-40 bottom-[-12rem] size-[34rem] text-[#d4e9d2]/70" />}
+        {hero && <Blob variant={3} className="pointer-events-none absolute end-[30%] -top-40 size-[22rem] text-white/45" />}
+        {hero && <DewField />}
         <Leaf className="pointer-events-none absolute end-[6%] top-4 h-40 w-20 rotate-[24deg] text-saudi/[0.05] blur-[1px]" />
         <Leaf className="pointer-events-none absolute end-[14%] top-14 h-28 w-14 -rotate-[18deg] text-saudi/[0.04] blur-[1px]" />
         <Leaf className="pointer-events-none absolute start-[30%] -top-6 h-32 w-16 rotate-[160deg] text-saudi/[0.04] blur-[1px]" />
@@ -297,6 +310,24 @@ export function Garden({ plants: serverPlants, initialId, variant = "page", intr
         )}
       </div>
     </div>
+  );
+}
+
+/** A few dew drops and leaves drifting in the window light — sparse, decorative, motion-safe. */
+const DEW = [
+  { s: 10, x: "12%", y: "18%", d: "0s", t: "16s" }, { s: 6, x: "26%", y: "62%", d: "-3s", t: "13s" }, { s: 8, x: "44%", y: "12%", d: "-7s", t: "18s" },
+  { s: 5, x: "58%", y: "48%", d: "-2s", t: "12s" }, { s: 9, x: "71%", y: "24%", d: "-9s", t: "17s" }, { s: 6, x: "86%", y: "66%", d: "-5s", t: "14s" },
+];
+function DewField() {
+  return (
+    <span aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+      {DEW.map((p, i) => (
+        <span key={i} className="absolute animate-drift rounded-[50%_50%_50%_50%/60%_60%_40%_40%] bg-[radial-gradient(circle_at_35%_30%,#ffffff,rgb(190_230_205/0.75)_55%,rgb(0_108_53/0.18))] shadow-[0_2px_6px_rgb(0_108_53/0.15)]"
+          style={{ width: p.s, height: p.s * 1.25, insetInlineStart: p.x, top: p.y, animationDelay: p.d, animationDuration: p.t, opacity: 0.75 }} />
+      ))}
+      <Leaf className="absolute start-[36%] top-[30%] h-6 w-3 animate-drift text-leaf/35 [animation-duration:19s]" />
+      <Leaf className="absolute start-[80%] top-[12%] h-5 w-2.5 animate-drift text-saudi/25 [animation-delay:-6s] [animation-duration:22s]" />
+    </span>
   );
 }
 

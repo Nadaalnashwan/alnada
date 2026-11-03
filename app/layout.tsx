@@ -28,7 +28,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* lets CSS animate scroll-reveal only when JS runs (content stays visible without JS) */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
       </head>
-      <body className="min-h-dvh bg-ivory">
+      <body className="min-h-dvh bg-page">
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-saudi focus:px-4 focus:py-2 focus:text-white">
           {locale === "ar" ? "تخطَّ إلى المحتوى" : "Skip to content"}
         </a>

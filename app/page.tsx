@@ -122,8 +122,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
         </p>
       )}
       <div className="mt-5 flex animate-rise flex-wrap gap-2 sm:mt-8 sm:gap-3 [animation-delay:180ms]">
-        <Link href="/nada-ai" className="btn-primary px-4 py-2.5 text-sm sm:px-7 sm:py-3.5 sm:text-base lg:px-5 xl:px-6"><span className="shine animate-shimmer" /><MessageCircle className="size-5" />{t.hero.ctaAi}</Link>
-        <Link href="/shop" className="btn-outline px-4 py-2.5 text-sm sm:px-7 sm:py-3.5 sm:text-base lg:px-5 xl:px-6">{t.hero.ctaShop}<Arrow className="size-4" /></Link>
+        <Link href="/nada-ai" className="group btn-primary px-4 py-2.5 text-sm hover:-translate-y-1 sm:px-7 sm:py-3.5 sm:text-base lg:px-5 xl:px-6"><span className="shine animate-shimmer" /><MessageCircle className="size-5 transition duration-500 group-hover:-rotate-12 group-hover:scale-110" />{t.hero.ctaAi}</Link>
+        <Link href="/shop" className="group btn-outline px-4 py-2.5 text-sm hover:-translate-y-1 hover:shadow-[var(--shadow-card)] sm:px-7 sm:py-3.5 sm:text-base lg:px-5 xl:px-6">{t.hero.ctaShop}<Arrow className="size-4 transition duration-300 group-hover:-translate-x-1 ltr:group-hover:translate-x-1" /></Link>
       </div>
       <Link href={sample ? addHref : "/my-green-space"} className="group mt-4 inline-flex animate-rise sm:mt-5 items-center gap-2 text-sm font-bold text-saudi [animation-delay:240ms]">
         <span className="grid size-7 place-items-center rounded-full bg-white text-saudi shadow-sm ring-1 ring-saudi/10 transition group-hover:bg-saudi group-hover:text-white"><Sprout className="size-4" /></span>
@@ -139,7 +139,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
       <Garden variant="hero" plants={gardenPlants} sample={sample} addHref={addHref} initialId={sp.plant ?? null} intro={intro} />
 
       {/* ══════════════════ CATEGORIES ══════════════════ */}
-      <section className="pb-12 pt-14 sm:pt-16">
+      <section className="pb-8 pt-10 sm:pt-12">
         <div className="container-x">
           <Reveal><SectionHeading eyebrow={ar ? "تسوّق حسب أسلوب حياتك" : "SHOP BY LIFESTYLE"} title={t.home.categories} lead={ar ? "من ركن مكتبك المظلل إلى بلكونة تضربها شمس العصر." : "From a shaded desk corner to a balcony in the afternoon sun."} href="/categories" linkLabel={t.home.viewAll} locale={locale} /></Reveal>
           <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-3 sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0 lg:grid-cols-8">
@@ -160,7 +160,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
       </section>
 
       {/* ══════════════════ FEATURED COLLECTION ══════════════════ */}
-      <section className="py-14">
+      <section className="py-9 sm:py-11">
         <div className="container-x">
           <Reveal><SectionHeading eyebrow={ar ? "مختارات الندى" : "THE AL NADA EDIT"} title={ar ? "نباتات اختارها عملاؤنا" : "Plants our customers love"} href="/shop" linkLabel={t.home.viewAll} locale={locale} /></Reveal>
           <div className="grid gap-5 lg:grid-cols-[1.05fr_2fr]">
@@ -185,7 +185,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
       </section>
 
       {/* ══════════════════ WHY AL NADA ══════════════════ */}
-      <section className="relative py-16">
+      <section className="relative py-10 sm:py-12">
         <Sprig className="absolute -start-6 top-10 hidden h-64 w-40 text-sage/50 lg:block" />
         <div className="container-x">
           <Reveal><SectionHeading align="center" eyebrow={ar ? "لماذا الندى" : "WHY AL NADA"} title={ar ? "متجر نباتات يفهم نبتتك ومكانها" : "A plant store that understands your plant and its place"} locale={locale} /></Reveal>
@@ -205,7 +205,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
       </section>
 
       {/* ══════════════════ NADA AI ══════════════════ */}
-      <section className="px-2 py-10 sm:px-4">
+      <section className="px-2 py-6 sm:px-4">
         <div className="relative mx-auto max-w-[90rem] overflow-hidden rounded-[2.5rem] bg-forest-glow text-white">
           <Leaf className="absolute -end-10 -top-6 h-72 w-36 rotate-12 text-white/[0.04]" />
           <div className="container-x grid items-center gap-12 py-16 lg:grid-cols-2 lg:py-20">
@@ -247,7 +247,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
       </section>
 
       {/* ══════════════════ SAUDI HOMES ══════════════════ */}
-      <section className="py-14">
+      <section className="py-9 sm:py-11">
         <div className="container-x">
           <Reveal><SectionHeading eyebrow={ar ? "مناخنا" : "OUR CLIMATE"} title={t.home.saudi} lead={t.home.saudiBody} href="/categories/low-maintenance" linkLabel={t.home.viewAll} locale={locale} /></Reveal>
           <Reveal><ProductGrid products={saudi.map(card)} row /></Reveal>
@@ -255,7 +255,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
       </section>
 
       {/* ══════════════════ PET SAFE ══════════════════ */}
-      <section className="py-14">
+      <section className="py-9 sm:py-11">
         <div className="container-x">
           <Reveal><SectionHeading eyebrow={ar ? "لبيت فيه قطط وكلاب" : "FOR HOMES WITH PETS"} title={t.home.pet} lead={ar ? "مصنفة غير سامة للقطط والكلاب في قائمة ASPCA. النباتات غير المؤكدة لا تظهر هنا." : "Listed non-toxic to cats and dogs by the ASPCA. Unconfirmed plants never appear here."} href="/categories/pet-friendly" linkLabel={t.home.viewAll} locale={locale} /></Reveal>
           <Reveal><ProductGrid products={petSafe.map(card)} row /></Reveal>
@@ -263,7 +263,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
       </section>
 
       {/* ══════════════════ CARE RITUALS ══════════════════ */}
-      <section className="bg-botanical py-16">
+      <section className="mx-2 rounded-[2.5rem] bg-botanical py-12 sm:mx-4">
         <div className="container-x">
           <Reveal><SectionHeading eyebrow={ar ? "طقوس العناية" : "CARE RITUALS"} title={t.home.tips} href="/nada-ai" linkLabel={t.nav.nada} locale={locale} /></Reveal>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -283,7 +283,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
 
       {/* ══════════════════ NEW IN ══════════════════ */}
       {newIn.length > 0 && (
-        <section className="py-14">
+        <section className="py-9 sm:py-11">
           <div className="container-x">
             <Reveal><SectionHeading eyebrow={ar ? "وصل حديثًا" : "JUST ARRIVED"} title={t.home.newArrivals} href="/shop" linkLabel={t.home.viewAll} locale={locale} /></Reveal>
             <Reveal><ProductGrid products={newIn.map(card)} row /></Reveal>
@@ -314,7 +314,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ p
       </section>
 
       {/* ══════════════════ CLOSING CTA ══════════════════ */}
-      <section className="py-16">
+      <section className="py-10 sm:py-12">
         <div className="container-x">
           <Reveal>
             <div className="relative overflow-hidden rounded-[2.5rem] bg-botanical px-6 py-14 text-center ring-1 ring-saudi/10">
