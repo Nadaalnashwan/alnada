@@ -229,7 +229,12 @@ export function NadaChat({ plants, aiReady, initialPrompt, initialPlantId }: { p
                   </div>
                 )}
                 {m.error && <p className="flex items-start gap-2 rounded-2xl bg-danger-bg px-4 py-3 text-sm text-danger" role="alert"><CloudOff className="mt-0.5 size-4 shrink-0" />{m.error}</p>}
-                {m.blocks?.map((b, j) => <ChatBlockView key={j} block={b} onChoose={(id, label) => { setSelectedPlant(id); send(`${messages[i - 1]?.content ?? ""} (${label})`, { userPlantId: id }); }} />)}
+                {m.blocks?.map((b, j) => <ChatBlockView key={j} block={b} onChoose={(id, label) => {
+                  // Choices are either the customer's saved plants or plants/products Nada presented; only the former is a userPlantId.
+                  const own = plants.some((p) => p.id === id);
+                  if (own) setSelectedPlant(id);
+                  send(`${messages[i - 1]?.content ?? ""} (${label})`, { userPlantId: own ? id : null });
+                }} />)}
               </div>
             </div>
           ))}

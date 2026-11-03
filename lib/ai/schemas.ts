@@ -42,6 +42,25 @@ export const UnderstandingSchema = z.object({
 });
 export type Understanding = z.infer<typeof UnderstandingSchema>;
 
+/**
+ * One plant Nada referred to. `key` is stable: the catalogue product id, else `sp:<species slug>`, else
+ * `n:<normalised name>` for a botanical suggestion that is not in AL NADA's verified data.
+ */
+export const RefItemSchema = z.object({
+  key: z.string().max(120),
+  name_ar: z.string().max(80),
+  name_en: z.string().max(80),
+  scientific: z.string().max(120).nullable(),
+  species_slug: z.string().max(80).nullable(),
+  product_id: z.string().uuid().nullable(),
+});
+export type RefItem = z.infer<typeof RefItemSchema>;
+
+/** An ordered group of plants Nada presented in one turn (store picks or a list in her reply). */
+export const RecSetSchema = z.object({ id: z.number().int().min(0), source: z.enum(["store", "reply"]), items: z.array(RefItemSchema).min(1).max(6) });
+export type RecSet = z.infer<typeof RecSetSchema>;
+export const MAX_REC_SETS = 6;
+
 /** Conversation state the server carries between turns (no personal data). */
 export const ChatContextSchema = z.object({
   workflow: z.enum(["care", "rescue", "finder", "general"]).default("general"),
@@ -50,6 +69,18 @@ export const ChatContextSchema = z.object({
   focus_species: z.string().max(80).nullable().default(null),
   focus_user_plant: z.string().uuid().nullable().default(null),
   save_explored: z.boolean().default(true),
+  // Reference memory (all optional so contexts saved before this existed still parse):
+  turn: z.number().int().min(0).default(0),
+  /** Recent recommendation groups, oldest first, each in its original order. */
+  rec_sets: z.array(RecSetSchema).max(MAX_REC_SETS).default([]),
+  /** id of the group "الأولى/الثانية" refer to — the latest one presented. */
+  active_set: z.number().int().min(0).nullable().default(null),
+  /** The single plant currently being discussed ("هذي", "أضيفيها"); never reorders the active group. */
+  focus_item: RefItemSchema.nullable().default(null),
+  /** Keys of the plants in the latest comparison ("أي وحدة أرخص؟" is answered among these). */
+  compared: z.array(z.string().max(120)).max(4).default([]),
+  /** Last cart/wishlist action — answers "وش أضفتي؟" and blocks accidental duplicates. */
+  last_action: z.object({ type: z.enum(["cart", "wishlist"]), item: RefItemSchema, message: z.string().max(200), turn: z.number().int().min(0) }).nullable().default(null),
 });
 export type ChatContext = z.infer<typeof ChatContextSchema>;
 
@@ -80,7 +111,8 @@ export type ChatBlock =
   | { type: "checklist"; title: string; items: string[]; tone: "care" | "rescue" }
   | { type: "care_logs"; title: string; plantId: string; items: CareLogData[] }
   | { type: "action"; status: "success" | "failed" | "needs_auth" | "needs_choice"; message: string; choices?: { id: string; label: string }[] }
-  | { type: "save_observation"; plantId: string; note: string };
+  | { type: "save_observation"; plantId: string; note: string }
+  | { type: "notice"; message: string };
 
 export interface ChatResponse {
   reply: string;

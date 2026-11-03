@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { AlertCircle, Check, CheckCircle2, ClipboardList, Droplets, Heart, LogIn, MapPin, ShoppingBag, Sprout } from "lucide-react";
+import { AlertCircle, Check, CheckCircle2, ClipboardList, Droplets, Heart, Info, LogIn, MapPin, ShoppingBag, Sprout } from "lucide-react";
 import { useCart, useT, useWishlist } from "@/components/layout/Providers";
 import { PlantBox } from "@/components/my-green-space/PlantBox";
 import { PlantImage } from "@/components/store/PlantImage";
@@ -175,6 +175,8 @@ export function ChatBlockView({ block, onChoose }: { block: ChatBlock; onChoose:
         </section>
       );
     }
+    case "notice":
+      return <p className="flex items-start gap-2 rounded-2xl bg-mist p-3 text-sm text-deep" role="note"><Info className="mt-0.5 size-4 shrink-0 text-saudi" />{block.message}</p>;
     case "save_observation":
       return (
         <button

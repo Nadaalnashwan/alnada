@@ -5,12 +5,16 @@
 // Dependencies (model + user-scoped data access) are injected so the pipeline is testable and the
 // model can never reach the database: it only fills the Understanding schema.
 
-import { matchesQuery } from "@/lib/catalog/filter";
 import { plantInsights, type PlantInsights } from "@/lib/green-space/insights";
 import type { Locale } from "@/lib/i18n/dict";
 import { DICTS } from "@/lib/i18n/dict";
 import type { ProductWithSpecies, Species } from "@/lib/plants/types";
 import { PreferencesSchema, recommend, type Preferences } from "@/lib/recommendations/engine";
+import {
+  activeSet, answerCriterion, asksForMore, asksForProduct, asksForRecommendations, detectCriterion, extractReplyList, findItem, isCompareRequest,
+  isLastActionQuestion, itemFromProduct, itemFromSpecies, itemName, pushRecSet, resolveReference, sameRequest, storeProductsFor, wantsCart, wantsWishlist,
+  type Resolution,
+} from "./conversation";
 import type { LlamaChat, LlamaMessage } from "./llama";
 import { RESPOND_SYSTEM, RESPOND_SYSTEM_EN, UNDERSTAND_SYSTEM } from "./prompts";
 import {
@@ -21,9 +25,13 @@ import {
   type ChatResponse,
   type Intent,
   type ProductCardData,
+  type RefItem,
   type Understanding,
   type UserPlantCardData,
 } from "./schemas";
+import { matchSpecies, norm, resolveSpecies } from "./species-match";
+
+export { resolveSpecies };
 
 // ───────────────────────── data port ─────────────────────────
 export interface UserPlantRecord {
@@ -73,45 +81,6 @@ export interface NadaInput {
 }
 
 // ───────────────────────── helpers ─────────────────────────
-const norm = (s: string) =>
-  s.toLowerCase().normalize("NFKD").replace(/[ً-ٰٟ]/g, "").replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/^ال/, "").trim();
-
-// Common Saudi/Arabic and English names that differ from catalogue names.
-const ALIASES: Record<string, string> = {
-  "سانسفيريا": "dracaena-trifasciata", "سنسيفيريا": "dracaena-trifasciata", "جلد النمر": "dracaena-trifasciata", "snake plant": "dracaena-trifasciata",
-  "بوتس": "epipremnum-aureum", "بوثوس": "epipremnum-aureum", "pothos": "epipremnum-aureum",
-  "زاميا": "zamioculcas-zamiifolia", "zz": "zamioculcas-zamiifolia",
-  "صبار": "aloe-vera", "الوفيرا": "aloe-vera", "صبار الالوفيرا": "aloe-vera",
-  "فل": "jasminum-sambac", "ياسمين": "jasminum-sambac", "jasmine": "jasminum-sambac",
-  "نعناع": "mentha-spicata", "mint": "mentha-spicata", "ريحان": "ocimum-basilicum", "basil": "ocimum-basilicum",
-  "جهنميه": "bougainvillea-glabra", "مجنونه": "bougainvillea-glabra", "دفله": "nerium-oleander",
-  "مطاطي": "ficus-elastica", "فيكس": "ficus-elastica", "اوركيد": "phalaenopsis-hybrid", "orchid": "phalaenopsis-hybrid",
-  "كالاثيا": "goeppertia-orbifolia", "calathea": "goeppertia-orbifolia", "زنبق السلام": "spathiphyllum-wallisii", "سباثيفيلوم": "spathiphyllum-wallisii",
-  "monstera": "monstera-deliciosa", "مونستيرا": "monstera-deliciosa", "مونستيره": "monstera-deliciosa",
-  "عصفور الجنه": "strelitzia-reginae", "لافندر": "lavandula-angustifolia", "خزامي": "lavandula-angustifolia", "اكليل الجبل": "salvia-rosmarinus", "روزماري": "salvia-rosmarinus",
-};
-
-export function resolveSpecies(mention: string, species: Species[]): Species | null {
-  const m = norm(mention);
-  if (!m) return null;
-  // whole-word alias match ("zz" must not match inside "xyzzy")
-  const alias = Object.entries(ALIASES).find(([k]) => ` ${m} `.includes(` ${norm(k)} `));
-  if (alias) return species.find((s) => s.slug === alias[1]) ?? null;
-  let best: { s: Species; score: number } | null = null;
-  for (const s of species) {
-    const names = [s.name_ar, s.name_en, s.scientific_name, s.slug.replace(/-/g, " ")].map(norm);
-    let score = 0;
-    for (const n of names) {
-      if (n === m) score = Math.max(score, 3);
-      else if (n.includes(m) && m.length >= 3) score = Math.max(score, 2);
-      else if (m.includes(n) && n.length >= 3) score = Math.max(score, 1.5);
-      else if (n.split(/[\s()]+/).some((w) => w.length >= 4 && m.includes(w))) score = Math.max(score, 1);
-    }
-    if (score > (best?.score ?? 0)) best = { s, score };
-  }
-  return best?.s ?? null;
-}
-
 function riyadhDate(d: Date) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
 }
@@ -168,6 +137,12 @@ function rescueChecklist(locale: Locale): string[] {
 export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatResponse> {
   const now = deps.now?.() ?? new Date();
   const ctx: ChatContext = ChatContextSchema.parse({ ...(input.context ?? {}), ...(input.workflow ? { workflow: input.workflow } : {}) });
+  // Contexts saved before recommendation groups existed: their last store picks become the active group.
+  if (!ctx.rec_sets.length && ctx.last_recommended.length) {
+    const legacy = ctx.last_recommended.map((id) => deps.products.find((p) => p.id === id)).filter((p): p is ProductWithSpecies => !!p).map(itemFromProduct);
+    if (legacy.length) { ctx.rec_sets = [{ id: ctx.turn, source: "store", items: legacy }]; ctx.active_set = ctx.turn; }
+  }
+  ctx.turn += 1;
   const history = input.history.slice(-8);
   const speciesBySlug = new Map(deps.species.map((s) => [s.slug, s]));
 
@@ -177,7 +152,7 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
     { role: "system", content: UNDERSTAND_SYSTEM },
     {
       role: "system",
-      content: `Context: workflow=${ctx.workflow}; signed_in=${Boolean(deps.user)}; user_saved_plant_nicknames=${JSON.stringify(plants.map((p) => p.nickname).filter(Boolean))}; previous_preferences=${JSON.stringify(ctx.preferences)}; last_recommended_count=${ctx.last_recommended.length}`,
+      content: `Context: workflow=${ctx.workflow}; signed_in=${Boolean(deps.user)}; user_saved_plant_nicknames=${JSON.stringify(plants.map((p) => p.nickname).filter(Boolean))}; previous_preferences=${JSON.stringify(ctx.preferences)}; last_recommended_count=${ctx.last_recommended.length}; active_recommendations_in_order=${JSON.stringify(activeSet(ctx)?.items.map((i) => i.name_ar || i.name_en) ?? [])}`,
     },
     ...history.map((h) => ({ role: h.role, content: h.content }) as LlamaMessage),
     { role: "user", content: input.message },
@@ -200,10 +175,19 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
   // A care log is only written for a completed action in the past tense ("سقيت", "watered"), never for
   // habits ("أسقيها يوميًا") or plans — otherwise we would store a false record.
   if (u.intent === "save_care_log" && !CARE_DONE.test(input.message)) u = { ...u, intent: "get_plant_care" };
-  // Ordinal references ("الثانية", "the first") pick an exact product — never left to the model alone.
-  if ((u.intent === "save_to_wishlist" || u.intent === "add_to_cart") && ctx.last_recommended.length) {
-    const idx = detectOrdinal(input.message);
-    if (idx) u = { ...u, reference_index: idx };
+  // References to plants Nada already presented ("الأولى", "قارني بينهم", "أضيفيها") are resolved
+  // deterministically against the latest recommendation group — never left to the model alone.
+  const ref: Resolution = input.userPlantId || u.plant_nickname ? { kind: "none" } : resolveReference(input.message, ctx);
+  const criterion = ctx.rec_sets.length || ctx.compared.length ? detectCriterion(input.message) : null;
+  const OWN_PLANT_INTENTS: Intent[] = ["get_my_plants", "get_plant_history", "save_care_log", "save_plant", "get_explored_history", "investigate_plant_problem"];
+  if (ref.kind !== "none" && !OWN_PLANT_INTENTS.includes(u.intent)) {
+    if (wantsCart(input.message) && u.intent !== "save_to_wishlist") u = { ...u, intent: "add_to_cart" };
+    else if (wantsWishlist(input.message)) u = { ...u, intent: "save_to_wishlist" };
+    else if (isCompareRequest(input.message)) u = { ...u, intent: "compare_plants" };
+    else if (criterion) u = { ...u, intent: "compare_plants" };
+    else if (isLastActionQuestion(input.message)) u = { ...u, intent: "general_question" };
+  } else if (criterion && !OWN_PLANT_INTENTS.includes(u.intent) && u.intent !== "save_to_wishlist" && u.intent !== "add_to_cart" && u.intent !== "cheaper_options") {
+    u = { ...u, intent: "compare_plants" };
   }
   // Reply language follows the user's own message script, not the model's guess.
   const arabicChars = (input.message.match(/[\u0600-\u06FF]/g) ?? []).length;
@@ -323,8 +307,76 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
     blocks.push({ type: "species", item: { slug: sp.slug, name: ar ? sp.name_ar : sp.name_en, scientific: sp.scientific_name, image: sp.image?.thumb_url ?? null, facts: speciesFacts(sp, locale), productSlug: product?.slug ?? null } });
   };
 
+  // ── plants from the conversation's recommendation groups ──
+  const speciesOf = (i: RefItem) => (i.species_slug ? speciesBySlug.get(i.species_slug) ?? null : null);
+  /** Verified facts for one referenced plant; store data only when this exact species is sold. */
+  const refFact = (i: RefItem) => {
+    const sp = speciesOf(i);
+    const prods = storeProductsFor(i, deps.products);
+    const prices = prods.map((p) => p.price_sar);
+    return {
+      name: itemName(i, ar), scientific: i.scientific ?? sp?.scientific_name ?? null,
+      verified_botanical_data: sp ? speciesKnowledge(sp, locale) : null,
+      store: prods.length
+        ? { sold_in_al_nada: true, price_sar: prices.length === 1 ? prices[0] : { from: Math.min(...prices), to: Math.max(...prices) }, in_stock: prods.some((p) => p.stock > 0) }
+        : { sold_in_al_nada: false },
+    };
+  };
+  const unavailableNotice = (i: RefItem) => blocks.push({
+    type: "notice",
+    message: ar
+      ? `${itemName(i, true)} غير متوفرة في متجر الندى${speciesOf(i) ? "" : "، وما عندنا عنها بيانات نباتية موثقة"} — ما راح نعرض منتج ثاني بدالها.`
+      : `${itemName(i, false)} isn't sold at AL NADA${speciesOf(i) ? "" : " and isn't in our verified plant data"} — we won't show a different product in its place.`,
+  });
+  const showItem = (i: RefItem, withProducts: boolean) => {
+    const sp = speciesOf(i);
+    if (sp) speciesBlock(sp);
+    const prods = storeProductsFor(i, deps.products);
+    if (!prods.length) unavailableNotice(i);
+    else if (withProducts) blocks.push({ type: "products", title: ar ? "في متجر الندى" : "At AL NADA", items: prods.slice(0, 3).map((p) => productCard(p, locale)) });
+  };
+  const askWhichItem = (options: RefItem[]) => {
+    blocks.push({ type: "action", status: "needs_choice", message: ar ? "تقصد أي نبتة بالضبط؟" : "Which plant exactly do you mean?", choices: options.slice(0, 6).map((o) => ({ id: o.key, label: itemName(o, ar) })) });
+    facts.clarify_reference = options.map((o) => itemName(o, ar));
+  };
+  const referenceProblem = (r: Extract<Resolution, { kind: "missing" }>) => {
+    facts.reference_problem = { no_group: "No plants have been recommended in this conversation yet.", out_of_range: "That position does not exist in the latest recommendation list.", no_focus: "It is unclear which plant the customer means." }[r.reason];
+    facts.active_recommendations = activeSet(ctx)?.items.map((i) => itemName(i, ar)) ?? [];
+  };
+  /** Names the customer typed, matched strictly; unknown names stay unverified instead of becoming another plant. */
+  const itemsFromMentions = (): { items: RefItem[]; ambiguous: RefItem[] | null } => {
+    const items: RefItem[] = [];
+    for (const m of u!.species_mentions) {
+      const r = matchSpecies(m, deps.species);
+      if (r.match) items.push(activeSet(ctx)?.items.find((i) => i.species_slug === r.match!.slug) ?? itemFromSpecies(r.match));
+      else if (r.candidates.length) return { items: [], ambiguous: r.candidates.map(itemFromSpecies) };
+      else items.push({ key: `n:${norm(m)}`.slice(0, 120), name_ar: m, name_en: m, scientific: null, species_slug: null, product_id: null });
+    }
+    return { items: [...new Map(items.map((i) => [i.key, i])).values()], ambiguous: null };
+  };
+
   // 2) Authorised retrieval + deterministic logic per intent.
-  switch (u.intent) {
+  let storeSet = false;
+  const discuss = ref.kind !== "none" && (u.intent === "general_question" || u.intent === "get_plant_care" || u.intent === "clarify_request");
+  if (discuss) {
+    // "وش كانت الثانية؟", "حدثيني عن الأولى", "وش أضفتي؟", "وريني صفحتها" — about plants already presented.
+    if (u.intent === "clarify_request") intent = "general_question";
+    if (ref.kind === "ambiguous") askWhichItem(ref.options);
+    else if (ref.kind === "missing") referenceProblem(ref);
+    else if (ref.kind === "items") {
+      const items = ref.items.slice(0, 3);
+      facts.referenced = items.map(refFact);
+      facts.reference_note = ref.via === "last_action" ? "This is exactly what was added in the last cart/wishlist action." : "The customer means exactly these plants from the conversation, in this order.";
+      if (items.length === 1) ctx.focus_item = items[0];
+      const wantProduct = asksForProduct(input.message);
+      for (const i of items) {
+        const sp = speciesOf(i);
+        showItem(i, wantProduct);
+        if (sp && u.intent === "get_plant_care" && items.length === 1) blocks.push({ type: "checklist", title: ar ? "قائمة عناية" : "Care checklist", items: careChecklist(sp, locale), tone: "care" });
+        if (sp) await recordExplored(sp, ar ? "سألت عنها" : "Asked about it");
+      }
+    }
+  } else switch (u.intent) {
     case "recommend_plant":
     case "cheaper_options": {
       ctx.workflow = ctx.workflow === "general" ? "finder" : ctx.workflow;
@@ -342,7 +394,8 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
       const result = recommend(deps.products, merged, { limit: 3, excludeProductIds: excludeIds, sort });
       const items = result.results.map((r, i) => productCard(r.product, locale, ar ? r.reasons_ar : r.reasons_en, ar ? r.cautions_ar : r.cautions_en, i + 1));
       if (items.length) {
-        ctx.last_recommended = items.map((i) => i.id);
+        pushRecSet(ctx, "store", result.results.map((r) => itemFromProduct(r.product)));
+        storeSet = true;
         blocks.push({ type: "products", title: ar ? "اقتراحات ندى من متجرنا" : "Nada's picks from our store", items });
         for (const r of result.results) await recordExplored(r.product.species!, ar ? "اقترحتها ندى" : "Recommended by Nada", r.product.id);
       }
@@ -482,14 +535,59 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
 
     case "save_to_wishlist":
     case "add_to_cart": {
-      const product = resolveReferencedProduct(u, ctx, deps);
-      if (!product) {
+      const kind = u.intent === "add_to_cart" ? "cart" : "wishlist";
+      // 1) Which plant: the resolved reference, else a name the customer typed, else the single obvious one.
+      let target: RefItem | null = null;
+      if (ref.kind === "ambiguous") { askWhichItem(ref.options); facts.action = { status: "needs_choice" }; break; }
+      if (ref.kind === "missing") { referenceProblem(ref); facts.action = { status: "failed", reason: "reference_unresolved" }; }
+      else if (ref.kind === "items") {
+        if (ref.items.length > 1) { askWhichItem(ref.items); facts.action = { status: "needs_choice" }; break; }
+        target = ref.items[0];
+      } else {
+        const named = itemsFromMentions();
+        if (named.ambiguous) { askWhichItem(named.ambiguous); facts.action = { status: "needs_choice" }; break; }
+        const set = activeSet(ctx);
+        target = named.items[0]
+          ?? (u.reference_index ? set?.items[u.reference_index - 1] ?? null : null)
+          ?? (set?.items.length === 1 ? set.items[0] : null)
+          ?? ctx.focus_item
+          ?? (ctx.focus_species && speciesBySlug.get(ctx.focus_species) ? itemFromSpecies(speciesBySlug.get(ctx.focus_species)!) : null);
+      }
+      if (!target) {
         facts.action = { status: "failed", reason: "product_not_resolved" };
-        blocks.push({ type: "action", status: "failed", message: ar ? "ما عرفت أي منتج تقصد. اختر من البطاقات أو اكتب اسم النبتة." : "I'm not sure which product you mean. Pick from the cards or name the plant." });
+        blocks.push({ type: "action", status: "failed", message: ar ? "ما عرفت أي نبتة تقصد. اختر من البطاقات أو اكتب اسم النبتة." : "I'm not sure which plant you mean. Pick from the cards or name the plant." });
         break;
       }
+      ctx.focus_item = target;
+      // 2) The exact store product for that plant — never a different species.
+      let prods = storeProductsFor(target, deps.products);
+      if (prods.length > 1) {
+        const msg = norm(input.message);
+        const byVariant = prods.filter((p) => [p.variant_ar, p.variant_en].some((v) => v && msg.includes(norm(v))));
+        if (byVariant.length === 1) prods = byVariant;
+      }
+      const tname = itemName(target, ar);
+      if (!prods.length) {
+        facts.action = { status: "failed", reason: "not_sold_in_al_nada", plant: tname };
+        blocks.push({ type: "action", status: "failed", message: ar ? `${tname} غير متوفرة في متجر الندى، فما أقدر أضيفها.` : `${tname} isn't sold at AL NADA, so I can't add it.` });
+        break;
+      }
+      if (prods.length > 1) {
+        blocks.push({ type: "action", status: "needs_choice", message: ar ? `عندنا ${tname} بأكثر من خيار، أي واحد تبي؟` : `We have ${tname} in more than one option — which one?`, choices: prods.map((p) => ({ id: p.id, label: `${ar ? p.name_ar : p.name_en} — ${ar ? p.variant_ar : p.variant_en}` })) });
+        facts.action = { status: "needs_choice", options: prods.map((p) => (ar ? p.variant_ar : p.variant_en)) };
+        break;
+      }
+      const product = prods[0];
       const name = ar ? product.name_ar : product.name_en;
-      if (u.intent === "add_to_cart") {
+      // 3) The same request repeated right away (double send / retry) is not applied twice.
+      const last = ctx.last_action;
+      if (last && last.type === kind && last.item.product_id === product.id && last.turn === ctx.turn - 1 && sameRequest(last.message, input.message)) {
+        facts.action = { status: "success", detail: "already done in the previous message; not repeated", product: name };
+        blocks.push({ type: "action", status: "success", message: ar ? `${name} سبق وانضافت ✓ ما كررتها.` : `${name} was already added ✓ — not added twice.` });
+        break;
+      }
+      let ok = false;
+      if (kind === "cart") {
         if (product.stock < 1) {
           facts.action = { status: "failed", reason: "out_of_stock" };
           blocks.push({ type: "action", status: "failed", message: ar ? `${name} غير متوفرة حاليًا.` : `${name} is currently out of stock.` });
@@ -497,15 +595,17 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
         }
         // The cart lives in the client (synced to the account); the UI performs this action and confirms.
         clientActions.push({ type: "add_to_cart", productId: product.id });
-        facts.action = { status: "success", detail: "added to the customer's cart in the app", product: ar ? product.name_ar : product.name_en };
+        facts.action = { status: "success", detail: "added to the customer's cart in the app", product: name };
         blocks.push({ type: "products", title: ar ? "المنتج" : "Product", items: [productCard(product, locale)] });
+        ok = true;
       } else {
         if (!deps.user || !deps.data) { needAuth(); break; }
-        const ok = await deps.data.addToWishlist(product.id);
-        facts.action = { status: ok ? "success" : "failed", product: product.name_en };
+        ok = await deps.data.addToWishlist(product.id);
+        facts.action = { status: ok ? "success" : "failed", product: name };
         blocks.push({ type: "action", status: ok ? "success" : "failed", message: ok ? (ar ? `حفظت ${name} في قائمة أمنياتك ✓` : `Saved ${name} to your wishlist ✓`) : (ar ? "ما قدرت أحفظها في قائمة الأمنيات." : "Couldn't save it to your wishlist.") });
         if (ok) blocks.push({ type: "products", title: ar ? "في قائمة أمنياتك" : "In your wishlist", items: [productCard(product, locale)] });
       }
+      if (ok) ctx.last_action = { type: kind, item: itemFromProduct(product), message: input.message.slice(0, 200), turn: ctx.turn };
       break;
     }
 
@@ -524,10 +624,43 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
     }
 
     case "compare_plants": {
-      const sps = u.species_mentions.map((m) => resolveSpecies(m, deps.species)).filter((s): s is Species => !!s);
-      const unique = [...new Map(sps.map((s) => [s.slug, s])).values()].slice(0, 3);
-      facts.compare = unique.map((x) => speciesKnowledge(x, locale));
-      for (const s of unique) { speciesBlock(s); await recordExplored(s, ar ? "قارنتها مع نبتة ثانية" : "Compared with another plant"); }
+      let items: RefItem[] = [];
+      if (ref.kind === "ambiguous") { askWhichItem(ref.options); break; }
+      if (ref.kind === "missing") { referenceProblem(ref); break; }
+      if (ref.kind === "items") items = ref.items;
+      else {
+        const named = itemsFromMentions();
+        if (named.ambiguous) { askWhichItem(named.ambiguous); break; }
+        items = named.items;
+      }
+      if (criterion) {
+        // "أي وحدة أرخص؟ / الثانية تحتاج ري أقل؟" — answered from verified data among the plants on the table.
+        const pool = ctx.compared.length >= 2 ? ctx.compared.map((k) => findItem(ctx, k)).filter((x): x is RefItem => !!x) : activeSet(ctx)?.items ?? [];
+        const single = items.length === 1 ? items[0] : null;
+        const candidates = (items.length >= 2 ? items : single ? [single, ...pool.filter((x) => x.key !== single.key)] : pool).slice(0, 4);
+        if (candidates.length < 2) { facts.reference_problem = "There is nothing to compare it with yet."; break; }
+        const ans = answerCriterion(criterion, candidates, deps.products, deps.species, ar, !asksForMore(input.message));
+        const winner = ans.winner ? candidates.find((c) => c.key === ans.winner) ?? null : null;
+        facts.answer = { criterion, computed_from: criterion === "price" ? "AL NADA store prices" : "verified species data", rows: ans.rows, winner: winner ? itemName(winner, ar) : null, result: ans.reason, asked_about: single ? itemName(single, ar) : null };
+        facts.compare = candidates.map(refFact);
+        ctx.compared = candidates.map((c) => c.key);
+        // "الثانية أرخص؟" keeps the second in focus; "أي وحدة أرخص؟" focuses the answer (none on a tie).
+        ctx.focus_item = single ?? winner;
+        if (criterion === "price") for (const c of candidates) if (!storeProductsFor(c, deps.products).length) unavailableNotice(c);
+        break;
+      }
+      const unique = items.slice(0, 3);
+      if (!unique.length) { facts.reference_problem = "No plants to compare were identified."; break; }
+      facts.compare = unique.map(refFact);
+      facts.compare_scope = "Compare exactly these plants, in this order. Do not add any other plant unless the customer asks for alternatives.";
+      if (Object.keys(ctx.preferences).length) facts.customer_conditions = ctx.preferences;
+      ctx.compared = unique.length >= 2 ? unique.map((i) => i.key) : ctx.compared;
+      ctx.focus_item = unique.length === 1 ? unique[0] : null;
+      for (const i of unique) {
+        showItem(i, false);
+        const sp = speciesOf(i);
+        if (sp) await recordExplored(sp, ar ? "قارنتها مع نبتة ثانية" : "Compared with another plant");
+      }
       break;
     }
 
@@ -583,6 +716,15 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
     return { reply: "", replyError: true, blocks, context: ctx, sessionId: input.sessionId, intent, clientActions, model: deps.model };
   }
 
+  // A list of plants in Nada's own reply becomes the new active group, so "الأولى/الثانية" next turn
+  // means exactly what the customer just read. Not on turns that refer to existing plants (a comparison
+  // or "the second one" must never reorder or replace the group).
+  const REPLY_LIST_INTENTS: Intent[] = ["general_question", "recommend_plant", "cheaper_options", "clarify_request", "get_plant_care"];
+  if (!storeSet && ref.kind === "none" && !discuss && REPLY_LIST_INTENTS.includes(intent)) {
+    const listed = extractReplyList(reply, deps.species, intent === "recommend_plant" || asksForRecommendations(input.message));
+    if (listed.length >= 2) pushRecSet(ctx, "reply", listed);
+  }
+
   const debug = process.env.NODE_ENV === "development" ? { understanding: u, facts } : undefined;
   return { reply, blocks, context: ctx, sessionId: input.sessionId, intent, clientActions, model: deps.model, debug };
 }
@@ -597,14 +739,6 @@ export function extractJson(raw: string): string {
 }
 
 const CARE_DONE = /(^|[^\p{L}])(سقيت|سقيتها|سقيته|رويت|سمدت|سمّدت|سمدتها|قصيت|قلمت|قلّمت|نظفت|نظّفت|مسحت|غيرت|غيّرت|بدلت|نقلت|زرعت)(?=$|[^\p{L}])|\b(watered|fertili[sz]ed|fed|repotted|pruned|trimmed|cleaned|wiped|misted)\b/u;
-
-export function detectOrdinal(message: string): number | null {
-  const m = message.toLowerCase();
-  if (/(الاولى|الأولى|الاول|الأول|اول وحده|أول وحدة|\bfirst\b|\b1st\b)/.test(m)) return 1;
-  if (/(الثانية|الثانيه|الثاني|ثاني وحده|ثاني وحدة|\bsecond\b|\b2nd\b)/.test(m)) return 2;
-  if (/(الثالثة|الثالثه|الثالث|ثالث وحده|\bthird\b|\b3rd\b)/.test(m)) return 3;
-  return null;
-}
 
 const SYMPTOMS = /صفرا|صفراء|اصفر|ذبل|ذابل|تذبل|بنية|تعفن|عفن|حشرات|تساقط|تطيح|تموت|ميتة|تعبان|بقع|yellow|wilt|droop|brown|\brot(s|ting|ten)?\b|mold|mould|pests?\b|bugs\b|spots|dying|dropping/i;
 const FAILURE_WORDS = /لم أستطع|لم استطع|ما قدرت|ما قدرنا|لم يتم|لم تكتمل|فشل|تعذر|couldn['’]t|could not|failed|unable/i;
@@ -639,21 +773,4 @@ export function detectHardPreferences(message: string, fromModel: Partial<Prefer
 
 function stripNulls<T extends Record<string, unknown>>(o: T): Partial<T> {
   return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== null && v !== undefined && !(Array.isArray(v) && v.length === 0))) as Partial<T>;
-}
-
-/** "the second plant" → last_recommended[1]; otherwise a named product; otherwise the single focus. */
-function resolveReferencedProduct(u: Understanding, ctx: ChatContext, deps: NadaDeps): ProductWithSpecies | null {
-  if (u.reference_index && ctx.last_recommended[u.reference_index - 1]) {
-    return deps.products.find((p) => p.id === ctx.last_recommended[u.reference_index! - 1]) ?? null;
-  }
-  for (const m of u.species_mentions) {
-    const recent = deps.products.filter((p) => ctx.last_recommended.includes(p.id));
-    const inRecent = recent.find((p) => matchesQuery(p, m));
-    if (inRecent) return inRecent;
-    const sp = resolveSpecies(m, deps.species);
-    if (sp) return deps.products.find((p) => p.species_slug === sp.slug && p.kind === "plant") ?? null;
-  }
-  if (ctx.last_recommended.length === 1) return deps.products.find((p) => p.id === ctx.last_recommended[0]) ?? null;
-  if (ctx.focus_species) return deps.products.find((p) => p.species_slug === ctx.focus_species && p.kind === "plant") ?? null;
-  return null;
 }

@@ -223,7 +223,7 @@ describe("action truthfulness guard", () => {
     const first = await runNada({ ...base, message: "x" }, deps(scriptedLlm({ intent: "recommend_plant", language: "ar", preferences: { placement: "indoor" } }).llm, null, false));
     const { data } = memoryData();
     const liar: LlamaChat = async (_m, o) => (o?.json ? JSON.stringify({ intent: "save_to_wishlist", language: "ar", reference_index: 1 }) : "عفوًا، لم أستطع حفظها.");
-    const r = await runNada({ ...base, message: "احفظيها", context: first.context }, deps(liar, data));
+    const r = await runNada({ ...base, message: "احفظي الأولى", context: first.context }, deps(liar, data));
     expect(r.reply).not.toMatch(/لم أستطع/);
     expect(r.reply).toContain("حفظت");
   });

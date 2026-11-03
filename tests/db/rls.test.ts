@@ -85,6 +85,20 @@ describe("public vs private access", () => {
     });
   });
 
+  it("keeps Nada's saved conversation context (recommendation groups) private to its owner", async () => {
+    const context = { turn: 3, active_set: 3, rec_sets: [{ id: 3, source: "reply", items: [{ key: "n:zinnia", name_ar: "الزينيا", name_en: "Zinnia", scientific: "Zinnia elegans", species_slug: null, product_id: null }] }] };
+    const s = await as(A, () => one("insert into public.chat_sessions (user_id, workflow, context) values ($1, 'finder', $2) returning id", [A, JSON.stringify(context)]));
+    await as(B, async () => {
+      expect((await db.query("select context from public.chat_sessions where id = $1", [s.id])).rows).toEqual([]);
+      const upd = await db.query("update public.chat_sessions set context = '{}'::jsonb where id = $1", [s.id]);
+      expect(upd.affectedRows).toBe(0);
+    });
+    await as(A, async () => {
+      const row = await one("select context from public.chat_sessions where id = $1", [s.id]);
+      expect(row.context.rec_sets[0].items[0].name_ar).toBe("الزينيا");
+    });
+  });
+
   it("prevents customers from making themselves admin", async () => {
     await expect(as(A, () => db.query(`update public.profiles set role = 'admin' where id = '${A}'`))).rejects.toThrow();
     await as(A, async () => {

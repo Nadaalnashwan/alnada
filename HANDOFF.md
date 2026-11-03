@@ -1,6 +1,6 @@
 # HANDOFF — AL NADA | الندى
 
-_Last updated: 2026-11-02 by Claude Code (Opus 5.5)._ Read `CLAUDE.md` for rules and `README.md` for setup.
+_Last updated: 2026-11-03 by Claude Code (Opus 5.5)._ Read `CLAUDE.md` for rules and `README.md` for setup.
 
 ## Status at a glance
 | Area | State |
@@ -49,7 +49,30 @@ no email sent; password only in the owner's `.env.local` as `TEST_PASSWORD`). De
 ## Design branch `design/botanical-redesign` (not merged to main yet)
 "Living Botanical" design system, redesigned homepage/shop/Nada AI, official logo + icons, and My Green Space as a
 shared interactive garden shelf with a selectable details panel (real Supabase data; watering updates the DB and UI).
-Catalogue photos are mirrored locally (`npm run data:mirror`). Merge via PR after review.
+Catalogue photos are mirrored locally (`npm run data:mirror`). The homepage hero **is** the garden (customer's own
+plants; labelled sample plants for visitors). Merge via PR after review.
+
+## Nada AI conversation memory (added 2026-11-03)
+**Bug:** after Nada listed Zinnia/Papaya in her reply, "قارني بين الأولى والثانية" showed an Aloe vera card and
+"أضيفي الثانية للسلة" added Aloe vera (reproduced against the old code). Root causes: (1) only store-engine picks were
+tracked (`last_recommended`); plants Nada listed in her own text were never recorded, so ordinals hit an older group;
+(2) `compare_plants` ignored context and used whatever names Llama pulled from history; (3) the species matcher checked
+generic aliases first and accepted weak fragments ("صبار"→Aloe vera, "فيكس ليراتا"→Ficus elastica, "نبتة الصبار"→snake plant).
+**Fix (no migration — state lives in the existing RLS-protected `chat_sessions.context` jsonb):**
+- `lib/ai/conversation.ts`: ordered recommendation groups (`rec_sets`, max 6, oldest kept for "الخيارات السابقة"),
+  `active_set` (latest group), `focus_item` (the one plant being discussed — never reorders the group), `compared`,
+  `last_action` (answers "وش أضفتي؟", blocks an identical repeated request). Deterministic resolver for الأولى/الثانية/
+  الثالثة, آخر وحدة, آخر نبتتين, قارني بينهم, هذي/ذيك/أضيفيها, the older/first group, "وش أضفتي"; ambiguous → clarification.
+  "أي وحدة أرخص / تحتاج ري أقل / أسهل / آمنة للقطط" is computed from catalogue prices / verified species data (tie or
+  missing data → no winner). Numbered plant lists in Nada's reply become the new active group.
+- `lib/ai/species-match.ts`: strict matching (exact name → exact alias → whole-word part of one name → longest contained
+  name); generic names return candidates for clarification instead of a guess.
+- Cart/wishlist/product cards use only validated catalogue products of the exact species (`storeProductsFor`); a plant
+  not sold at AL NADA gets a `notice` block / failed action — never a substitute. Several products of one species → choice.
+- Old saved sessions (only `last_recommended`) are migrated on read. Prompts tell Llama to compare only `FACTS.compare`.
+- Tests: `tests/nada-references.test.ts` (41, mocked Llama: scenarios A–G + spec scenario + duplicates + budget),
+  RLS test for `chat_sessions.context` privacy. One live check (2026-11-03): recommendation saved as the active group in
+  card order.
 
 ## Nada AI ↔ customer data (added 2026-11-02, second session)
 `lib/green-space/insights.ts` derives record-based insights from saved data only: days since the last *recorded*
@@ -65,7 +88,8 @@ Optional `LLAMA_INTENT_MODEL` lets the short JSON intent call use a cheaper Meta
 - Perenual: paywall placeholder strings, plan-restricted ids misread as quota exhaustion, loose genus match for hybrids.
 - Llama translation/replies contained stray CJK/Vietnamese glyphs → validation + retry (+ strip as last resort).
 - Llama returned `city: "رياض"` → Riyadh not detected as hot → mint recommended for afternoon sun. City matching normalised.
-- Llama sometimes omitted/negated `afternoon_sun`, pets, `reference_index` → deterministic backstops (`detectHardPreferences`, `detectOrdinal`).
+- Llama sometimes omitted/negated `afternoon_sun`, pets, `reference_index` → deterministic backstops (`detectHardPreferences`; references now via `lib/ai/conversation.ts`).
+- Multi-turn references used outdated groups and fuzzy species matching (Zinnia/Papaya → Aloe vera) → see "Nada AI conversation memory".
 - Llama said "لم أستطع" after a successful DB write, and once echoed the FACTS block → truthfulness + leak guards
   (`must_state`, regenerate, fall back to the server confirmation).
 - Llama copied a style example verbatim (invented "لولو" for a guest) → example removed; English uses `RESPOND_SYSTEM_EN`.
@@ -74,10 +98,11 @@ Optional `LLAMA_INTENT_MODEL` lets the short JSON intent call use a cheaper Meta
 - A Japanese-kana glitch slipped into the stored Aglaonema translation (blocklist missed kana) → validation switched to a
   script **allowlist** (Arabic letters + A–Z only) for both imports and live replies; bad text removed from the DB.
 
-## Cloudflare quota (important)
-The free Workers AI plan allows **10,000 neurons/day** (resets 00:00 UTC). Today's repeated live test runs with the 70B
-model used it up — Cloudflare now returns error 4006 / HTTP 429 and the app correctly shows `AI_RATE_LIMITED`.
-Options: Workers Paid plan, or set `LLAMA_INTENT_MODEL=@cf/meta/llama-3.1-8b-instruct-fp8` (not yet evaluated).
+## Cloudflare plan & cost
+Upgraded to **Workers Paid** on 2026-11-03 (10,000 neurons/day included, then $0.011 / 1,000 neurons). A Nada message
+is 2 Llama 3.3 70B calls (≈230–350 neurons, ≈$0.003 beyond the daily allowance). Daily-quota exhaustion (error 4006)
+is now reported as `AI_QUOTA_EXHAUSTED` with the real reset time, not "too many messages".
+Keep development tests mocked; `npm run test:app` makes ~40 live calls.
 
 ## LLM variance (honest note)
 `npm run test:app` drives 20 checks through real Llama. After the fixes, clean runs pass 20/20 (twice in a row);
@@ -85,7 +110,10 @@ individual runs occasionally failed on a model routing choice before the matchin
 free tier returned **429 (`AI_RATE_LIMITED`)** after many back-to-back calls — the UI shows the error, never a fake reply
 (this exercised brief Test 14 for real). Re-run the suite after the daily allowance resets.
 
-## Test results (executed 2026-11-02, from ~/Developer/alnada)
+## Test results
+**2026-11-03 (design branch):** `npm test` **104/104** (incl. 41 reference tests), lint/typecheck clean, production build OK.
+
+**2026-11-02 (from ~/Developer/alnada):**
 - `npm test`: **59/59** (recommendations 11, insights 4, Nada pipeline 28 with scripted model, DB/RLS/grants in PGlite 16).
 - `npm run test:live`: **25/25** against Supabase ALNADA with the publishable key (run twice).
 - `npm run test:app -- --no-ai`: **18/18** app routes against both `next dev` and the production `next start` server,
@@ -103,10 +131,9 @@ free tier returned **429 (`AI_RATE_LIMITED`)** after many back-to-back calls —
 - Admin product image = URL (allowed hosts), not file upload. No plant-photo identification yet.
 
 ## Exact next tasks
-1. After the Cloudflare quota resets (00:00 UTC): `npm run dev`, then `npm run test:app` (real Llama) and
-   `npm run data:perenual -- --translate` (re-translates Aglaonema), `npm run data:build`, and update that one row
-   (or re-run `supabase/seed/seed.sql`).
-2. Decide on Workers Paid vs `LLAMA_INTENT_MODEL` (evaluate the 8B model with `npm run test:app`).
+1. Review the design branch and open the PR to `main` (owner approval required).
+2. `npm run test:app` (real Llama, ~40 calls) once before release; `npm run data:perenual -- --translate` (Aglaonema),
+   `npm run data:build`, update that one row. Optionally try `LLAMA_INTENT_MODEL=@cf/meta/llama-3.1-8b-instruct-fp8` to cut cost.
 3. Sign up the owner account, run `supabase/admin/grant-admin.sql`, check `/admin` live.
 4. Deploy to Vercel: env vars from `.env.example` (no TEST_* vars), add `<vercel-url>/auth/callback` to Supabase Auth redirect URLs.
 5. Delete the two test users before public launch; delete the obsolete `~/Desktop/alnada` copy.
