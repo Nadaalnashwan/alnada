@@ -52,6 +52,17 @@ shared interactive garden shelf with a selectable details panel (real Supabase d
 Catalogue photos are mirrored locally (`npm run data:mirror`). The homepage hero **is** the garden (customer's own
 plants; labelled sample plants for visitors). Merge via PR after review.
 
+## My Green Space care checklist (added 2026-11-03)
+Checklist tasks are recurring care activities (`lib/green-space/care-tasks.ts`): watering (species interval 4/7/14 d;
+"التربة رطبة" records a soil check that also completes it), wiping leaves (14 d), light feeding (30 d, succulents 60 d)
+and refreshing soil/repotting (365 d) — the non-watering intervals are labelled as general guidance. Ticking a task
+saves a **real care log** via the existing `POST /api/care-logs` (RLS), so completion persists; it is shown as done only
+after Supabase returns the row, repeated clicks / the same action twice in a day are not saved twice, and a failed save
+shows an error. Advice ("away from AC", "better light") is confirmed by the customer and saved as a marked observation
+(`lib/green-space/care-notes.ts`); markers are excluded from health observations and a soil check clears
+`soil_check_due` in `insights.ts` without counting as a watering. No migration. Companion lines, the plant journey and
+the attention dot on pots come only from saved records. No notifications or automatic reminders exist.
+
 ## Nada AI conversation memory (added 2026-11-03)
 **Bug:** after Nada listed Zinnia/Papaya in her reply, "قارني بين الأولى والثانية" showed an Aloe vera card and
 "أضيفي الثانية للسلة" added Aloe vera (reproduced against the old code). Root causes: (1) only store-engine picks were
@@ -111,7 +122,7 @@ free tier returned **429 (`AI_RATE_LIMITED`)** after many back-to-back calls —
 (this exercised brief Test 14 for real). Re-run the suite after the daily allowance resets.
 
 ## Test results
-**2026-11-03 (design branch):** `npm test` **104/104** (incl. 41 reference tests), lint/typecheck clean, production build OK.
+**2026-11-03 (design branch):** `npm test` **113/113** (incl. 41 reference tests, 9 care-task tests), lint/typecheck clean, production build OK.
 
 **2026-11-02 (from ~/Developer/alnada):**
 - `npm test`: **59/59** (recommendations 11, insights 4, Nada pipeline 28 with scripted model, DB/RLS/grants in PGlite 16).

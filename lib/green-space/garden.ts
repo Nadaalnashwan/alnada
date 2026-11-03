@@ -34,6 +34,11 @@ export function buildGarden(owned: OwnedPlant[], { products, sessions, t, ar }: 
       unconfirmed: p.identification_status === "unconfirmed", status: statusOf(p),
       daysSinceWatering: p.insights.days_since_watering, checkInterval: p.insights.typical_check_interval_days, lastWatered: p.last_watered_at,
       suggestions: ar ? p.insights.suggestions_ar : p.insights.suggestions_en,
+      advice: [
+        ...(p.insights.light_matches === false ? [{ key: "light" as const, text: ar ? "الإضاءة المسجلة ما تطابق احتياجها؛ فكّر تنقلها لمكان أنسب." : "The recorded light doesn't match its needs; consider moving it." }] : []),
+        ...(s?.humidity === "high" ? [{ key: "ac" as const, text: ar ? "تحب الرطوبة العالية: أبعدها عن هواء المكيف المباشر." : "Likes high humidity: keep it out of direct AC airflow." }] : []),
+      ],
+      succulent: s?.succulent ?? false,
       tips: s ? (ar ? s.tips_ar : s.tips_en) : [], problems: s ? (ar ? s.problems_ar : s.problems_en) : [],
       observations: p.insights.recent_observations, logs: p.logs,
       consultations: sessions.filter((c) => (c.context as { focus_user_plant?: string } | null)?.focus_user_plant === p.id).slice(0, 5)
@@ -62,7 +67,7 @@ export function sampleGarden(products: ProductWithSpecies[], { t, ar }: { t: Dic
       temp: `${s.temp_min_c}–${s.temp_max_c}°C`, difficulty: t.attr.difficulty[s.difficulty],
       source: "store_purchase", addedAt: "", acquiredAt: null, wateringPreference: null, notes: null,
       unconfirmed: false, status: "on_track", daysSinceWatering: null, checkInterval: null, lastWatered: null,
-      suggestions: [], tips: ar ? s.tips_ar : s.tips_en, problems: ar ? s.problems_ar : s.problems_en,
+      suggestions: [], advice: [], succulent: s.succulent, tips: ar ? s.tips_ar : s.tips_en, problems: ar ? s.problems_ar : s.problems_en,
       observations: [], logs: [], consultations: [],
     }];
   });

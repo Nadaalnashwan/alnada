@@ -4,14 +4,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  AlertTriangle, CalendarClock, Camera, Check, ChevronLeft, ChevronRight, ClipboardList, Droplets, ExternalLink, Gauge, Info, MapPin,
-  MessageCircle, NotebookPen, Plus, Sparkles, Sprout, Store, Sun, Thermometer, Waves, X,
+  AlertTriangle, CalendarClock, Camera, Check, ChevronLeft, ChevronRight, ClipboardList, Droplets, ExternalLink, Gauge, History, Info, ListChecks,
+  LoaderCircle, MapPin, MessageCircle, NotebookPen, Plus, Scissors, Shovel, Sparkles, Sprout, Store, Sun, Thermometer, Waves, X,
 } from "lucide-react";
 import { Leaf } from "@/components/brand/Decor";
 import { useT } from "@/components/layout/Providers";
 import { PlantImage } from "@/components/store/PlantImage";
+import { CARE_ACTIVITIES } from "@/lib/ai/schemas";
+import { ADVICE_NOTES, SOIL_CHECK_NOTE, adviceOf, isSoilCheck } from "@/lib/green-space/care-notes";
+import { careTasks, companionLines, taskProgress, type CareTask, type TaskActivity } from "@/lib/green-space/care-tasks";
 import { dayCount, formatDate } from "@/lib/i18n/format";
 import { CareLogForm, DeleteLogButton, PlantEditor } from "./PlantManager";
+import type { AdviceKey } from "@/lib/green-space/care-notes";
 import { AddPlantPot, PottedPlant, type Habit, type Size } from "./PottedPlant";
 
 // Shelf geometry: the slot label block is 3.25rem and the list has 0.5rem bottom padding; the 0.75rem gap above
@@ -52,6 +56,9 @@ export interface GardenPlant {
   checkInterval: number | null;
   lastWatered: string | null;
   suggestions: string[];
+  /** Record-based advice that is not a recurring task; the customer confirms the change themselves. */
+  advice: { key: AdviceKey; text: string }[];
+  succulent: boolean;
   tips: string[];
   problems: string[];
   observations: { date: string; note: string }[];
@@ -82,15 +89,33 @@ export interface GardenProps {
   addHref?: string;
 }
 
-export function Garden({ plants, initialId, variant = "page", intro, sample = false, addHref = "/my-green-space/add" }: GardenProps) {
+type Log = GardenPlant["logs"][number];
+export interface LogRequest { activity: (typeof CARE_ACTIVITIES)[number]; notes?: string; key: string; success: string }
+
+export function Garden({ plants: serverPlants, initialId, variant = "page", intro, sample = false, addHref = "/my-green-space/add" }: GardenProps) {
   const { locale } = useT();
   const ar = locale === "ar";
   const hero = variant === "hero";
   const router = useRouter();
-  const valid = (id: string | null | undefined) => (id && plants.some((p) => p.id === id) ? id : null);
-  const [selectedId, setSelectedId] = useState<string | null>(() => valid(initialId) ?? (hero ? null : defaultPick(plants)));
+  const valid = (id: string | null | undefined) => (id && serverPlants.some((p) => p.id === id) ? id : null);
+  const [selectedId, setSelectedId] = useState<string | null>(() => valid(initialId) ?? (hero ? null : defaultPick(serverPlants)));
   const [wateringId, setWateringId] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [celebrateId, setCelebrateId] = useState<string | null>(null);
+  const [pendingKey, setPendingKey] = useState<string | null>(null);
+  const inflight = useRef(new Set<string>());
+  const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = (text: string, ok = true) => {
+    setToast({ text, ok });
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2800);
+  };
+
+  // Logs saved in this visit are shown at once (the real rows returned by the API) until the refreshed
+  // server data arrives; a fresh server snapshot is always authoritative (it also reflects deletions).
+  const [added, setAdded] = useState<Record<string, Log[]>>({});
+  useEffect(() => setAdded({}), [serverPlants]);
+  const plants = useMemo(() => serverPlants.map((p) => withSavedLogs(p, added[p.id] ?? [])), [serverPlants, added]);
   const shelfRef = useRef<HTMLUListElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
   const lastShown = useRef<GardenPlant | null>(null);
@@ -141,18 +166,45 @@ export function Garden({ plants, initialId, variant = "page", intro, sample = fa
     el.scrollBy({ left: dir * (rtl ? -1 : 1) * el.clientWidth * 0.7, behavior: "smooth" });
   };
 
-  const waterNow = async (id: string) => {
-    setWateringId(id);
-    const res = await fetch("/api/care-logs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plantId: id, activity: "watering" }) });
-    if (res.ok) {
-      setToast(ar ? "سجلنا الري ✓ نبتتك ممتنة" : "Watering logged ✓");
-      router.refresh(); // recompute status, timeline and insights from Supabase
-    } else {
-      setToast(ar ? "ما قدرنا نسجل الري، حاول مرة ثانية" : "Couldn't log watering, please retry");
+  /**
+   * Saves one real care log. Nothing is shown as done unless Supabase accepted it; repeated clicks
+   * while saving, or the same action twice on one day, never create a second record.
+   */
+  const logCare = async (p: GardenPlant, req: LogRequest): Promise<boolean> => {
+    const key = `${p.id}:${req.key}`;
+    if (inflight.current.has(key)) return false;
+    if (p.logs.some((l) => l.activity === req.activity && (req.notes === undefined || l.notes === req.notes) && new Date(l.occurred_at).toDateString() === new Date().toDateString())) {
+      showToast(ar ? "مسجلة اليوم من قبل ✓ ما كررناها" : "Already logged today ✓ — not added twice");
+      return false;
     }
-    setTimeout(() => setWateringId(null), 1400);
-    setTimeout(() => setToast(null), 2600);
+    inflight.current.add(key);
+    setPendingKey(key);
+    if (req.activity === "watering") setWateringId(p.id);
+    try {
+      const res = await fetch("/api/care-logs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plantId: p.id, activity: req.activity, notes: req.notes ?? null }) });
+      if (!res.ok) throw new Error(String(res.status));
+      const { log } = (await res.json()) as { log: Log };
+      setAdded((a) => ({ ...a, [p.id]: [log, ...(a[p.id] ?? [])] }));
+      const after = careTasks({ waterIntervalDays: p.checkInterval, succulent: p.succulent, addedAt: p.addedAt, logs: [log, ...p.logs] });
+      const allDone = taskProgress(after).due === 0 && taskProgress(careTasks({ waterIntervalDays: p.checkInterval, succulent: p.succulent, addedAt: p.addedAt, logs: p.logs })).due > 0;
+      showToast(allDone ? (ar ? `كل مهام ${p.nickname ?? p.speciesName} المستحقة صارت مكتملة 🌿` : `All of ${p.nickname ?? p.speciesName}'s due tasks are done 🌿`) : req.success);
+      setCelebrateId(p.id);
+      setTimeout(() => setCelebrateId((c) => (c === p.id ? null : c)), 1600);
+      router.refresh(); // recompute status, insights and history from Supabase
+      return true;
+    } catch {
+      showToast(ar ? "ما قدرنا نسجلها، جرّب مرة ثانية" : "Couldn't save that — please try again", false);
+      return false;
+    } finally {
+      inflight.current.delete(key);
+      setPendingKey((k) => (k === key ? null : k));
+      setTimeout(() => setWateringId((w) => (w === p.id ? null : w)), 1400);
+    }
   };
+  const dueCount = (p: GardenPlant) => (sample ? 0 : taskProgress(careTasks({ waterIntervalDays: p.checkInterval, succulent: p.succulent, addedAt: p.addedAt, logs: p.logs })).due);
+  const detailsFor = (p: GardenPlant) => (sample
+    ? <SampleDetails key={p.id} p={p} addHref={addHref} />
+    : <PlantDetails key={p.id} p={p} onLog={(req) => logCare(p, req)} pendingKey={pendingKey?.startsWith(`${p.id}:`) ? pendingKey.slice(p.id.length + 1) : null} watering={wateringId === p.id} />);
 
   const sampleLabel = ar ? "نبتة نموذجية" : "Sample plant";
   const shelf = (
@@ -174,7 +226,7 @@ export function Garden({ plants, initialId, variant = "page", intro, sample = fa
             <PottedPlant key={p.id} index={i} id={p.id} image={p.image} label={p.nickname ?? p.speciesName}
               sublabel={sample ? sampleLabel : p.nickname ? p.speciesName : (p.location ?? "")}
               status={p.status} statusLabel={sample ? sampleLabel : gardenStatusLabel(p.status, ar)}
-              selected={p.id === selectedId} watering={p.id === wateringId} onSelect={() => select(p.id)} />
+              selected={p.id === selectedId} watering={p.id === wateringId} celebrate={p.id === celebrateId} due={dueCount(p)} onSelect={() => select(p.id)} />
           ))}
           <AddPlantPot index={plants.length} href={addHref} label={sample ? (ar ? "ازرع نبتتك" : "Plant yours") : ar ? "أضف نبتة" : "Add a plant"}
             hint={sample ? (ar ? "ابدأ مساحتك الخضراء" : "Start your Green Space") : ar ? "ازرع نبتة جديدة" : "Plant a new one"} />
@@ -224,7 +276,7 @@ export function Garden({ plants, initialId, variant = "page", intro, sample = fa
 
       {/* toast */}
       <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
-        {toast && <p className="animate-pop rounded-full bg-forest px-5 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-lift)]">{toast}</p>}
+        {toast && <p className={`animate-pop rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-lift)] ${toast.ok ? "bg-forest" : "bg-danger"}`}>{toast.text}</p>}
       </div>
 
       {/* Details of the selected plant — in the hero they unfold below the garden only once a plant is picked */}
@@ -235,17 +287,29 @@ export function Garden({ plants, initialId, variant = "page", intro, sample = fa
               {shown && (
                 <div className="relative pb-2">
                   <button type="button" onClick={() => select(null)} className="absolute end-4 top-10 z-20 grid size-9 place-items-center rounded-full bg-white/90 text-deep shadow-sm ring-1 ring-saudi/10 transition hover:bg-white sm:end-6 sm:top-12" aria-label={ar ? "إغلاق التفاصيل" : "Close details"}><X className="size-4" /></button>
-                  {sample ? <SampleDetails key={shown.id} p={shown} addHref={addHref} /> : <PlantDetails key={shown.id} p={shown} onWater={() => waterNow(shown.id)} watering={wateringId === shown.id} />}
+                  {detailsFor(shown)}
                 </div>
               )}
             </div>
           </div>
         ) : (
-          selected && (sample ? <SampleDetails key={selected.id} p={selected} addHref={addHref} /> : <PlantDetails key={selected.id} p={selected} onWater={() => waterNow(selected.id)} watering={wateringId === selected.id} />)
+          selected && detailsFor(selected)
         )}
       </div>
     </div>
   );
+}
+
+/** Server data plus logs saved during this visit; watering/soil-check statuses follow those real records. */
+function withSavedLogs(p: GardenPlant, extra: Log[]): GardenPlant {
+  const fresh = extra.filter((l) => !p.logs.some((x) => x.id === l.id));
+  if (!fresh.length) return p;
+  const logs = [...fresh, ...p.logs].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at));
+  const lastWatered = logs.find((l) => l.activity === "watering")?.occurred_at ?? null;
+  const watered = fresh.some((l) => l.activity === "watering");
+  const checked = watered || fresh.some(isSoilCheck);
+  const status: GardenStatus = (checked && p.status === "soil_check_due") || (watered && p.status === "no_watering_recorded") ? "on_track" : p.status;
+  return { ...p, logs, lastWatered, daysSinceWatering: lastWatered ? Math.max(0, Math.floor((Date.now() - new Date(lastWatered).getTime()) / 86_400_000)) : null, status };
 }
 
 /** Pick the plant that needs attention first, otherwise the first one. */
@@ -264,24 +328,83 @@ function Stat({ icon: I, label, value, tone = "default" }: { icon: typeof Sun; l
   );
 }
 
-function PlantDetails({ p, onWater, watering }: { p: GardenPlant; onWater: () => void; watering: boolean }) {
+const ACTIVITY_ICON: Record<string, typeof Sun> = { watering: Droplets, cleaning: Sparkles, fertilizing: Sprout, repotting: Shovel, pruning: Scissors, observation: NotebookPen };
+const ACTIVITY_TONE: Record<string, string> = { watering: "bg-sky-100 text-sky-600", cleaning: "bg-dew text-saudi", fertilizing: "bg-[#f3ecd6] text-[#8a6a1f]", repotting: "bg-[#efe3d3] text-[#7a5a3a]", pruning: "bg-soft text-deep", observation: "bg-warn-bg text-warn" };
+
+const TASK_TEXT: Record<TaskActivity, { ar: string; en: string; done: { ar: string; en: string } }> = {
+  watering: { ar: "افحص التربة واسقها لو جفّت", en: "Check the soil, water if dry", done: { ar: "سقيتها", en: "Watered" } },
+  cleaning: { ar: "امسح الغبار عن الأوراق", en: "Wipe dust off the leaves", done: { ar: "مسحت الأوراق", en: "Leaves wiped" } },
+  fertilizing: { ar: "تسميد خفيف", en: "Light feeding", done: { ar: "سمّدتها", en: "Fed" } },
+  repotting: { ar: "تجديد التربة أو تغيير الأصيص", en: "Refresh soil or repot", done: { ar: "غيرت الأصيص", en: "Repotted" } },
+};
+
+/** One recurring care task: ticking it saves a real care log; it only shows as done once Supabase saved it. */
+function TaskRow({ task, name, pending, onDo, onSoilOk }: { task: CareTask; name: string; pending: string | null; onDo: () => void; onSoilOk?: () => void }) {
+  const { locale } = useT();
+  const ar = locale === "ar";
+  const L = (s: { ar: string; en: string }) => (ar ? s.ar : s.en);
+  const I = ACTIVITY_ICON[task.activity];
+  const busy = pending === task.activity || pending === "soil";
+  const done = task.state === "done";
+  const when = task.daysSinceLast === null ? null : task.daysSinceLast === 0 ? (ar ? "اليوم" : "today") : ar ? `قبل ${dayCount(task.daysSinceLast, "ar")}` : `${dayCount(task.daysSinceLast, "en")} ago`;
+  const next = task.dueInDays === 0 ? (ar ? "مستحقة الحين" : "Due now") : ar ? `الجاية بعد ${dayCount(task.dueInDays, "ar")}` : `Next in ${dayCount(task.dueInDays, "en")}`;
+  return (
+    <li className={`group flex items-center gap-3 rounded-2xl p-2.5 transition duration-300 ${done ? "bg-soft/60" : task.state === "due" ? "bg-white ring-1 ring-warn/20" : "bg-white/70"}`}>
+      <button type="button" onClick={onDo} disabled={done || busy} aria-pressed={done}
+        aria-label={done ? `${L(TASK_TEXT[task.activity].done)} ✓` : `${L(TASK_TEXT[task.activity])} — ${ar ? "سجّلها كمنجزة" : "mark as done"}`}
+        className={`relative grid size-9 shrink-0 place-items-center rounded-full ring-2 transition duration-300 ${done ? "bg-saudi text-white ring-saudi" : "bg-white text-saudi ring-sage hover:ring-saudi hover:bg-soft active:scale-90"} disabled:cursor-default`}>
+        {busy ? <LoaderCircle className="size-4 animate-spin" /> : done ? <Check key="done" className="size-4 animate-pop" /> : <I className="size-4" />}
+      </button>
+      <div className="min-w-0 flex-1">
+        <p className={`text-sm font-semibold leading-6 ${done ? "text-saudi" : "text-ink"}`}>{done ? `${task.lastVia === "soil_check" ? (ar ? "فحصت التربة وكانت رطبة" : "Soil checked, still moist") : L(TASK_TEXT[task.activity].done)} ${when ?? ""}` : L(TASK_TEXT[task.activity])}</p>
+        <p className="text-[11px] leading-5 text-muted">
+          {done ? next : task.state === "due" ? (when ? `${next} · ${ar ? "آخر مرة" : "last"} ${when}` : next) : next}
+          {task.general && <span className="text-muted/80"> · {ar ? `إرشاد عام كل ${dayCount(task.intervalDays, "ar")}` : `general guide: every ${dayCount(task.intervalDays, "en")}`}</span>}
+        </p>
+      </div>
+      {onSoilOk && task.state === "due" && (
+        <button type="button" onClick={onSoilOk} disabled={busy} title={ar ? `فحصت تربة ${name} وكانت رطبة` : `Checked ${name}'s soil and it was moist`}
+          className="shrink-0 rounded-full bg-mist px-2.5 py-1.5 text-[11px] font-semibold text-deep ring-1 ring-saudi/10 transition hover:bg-soft disabled:opacity-50">
+          {ar ? "التربة رطبة" : "Soil moist"}
+        </button>
+      )}
+    </li>
+  );
+}
+
+function PlantDetails({ p, onLog, pendingKey, watering }: { p: GardenPlant; onLog: (req: LogRequest) => Promise<boolean>; pendingKey: string | null; watering: boolean }) {
   const { t, locale } = useT();
   const ar = locale === "ar";
   const [logOpen, setLogOpen] = useState(false);
-  const [checked, setChecked] = useState<Set<number>>(new Set());
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const name = p.nickname ?? p.speciesName;
   const alert = p.status === "soil_check_due" || p.status === "light_mismatch";
-  const nextCheck = p.daysSinceWatering === null || p.checkInterval === null ? null : Math.max(0, p.checkInterval - p.daysSinceWatering);
-  const wateredToday = p.daysSinceWatering === 0;
-  const checklist = [...p.suggestions, ...p.tips];
+  const tasks = useMemo(() => careTasks({ waterIntervalDays: p.checkInterval, succulent: p.succulent, addedAt: p.addedAt, logs: p.logs }), [p]);
+  const progress = taskProgress(tasks);
+  const lines = companionLines(name, tasks, p.logs, p.addedAt, locale);
+  const wateredToday = p.logs.some((l) => l.activity === "watering" && new Date(l.occurred_at).toDateString() === new Date().toDateString());
   const date = (iso: string, withYear = false) => formatDate(iso, locale, withYear ? { day: "numeric", month: "long", year: "numeric" } : { day: "numeric", month: "long" });
+  const confirmations = new Map(p.logs.flatMap((l) => { const k = adviceOf(l); return k ? [[k, l.occurred_at] as const] : []; }).reverse());
+  // Joining the garden and every care log, in date order (logs can be back-dated before the plant was added).
+  const journey = [
+    ...(p.addedAt ? [{ id: "joined", activity: "joined", occurred_at: p.addedAt, notes: null }] : []),
+    ...p.logs,
+  ].sort((a, b) => a.occurred_at.localeCompare(b.occurred_at)).slice(-7);
+  const actLabel = (a: string) => t.plant.activity[a as keyof typeof t.plant.activity] ?? a;
+
+  const doTask = (task: CareTask) => onLog({
+    activity: task.activity, key: task.activity,
+    success: task.activity === "watering" ? (ar ? `تم! سجلنا ري ${name} 💧` : `Done! Watering logged for ${name} 💧`) : (ar ? `تمام! سجلنا ${actLabel(task.activity)} لـ${name} 🌿` : `Nice! ${actLabel(task.activity)} logged for ${name} 🌿`),
+  });
+  const soilOk = () => onLog({ activity: "observation", notes: ar ? SOIL_CHECK_NOTE.ar : SOIL_CHECK_NOTE.en, key: "soil", success: ar ? `حلو! سجلنا إن تربة ${name} رطبة وما احتاجت ري` : `Got it — ${name}'s soil was still moist` });
 
   return (
-    <article className="relative mt-6 animate-settle overflow-hidden rounded-[2.5rem] bg-white shadow-[var(--shadow-lift)] ring-1 ring-saudi/[0.08]" aria-label={p.nickname ?? p.speciesName}>
-      {/* header */}
-      <header className="relative grid gap-6 bg-botanical p-5 sm:grid-cols-[auto_1fr] sm:p-8">
+    <article className="relative mt-6 animate-settle overflow-hidden rounded-[2.25rem] bg-white shadow-[var(--shadow-lift)] ring-1 ring-saudi/[0.08]" aria-label={name}>
+      {/* header: who this plant is, what the records say, and the main actions */}
+      <header className="relative grid gap-5 bg-garden p-5 sm:grid-cols-[auto_1fr] sm:gap-7 sm:p-7">
         <Leaf className="pointer-events-none absolute end-6 top-4 h-32 w-16 rotate-12 text-saudi/[0.06]" />
-        <div className="relative mx-auto aspect-[4/5] w-40 overflow-hidden arch bg-soft shadow-[var(--shadow-lift)] ring-[5px] ring-white sm:mx-0 sm:w-44">
-          <PlantImage src={p.image} alt={p.nickname ?? p.speciesName} sizes="176px" />
+        <div className="relative mx-auto aspect-[4/5] w-36 overflow-hidden rounded-t-full rounded-b-[1.4rem] bg-soft shadow-[var(--shadow-lift)] ring-[5px] ring-white sm:mx-0 sm:w-40">
+          <PlantImage src={p.image} alt={name} sizes="160px" className="object-[center_40%]" />
           {watering && (
             <span aria-hidden className="pointer-events-none absolute inset-x-0 top-6 flex justify-center gap-3">
               {[0, 1, 2, 3].map((d) => <span key={d} className="block h-4 w-3 animate-drip rounded-[50%_50%_50%_50%/60%_60%_40%_40%] bg-gradient-to-b from-sky-100 to-sky-400 shadow" style={{ animationDelay: `${d * 140}ms` }} />)}
@@ -295,96 +418,153 @@ function PlantDetails({ p, onWater, watering }: { p: GardenPlant; onWater: () =>
               {alert ? <AlertTriangle className="size-3.5" /> : <Check className="size-3.5" />}{gardenStatusLabel(p.status, ar)}
             </span>
             <span className="chip bg-white">{p.source === "store_purchase" ? <><Store className="size-3 text-saudi" />{t.space.fromStore}</> : <><Sprout className="size-3 text-saudi" />{t.space.manual}</>}</span>
+            {p.location && <span className="chip bg-white"><MapPin className="size-3 text-saudi" />{p.location}</span>}
           </div>
-          <h2 className="mt-3 text-3xl font-bold text-forest sm:text-4xl">{p.nickname ?? p.speciesName}</h2>
-          <p className="mt-1 text-muted">
+          <h2 className="mt-3 text-3xl font-bold text-forest sm:text-[2.2rem]">{name}</h2>
+          <p className="mt-0.5 text-sm text-muted">
             {p.nickname && p.speciesName}{p.nickname && p.scientific && <span className="mx-1.5 text-sage">•</span>}
             {p.scientific ? <bdi className="italic">{p.scientific}</bdi> : !p.nickname && t.space.unconfirmed}
           </p>
-          <div className="mt-3 flex flex-wrap gap-1.5 text-xs">
-            {p.location && <span className="chip bg-white"><MapPin className="size-3 text-saudi" />{p.location}</span>}
-            {p.lightLabel && <span className="chip bg-white"><Sun className="size-3 text-sun" />{p.lightLabel}</span>}
-            <span className="chip bg-white"><CalendarClock className="size-3 text-saudi" />{t.space.addedOn} {date(p.addedAt, true)}</span>
-          </div>
-          {/* primary actions */}
-          <div className="mt-5 flex flex-wrap gap-2">
-            <button type="button" onClick={onWater} disabled={watering}
-              className={`btn px-5 py-3 text-white shadow-[var(--shadow-glow)] ${watering ? "bg-leaf" : "bg-gradient-to-b from-[#0a7a3f] to-saudi hover:-translate-y-0.5"}`}>
-              {watering ? <Check className="size-5 animate-pop" /> : <Droplets className="size-5" />}{ar ? "سقيتها اليوم" : "Watered today"}
+          {/* companion lines — each one comes from saved records */}
+          <ul className="mt-3 space-y-1 text-sm text-deep">
+            {lines.map((l) => <li key={l} className="flex items-start gap-2"><span className="mt-2 size-1.5 shrink-0 rounded-full bg-leaf" />{l}</li>)}
+          </ul>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button type="button" onClick={() => doTask(tasks[0])} disabled={watering || wateredToday || pendingKey === "watering"}
+              className={`btn px-5 py-3 text-white shadow-[var(--shadow-glow)] disabled:opacity-100 ${wateredToday ? "bg-leaf" : "bg-gradient-to-b from-[#0a7a3f] to-saudi hover:-translate-y-0.5"}`}>
+              {pendingKey === "watering" ? <LoaderCircle className="size-5 animate-spin" /> : wateredToday ? <Check className="size-5 animate-pop" /> : <Droplets className="size-5" />}
+              {wateredToday ? (ar ? "انسقت اليوم" : "Watered today ✓") : ar ? "سقيتها اليوم" : "Watered today"}
             </button>
-            <Link href={`/nada-ai?userPlant=${p.id}`} className="btn-outline px-5 py-3"><Sparkles className="size-5" />{ar ? `اسأل ندى عن ${p.nickname ?? p.speciesName}` : `Ask Nada about ${p.nickname ?? p.speciesName}`}</Link>
+            <Link href={`/nada-ai?userPlant=${p.id}`} className="btn-outline px-5 py-3"><Sparkles className="size-5" />{ar ? `اسأل ندى عن ${name}` : `Ask Nada about ${name}`}</Link>
             <button type="button" onClick={() => setLogOpen((v) => !v)} aria-expanded={logOpen} className="btn-light px-4 py-3 ring-1 ring-saudi/10"><NotebookPen className="size-4" />{t.plant.log}</button>
           </div>
           {logOpen && <div className="mt-4 animate-settle rounded-2xl bg-white p-4 ring-1 ring-saudi/10"><CareLogForm plantId={p.id} /></div>}
         </div>
       </header>
 
-      {/* care stats */}
-      <div className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-3 sm:px-8 lg:grid-cols-6">
-        <Stat icon={Droplets} label={t.space.lastWatered} value={p.lastWatered ? (wateredToday ? (ar ? "اليوم" : "Today") : date(p.lastWatered)) : t.space.noWatering} tone={p.status === "no_watering_recorded" ? "warn" : "default"} />
-        <Stat icon={CalendarClock} label={ar ? "فحص التربة القادم" : "Next soil check"} tone={nextCheck === 0 ? "warn" : "default"}
-          value={nextCheck === null ? (ar ? "سجّل أول ري" : "Log a watering") : nextCheck === 0 ? (ar ? "اليوم" : "Today") : ar ? `بعد ${dayCount(nextCheck, "ar")}` : `In ${dayCount(nextCheck, "en")}`} />
-        <Stat icon={Sun} label={ar ? "الإضاءة المطلوبة" : "Light it needs"} value={p.needsLight.join(ar ? "، " : ", ") || "—"} tone={p.status === "light_mismatch" ? "warn" : "default"} />
-        <Stat icon={Gauge} label={t.product.water} value={p.waterNeed ?? "—"} />
-        <Stat icon={Waves} label={t.product.humidity} value={p.humidity ?? "—"} />
-        <Stat icon={Thermometer} label={t.product.temperature} value={p.temp ?? "—"} />
+      {/* compact facts */}
+      <div className="flex flex-wrap gap-2 border-b border-line/70 px-5 py-3.5 text-xs sm:px-7">
+        <span className={`chip ${p.status === "light_mismatch" ? "bg-warn-bg text-warn" : "bg-mist"}`}><Sun className="size-3.5 text-sun" />{p.needsLight.join(ar ? "، " : ", ") || "—"}</span>
+        <span className="chip bg-mist"><Gauge className="size-3.5 text-saudi" />{t.product.water}: {p.waterNeed ?? "—"}</span>
+        <span className="chip bg-mist"><Waves className="size-3.5 text-saudi" />{t.product.humidity}: {p.humidity ?? "—"}</span>
+        <span className="chip bg-mist"><Thermometer className="size-3.5 text-saudi" />{p.temp ?? "—"}</span>
+        {p.lightLabel && <span className="chip bg-mist"><MapPin className="size-3.5 text-saudi" />{ar ? "مكانها:" : "Its spot:"} {p.lightLabel}</span>}
       </div>
 
-      <div className="grid gap-5 px-5 pb-6 sm:px-8 lg:grid-cols-[1.1fr_1fr]">
-        {/* checklist & warnings */}
-        <section className="rounded-[1.75rem] bg-mist/70 p-5 ring-1 ring-saudi/[0.06]">
-          <h3 className="flex items-center justify-between gap-2 font-bold text-forest">
-            <span className="flex items-center gap-2"><ClipboardList className="size-4 text-saudi" />{t.plant.checklist}</span>
-            <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-muted">{checked.size}/{checklist.length}</span>
-          </h3>
-          <ul className="mt-3 space-y-1">
-            {checklist.map((c, i) => (
-              <li key={i}>
-                <button type="button" aria-pressed={checked.has(i)} onClick={() => setChecked((s) => { const n = new Set(s); if (n.has(i)) n.delete(i); else n.add(i); return n; })}
-                  className="flex w-full items-start gap-2.5 rounded-xl p-1.5 text-start text-sm transition hover:bg-white">
-                  <span className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full ring-1 transition ${checked.has(i) ? "bg-saudi text-white ring-saudi" : "bg-white ring-sage"}`}>{checked.has(i) && <Check className="size-3 animate-pop" />}</span>
-                  <span className={`leading-6 ${checked.has(i) ? "text-muted line-through" : "text-ink"}`}>{c}</span>
-                </button>
-              </li>
-            ))}
+      <div className="grid gap-5 p-4 sm:p-7 lg:grid-cols-[1.15fr_1fr] [&>section]:min-w-0">
+        {/* recurring care tasks */}
+        <section className="rounded-[1.75rem] bg-mist/70 p-4 ring-1 ring-saudi/[0.06] sm:p-5" aria-label={t.plant.checklist}>
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="flex items-center gap-2 font-bold text-forest"><ListChecks className="size-4 text-saudi" />{t.plant.checklist}</h3>
+            <span className="text-xs font-semibold text-muted" aria-live="polite">{ar ? `${progress.done}/${progress.total} مكتملة` : `${progress.done}/${progress.total} done`}</span>
+          </div>
+          <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-white" role="progressbar" aria-valuemin={0} aria-valuemax={progress.total} aria-valuenow={progress.done}>
+            <div className="h-full rounded-full bg-gradient-to-l from-leaf to-saudi transition-[width] duration-700 ease-[var(--ease-organic)]" style={{ width: `${progress.total ? (progress.done / progress.total) * 100 : 0}%` }} />
+          </div>
+          {progress.due === 0 && progress.total > 0 && <p className="mt-2 animate-pop text-xs font-semibold text-saudi">{ar ? `كل المهام المستحقة لـ${name} مكتملة 🌿` : `Everything due for ${name} is done 🌿`}</p>}
+          <ul className="mt-3 space-y-2">
+            {tasks.map((task) => <TaskRow key={task.activity} task={task} name={name} pending={pendingKey} onDo={() => doTask(task)} onSoilOk={task.activity === "watering" ? soilOk : undefined} />)}
           </ul>
-          <p className="mt-3 text-[11px] leading-5 text-muted">{t.plant.suggestedNote}</p>
-          {p.problems.length > 0 && (
-            <div className="mt-4 rounded-2xl bg-white p-3.5">
-              <p className="flex items-center gap-1.5 text-xs font-bold text-warn"><AlertTriangle className="size-3.5" />{t.product.problems}</p>
-              <ul className="mt-1.5 space-y-1 text-xs leading-5 text-muted">{p.problems.map((x) => <li key={x}>• {x}</li>)}</ul>
+          {/* advice: the customer confirms the change themselves — never assumed */}
+          {p.advice.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <p className="text-xs font-bold text-forest">{ar ? "نصائح تحتاج تأكيدك" : "Advice to confirm"}</p>
+              {p.advice.map((a) => {
+                const at = confirmations.get(a.key);
+                return (
+                  <div key={a.key} className={`flex items-start gap-3 rounded-2xl p-3 text-sm ${at ? "bg-soft/60" : "bg-warn-bg/60"}`}>
+                    {at ? <Check className="mt-0.5 size-4 shrink-0 text-saudi" /> : <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warn" />}
+                    <div className="min-w-0 flex-1">
+                      <p className="leading-6 text-ink">{a.text}</p>
+                      {at ? (
+                        <p className="text-[11px] text-saudi">{ar ? `أكدت إنك سويتها في ${date(at)}` : `You confirmed this on ${date(at)}`}{a.key === "light" && (ar ? " — حدّث «الإضاءة» من «تعديل» عشان يختفي التنبيه." : " — update its light under “Edit” to clear the warning.")}</p>
+                      ) : (
+                        <button type="button" disabled={pendingKey === `advice-${a.key}`} onClick={() => onLog({ activity: "observation", notes: ar ? ADVICE_NOTES[a.key].ar : ADVICE_NOTES[a.key].en, key: `advice-${a.key}`, success: ar ? "تمام، سجلنا التغيير في سجل نبتتك ✓" : "Noted — saved to your plant's history ✓" })}
+                          className="mt-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-saudi ring-1 ring-saudi/15 transition hover:bg-saudi hover:text-white disabled:opacity-50">
+                          {ar ? "سويتها ✓" : "I did this ✓"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <p className="mt-3 text-[11px] leading-5 text-muted">{ar ? "كل مهمة تنحفظ في سجل العناية وتتبع فترتها. هذي اقتراحات داخل التطبيق، ما فيه إشعارات أو تذكيرات تلقائية." : "Each task is saved to the care history and follows its own interval. These are in-app suggestions — no notifications or automatic reminders."}</p>
+        </section>
+
+        {/* plant journey */}
+        <section className="rounded-[1.75rem] bg-white p-4 ring-1 ring-saudi/[0.08] sm:p-5">
+          <h3 className="flex items-center gap-2 font-bold text-forest"><History className="size-4 text-saudi" />{ar ? `رحلة ${name}` : `${name}'s journey`}</h3>
+          <ol className="mt-4 flex gap-3 overflow-x-auto pb-2 [scrollbar-width:thin]">
+            {journey.map((l, i) => {
+              if (l.id === "joined") return (
+                <li key="joined" className="flex w-20 shrink-0 flex-col items-center text-center">
+                  <span className="relative grid size-11 place-items-center overflow-hidden rounded-full bg-soft ring-2 ring-white shadow-sm">
+                    {p.ownPhoto ? <PlantImage src={p.image} alt="" sizes="44px" /> : <Sprout className="size-5 text-saudi" />}
+                  </span>
+                  <span className="mt-1.5 text-[11px] font-semibold leading-4 text-deep">{ar ? "انضمت لحديقتك" : "Joined"}</span>
+                  <span className="text-[10px] text-muted">{date(l.occurred_at)}</span>
+                </li>
+              );
+              const I = ACTIVITY_ICON[l.activity] ?? NotebookPen;
+              return (
+                <li key={l.id} className="flex w-20 shrink-0 flex-col items-center text-center" style={{ animation: `settle 0.5s var(--ease-organic) ${i * 50}ms both` }}>
+                  <span className={`grid size-11 place-items-center rounded-full ring-2 ring-white shadow-sm ${ACTIVITY_TONE[l.activity] ?? "bg-soft text-saudi"}`}><I className="size-5" /></span>
+                  <span className="mt-1.5 line-clamp-2 text-[11px] font-semibold leading-4 text-deep">{isSoilCheck(l) ? (ar ? "فحص التربة" : "Soil check") : actLabel(l.activity)}</span>
+                  <span className="text-[10px] text-muted">{date(l.occurred_at)}</span>
+                </li>
+              );
+            })}
+          </ol>
+          {p.logs.length === 0 ? (
+            <p className="mt-2 rounded-2xl bg-mist p-3 text-sm text-muted">{ar ? "ابدأ رحلتها: سجّل أول ري من فوق." : "Start its journey: log the first watering above."}</p>
+          ) : (
+            <>
+              <button type="button" onClick={() => setHistoryOpen((v) => !v)} aria-expanded={historyOpen} className="mt-2 text-xs font-semibold text-saudi hover:underline">
+                {historyOpen ? (ar ? "إخفاء السجل الكامل" : "Hide full history") : ar ? `السجل الكامل (${p.logs.length})` : `Full history (${p.logs.length})`}
+              </button>
+              {historyOpen && (
+                <ol className="mt-3 max-h-72 animate-settle space-y-2.5 overflow-y-auto border-s-2 border-soft ps-5 pe-1">
+                  {p.logs.map((l) => (
+                    <li key={l.id} className="relative flex items-start justify-between gap-2 text-sm">
+                      <span className={`absolute -start-[1.6rem] top-1 size-3.5 rounded-full ring-2 ring-white ${l.activity === "watering" ? "bg-sky-400" : l.activity === "observation" ? "bg-warn" : "bg-saudi"}`} />
+                      <span><span className="font-semibold text-deep">{actLabel(l.activity)}</span><span className="text-muted"> · {date(l.occurred_at)}</span>{l.notes && <span className="block text-xs leading-5 text-muted">{l.notes}</span>}</span>
+                      <DeleteLogButton id={l.id} />
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </>
+          )}
+          {p.observations.length > 0 && (
+            <div className="mt-4 rounded-2xl bg-warn-bg/50 p-3">
+              <p className="text-xs font-bold text-warn">{t.plant.symptoms}</p>
+              <ul className="mt-1 space-y-1 text-xs text-muted">{p.observations.map((o, i) => <li key={i}><span className="text-deep">{date(o.date)}:</span> {o.note}</li>)}</ul>
             </div>
           )}
         </section>
 
-        {/* timeline */}
-        <section className="rounded-[1.75rem] bg-white p-5 ring-1 ring-saudi/[0.08]">
-          <h3 className="flex items-center gap-2 font-bold text-forest"><CalendarClock className="size-4 text-saudi" />{t.plant.history}</h3>
-          {p.logs.length === 0 ? (
-            <p className="mt-3 rounded-2xl bg-mist p-4 text-sm text-muted">{t.plant.noHistory}</p>
-          ) : (
-            <ol className="mt-4 max-h-80 space-y-3 overflow-y-auto border-s-2 border-soft ps-5 pe-1">
-              {p.logs.map((l, i) => (
-                <li key={l.id} className="relative flex items-start justify-between gap-2 text-sm" style={{ animation: `settle 0.5s var(--ease-organic) ${Math.min(i, 6) * 50}ms both` }}>
-                  <span className={`absolute -start-[1.65rem] top-1 grid size-4 place-items-center rounded-full ring-2 ring-white ${l.activity === "watering" ? "bg-sky-400" : l.activity === "observation" ? "bg-warn" : "bg-saudi"}`} />
-                  <span>
-                    <span className="font-semibold text-deep">{t.plant.activity[l.activity as keyof typeof t.plant.activity] ?? l.activity}</span>
-                    <span className="text-muted"> · {date(l.occurred_at)}</span>
-                    {l.notes && <span className="block text-xs leading-5 text-muted">{l.notes}</span>}
-                  </span>
-                  <DeleteLogButton id={l.id} />
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
+        {/* species tips & common problems */}
+        {(p.tips.length > 0 || p.problems.length > 0) && (
+          <section className="rounded-[1.75rem] bg-white p-4 ring-1 ring-saudi/[0.08] sm:p-5">
+            <h3 className="flex items-center gap-2 font-bold text-forest"><ClipboardList className="size-4 text-saudi" />{t.product.tips}</h3>
+            <ul className="mt-3 space-y-1.5 text-sm leading-6 text-ink">{p.tips.map((x) => <li key={x} className="flex gap-2"><Sprout className="mt-1 size-3.5 shrink-0 text-leaf" />{x}</li>)}</ul>
+            {p.problems.length > 0 && (
+              <div className="mt-3 rounded-2xl bg-mist p-3">
+                <p className="flex items-center gap-1.5 text-xs font-bold text-warn"><AlertTriangle className="size-3.5" />{t.product.problems}</p>
+                <ul className="mt-1 space-y-1 text-xs leading-5 text-muted">{p.problems.map((x) => <li key={x}>• {x}</li>)}</ul>
+              </div>
+            )}
+          </section>
+        )}
 
-        {/* notes, observations, photos */}
-        <section className="rounded-[1.75rem] bg-white p-5 ring-1 ring-saudi/[0.08]">
-          <h3 className="flex items-center gap-2 font-bold text-forest"><NotebookPen className="size-4 text-saudi" />{ar ? "ملاحظات وصور" : "Notes & photos"}</h3>
+        {/* notes, consultations & management */}
+        <section className="rounded-[1.75rem] bg-white p-4 ring-1 ring-saudi/[0.08] sm:p-5">
+          <h3 className="flex items-center gap-2 font-bold text-forest"><NotebookPen className="size-4 text-saudi" />{ar ? "ملاحظاتك واستشاراتك" : "Notes & consultations"}</h3>
           <div className="mt-3 flex gap-3">
-            <div className="relative size-20 shrink-0 overflow-hidden rounded-2xl bg-soft">
-              <PlantImage src={p.ownPhoto ? p.image : p.speciesImage} alt="" sizes="80px" />
+            <div className="relative size-16 shrink-0 overflow-hidden rounded-2xl bg-soft">
+              <PlantImage src={p.ownPhoto ? p.image : p.speciesImage} alt="" sizes="64px" />
               {!p.ownPhoto && <span className="absolute inset-x-0 bottom-0 bg-white/85 py-0.5 text-center text-[9px] text-muted">{ar ? "صورة النوع" : "Species photo"}</span>}
             </div>
             <div className="min-w-0 text-sm">
@@ -392,31 +572,18 @@ function PlantDetails({ p, onWater, watering }: { p: GardenPlant; onWater: () =>
               <p className={`mt-1 leading-6 ${p.notes ? "text-ink" : "text-muted"}`}>{p.notes ?? (ar ? "ما فيه ملاحظات بعد — أضفها من «تعديل»." : "No notes yet — add some via “Edit”.")}</p>
             </div>
           </div>
-          {p.observations.length > 0 && (
-            <div className="mt-4">
-              <p className="text-xs font-bold text-forest">{t.plant.symptoms}</p>
-              <ul className="mt-1.5 space-y-1 text-xs text-muted">{p.observations.map((o, i) => <li key={i}><span className="text-deep">{date(o.date)}:</span> {o.note}</li>)}</ul>
-            </div>
-          )}
-          <p className="mt-4 flex items-center gap-1.5 text-[11px] text-muted"><Info className="size-3.5" />{ar ? "تقدر ترفع صورة نبتتك من «صورة نبتتي» تحت." : "Upload your own plant photo with “My plant photo” below."}</p>
-        </section>
-
-        {/* consultations & management */}
-        <section className="rounded-[1.75rem] bg-white p-5 ring-1 ring-saudi/[0.08]">
-          <h3 className="flex items-center gap-2 font-bold text-forest"><MessageCircle className="size-4 text-saudi" />{t.plant.consultations}</h3>
           {p.consultations.length ? (
-            <ul className="mt-3 space-y-1.5 text-sm">
+            <ul className="mt-3 space-y-1 text-sm">
               {p.consultations.map((c) => (
                 <li key={c.id}><Link href={`/nada-ai?userPlant=${p.id}`} className="flex items-center gap-2 rounded-xl px-2 py-1.5 transition hover:bg-mist">
-                  <Sparkles className="size-3.5 shrink-0 text-leaf" /><span className="truncate">{c.title ?? "…"}</span><span className="ms-auto shrink-0 text-xs text-muted">{date(c.updated_at)}</span>
+                  <MessageCircle className="size-3.5 shrink-0 text-leaf" /><span className="truncate">{c.title ?? "…"}</span><span className="ms-auto shrink-0 text-xs text-muted">{date(c.updated_at)}</span>
                 </Link></li>
               ))}
             </ul>
           ) : (
-            <p className="mt-3 text-sm text-muted">{ar ? "ما سألت ندى عن هذي النبتة بعد." : "You haven't asked Nada about this plant yet."}</p>
+            <p className="mt-3 text-xs text-muted">{ar ? "ما سألت ندى عن هذي النبتة بعد." : "You haven't asked Nada about this plant yet."}</p>
           )}
-          <div className="mt-5 border-t border-line pt-4">
-            <p className="mb-2.5 text-xs font-bold text-forest">{ar ? "إدارة النبتة" : "Manage plant"}</p>
+          <div className="mt-4 border-t border-line pt-3">
             <PlantEditor plant={{ id: p.id, nickname: p.nickname, location: p.location, light_condition: p.lightCondition, watering_preference: p.wateringPreference, notes: p.notes }} />
             <div className="mt-3 flex flex-wrap gap-3 text-xs">
               <Link href={`/my-green-space/plants/${p.id}`} className="inline-flex items-center gap-1 font-semibold text-saudi hover:underline"><ExternalLink className="size-3.5" />{ar ? "صفحة النبتة الكاملة" : "Full plant page"}</Link>

@@ -3,6 +3,7 @@
 // both always say the same thing. Never claims to know the plant's real-time condition.
 
 import { dayCount } from "@/lib/i18n/format";
+import { isChecklistNote, isSoilCheck } from "./care-notes";
 import type { LightLevel, Species } from "@/lib/plants/types";
 
 /** Typical days between waterings for a species' water need — a prompt to check the soil, not a schedule. */
@@ -31,11 +32,15 @@ export function plantInsights(
 ): PlantInsights {
   const sorted = [...logs].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at));
   const lastWater = sorted.find((l) => l.activity === "watering");
-  const days = lastWater ? Math.max(0, Math.floor((now.getTime() - new Date(lastWater.occurred_at).getTime()) / 86_400_000)) : null;
+  const daysSince = (iso: string) => Math.max(0, Math.floor((now.getTime() - new Date(iso).getTime()) / 86_400_000));
+  const days = lastWater ? daysSince(lastWater.occurred_at) : null;
   const interval = species ? CHECK_INTERVAL_DAYS[species.water] : null;
-  const due = days !== null && interval !== null && days >= interval;
+  // A recorded soil check ("still moist, no water needed") also counts as checking the soil.
+  const lastCheck = sorted.find((l) => l.activity === "watering" || isSoilCheck(l));
+  const checkDays = lastCheck ? daysSince(lastCheck.occurred_at) : null;
+  const due = checkDays !== null && interval !== null && checkDays >= interval;
   const lightMatches = species && plant.light_condition ? species.light.includes(plant.light_condition as LightLevel) : null;
-  const observations = sorted.filter((l) => l.activity === "observation" && l.notes).slice(0, 3).map((l) => ({ date: l.occurred_at.slice(0, 10), note: l.notes! }));
+  const observations = sorted.filter((l) => l.activity === "observation" && l.notes && !isChecklistNote(l)).slice(0, 3).map((l) => ({ date: l.occurred_at.slice(0, 10), note: l.notes! }));
   const cleaned = sorted.some((l) => l.activity === "cleaning");
 
   const ar: string[] = [];

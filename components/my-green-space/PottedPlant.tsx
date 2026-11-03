@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleHelp, Droplets, Plus, Sun } from "lucide-react";
+import { CircleHelp, Droplets, Leaf, Plus, Sparkles, Sun } from "lucide-react";
 import { PlantImage } from "@/components/store/PlantImage";
 
 // A single plant standing on the garden shelf. Every plant uses exactly the same slot: the same arched
@@ -54,6 +54,10 @@ export interface PottedPlantProps {
   statusLabel: string;
   selected: boolean;
   watering: boolean;
+  /** Briefly true right after a care log for this plant was saved. */
+  celebrate?: boolean;
+  /** Care tasks due now, from its own records. */
+  due?: number;
   onSelect: () => void;
   index: number;
 }
@@ -68,7 +72,7 @@ function Slot({ children, label, index }: { children: React.ReactNode; label: Re
   );
 }
 
-export function PottedPlant({ id, image, label, sublabel, status, statusLabel, selected, watering, onSelect, index }: PottedPlantProps) {
+export function PottedPlant({ id, image, label, sublabel, status, statusLabel, selected, watering, celebrate = false, due = 0, onSelect, index }: PottedPlantProps) {
   const alert = status === "soil_check_due" || status === "light_mismatch";
   const StatusIcon = status === "soil_check_due" ? Droplets : status === "light_mismatch" ? Sun : status === "unconfirmed" ? CircleHelp : null;
 
@@ -79,13 +83,25 @@ export function PottedPlant({ id, image, label, sublabel, status, statusLabel, s
         <span className="mt-1 h-4 max-w-full truncate text-[11px] leading-4 text-muted">{sublabel}</span>
       </button>
     }>
-      <button type="button" onClick={onSelect} aria-pressed={selected} aria-controls="plant-details" aria-label={`${label} — ${statusLabel}`} data-plant-id={id}
+      <button type="button" onClick={onSelect} aria-pressed={selected} aria-controls="plant-details" aria-label={`${label} — ${statusLabel}${due ? ` · ${due}` : ""}`} data-plant-id={id}
         className="group relative flex flex-col items-center rounded-[1.75rem] outline-none focus-visible:ring-2 focus-visible:ring-saudi/60 focus-visible:ring-offset-4 focus-visible:ring-offset-transparent">
         {/* soft light behind the selected plant */}
         <span aria-hidden className={`pointer-events-none absolute -inset-x-3 -top-3 bottom-6 rounded-full bg-[radial-gradient(closest-side,rgb(140_197_111/0.38),transparent)] transition duration-700 ${selected ? "animate-glow opacity-100" : "opacity-0 group-hover:opacity-60"}`} />
         {watering && (
           <span aria-hidden className="pointer-events-none absolute -top-2 z-30 flex gap-2">
             {[0, 1, 2].map((d) => <span key={d} className="block h-3.5 w-2.5 animate-drip rounded-[50%_50%_50%_50%/60%_60%_40%_40%] bg-gradient-to-b from-sky-200 to-sky-400 shadow-sm" style={{ animationDelay: `${d * 160}ms` }} />)}
+          </span>
+        )}
+        {/* a small celebration only after a care log was really saved */}
+        {celebrate && (
+          <span aria-hidden className="pointer-events-none absolute inset-x-0 top-1 z-30 flex justify-center gap-5 text-leaf">
+            {[Leaf, Sparkles, Leaf].map((I, d) => <I key={d} className="size-4 animate-bloom" style={{ animationDelay: `${d * 120}ms` }} />)}
+          </span>
+        )}
+        {/* care tasks due now (from records) — a gentle attention dot on the frame */}
+        {due > 0 && !selected && (
+          <span aria-hidden className="absolute -top-1 start-2 z-20 grid min-w-5 place-items-center rounded-full bg-warn-bg px-1 text-[10px] font-bold leading-5 text-warn shadow-sm ring-2 ring-white">
+            <span className="absolute inset-0 animate-ping rounded-full bg-warn/20 [animation-duration:2.4s]" />{due}
           </span>
         )}
         {/* identical arched frame for every plant; the photo always covers it */}
