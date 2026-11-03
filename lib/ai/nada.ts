@@ -30,6 +30,7 @@ import {
   type UserPlantCardData,
 } from "./schemas";
 import { matchSpecies, norm, resolveSpecies } from "./species-match";
+import { findUserPlantMentions, isNicknameOf, normalizeArabic, refersToCurrentPlant } from "./user-plant-match";
 
 export { resolveSpecies };
 
@@ -152,7 +153,7 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
     { role: "system", content: UNDERSTAND_SYSTEM },
     {
       role: "system",
-      content: `Context: workflow=${ctx.workflow}; signed_in=${Boolean(deps.user)}; user_saved_plant_nicknames=${JSON.stringify(plants.map((p) => p.nickname).filter(Boolean))}; previous_preferences=${JSON.stringify(ctx.preferences)}; last_recommended_count=${ctx.last_recommended.length}; active_recommendations_in_order=${JSON.stringify(activeSet(ctx)?.items.map((i) => i.name_ar || i.name_en) ?? [])}`,
+      content: `Context: workflow=${ctx.workflow}; signed_in=${Boolean(deps.user)}; user_saved_plants=${JSON.stringify(plants.filter((p) => p.nickname).map((p) => ({ nickname: p.nickname, species: p.species_slug ? speciesBySlug.get(p.species_slug)?.name_en ?? null : p.unconfirmed_label })))}; previous_preferences=${JSON.stringify(ctx.preferences)}; last_recommended_count=${ctx.last_recommended.length}; active_recommendations_in_order=${JSON.stringify(activeSet(ctx)?.items.map((i) => i.name_ar || i.name_en) ?? [])}`,
     },
     ...history.map((h) => ({ role: h.role, content: h.content }) as LlamaMessage),
     { role: "user", content: input.message },
@@ -177,7 +178,25 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
   if (u.intent === "save_care_log" && !CARE_DONE.test(input.message)) u = { ...u, intent: "get_plant_care" };
   // References to plants Nada already presented ("الأولى", "قارني بينهم", "أضيفيها") are resolved
   // deterministically against the latest recommendation group — never left to the model alone.
-  const ref: Resolution = input.userPlantId || u.plant_nickname ? { kind: "none" } : resolveReference(input.message, ctx);
+  // The customer's own saved plants come first: a nickname typed in the message ("لفله", "بالفلة") is
+  // their plant — never a generic species guess and never a recommendation from earlier in the chat.
+  const mentions = deps.user ? findUserPlantMentions(input.message, plants, deps.species) : { byNickname: [] as UserPlantRecord[], bySpecies: [] as UserPlantRecord[] };
+  const SHOPPING_INTENTS: Intent[] = ["add_to_cart", "save_to_wishlist", "recommend_plant", "cheaper_options", "save_plant", "compare_plants"];
+  const personal = mentions.byNickname.length > 0 && !SHOPPING_INTENTS.includes(u.intent);
+  if (personal) {
+    u = {
+      ...u,
+      plant_nickname: mentions.byNickname[0].nickname,
+      // Model "species" that are really the nickname would otherwise become a wrong species guess.
+      species_mentions: u.species_mentions.filter((m) => !isNicknameOf(m, mentions.byNickname)),
+      intent: u.intent === "general_question" || u.intent === "clarify_request" ? "get_plant_care" : u.intent,
+    };
+  }
+  let ref: Resolution = input.userPlantId || u.plant_nickname ? { kind: "none" } : resolveReference(input.message, ctx);
+  // "هي / أسقيها / فيها" right after talking about their own plant means that plant, not a recommendation.
+  const followsOwnPlant = !personal && !input.userPlantId && ctx.last_focus === "user_plant" && !!ctx.focus_user_plant && plants.some((p) => p.id === ctx.focus_user_plant);
+  if (followsOwnPlant && (ref.kind === "ambiguous" || (ref.kind === "items" && ref.via === "focus") || (ref.kind === "missing" && ref.reason === "no_focus"))) ref = { kind: "none" };
+  if (followsOwnPlant && ref.kind === "none" && (u.intent === "general_question" || u.intent === "clarify_request") && refersToCurrentPlant(input.message)) u = { ...u, intent: "get_plant_care" };
   const criterion = ctx.rec_sets.length || ctx.compared.length ? detectCriterion(input.message) : null;
   const OWN_PLANT_INTENTS: Intent[] = ["get_my_plants", "get_plant_history", "save_care_log", "save_plant", "get_explored_history", "investigate_plant_problem"];
   if (ref.kind !== "none" && !OWN_PLANT_INTENTS.includes(u.intent)) {
@@ -211,11 +230,25 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
   };
 
   /** Resolve which saved plant the user means: UI selection → nickname → species mention → focus. */
+  /** Mentions the customer actually typed (the model sometimes carries names over from history). */
+  const typed = (m: string) => normalizeArabic(input.message).includes(normalizeArabic(m).replace(/^ال/, ""));
+  let touchedUserPlant = false;
+  /**
+   * Which saved plant the customer means: a nickname typed in this message → the plant selected in the
+   * sidebar → the model's nickname → a species they own → the plant already being discussed.
+   */
   const resolveUserPlant = (): { plant: UserPlantRecord | null; ambiguous: UserPlantRecord[] } => {
+    const r = resolveUserPlantInner();
+    if (r.plant) touchedUserPlant = true;
+    return r;
+  };
+  const resolveUserPlantInner = (): { plant: UserPlantRecord | null; ambiguous: UserPlantRecord[] } => {
+    if (mentions.byNickname.length === 1) return { plant: mentions.byNickname[0], ambiguous: [] };
+    if (mentions.byNickname.length > 1) return { plant: null, ambiguous: mentions.byNickname };
     if (selectedPlant) return { plant: selectedPlant, ambiguous: [] };
     if (u!.plant_nickname) {
-      const n = norm(u!.plant_nickname);
-      const hits = plants.filter((p) => p.nickname && norm(p.nickname) === n);
+      const n = normalizeArabic(u!.plant_nickname).replace(/^ال/, "");
+      const hits = plants.filter((p) => p.nickname && normalizeArabic(p.nickname).replace(/^ال/, "") === n);
       if (hits.length === 1) return { plant: hits[0], ambiguous: [] };
       if (hits.length > 1) return { plant: null, ambiguous: hits };
     }
@@ -227,7 +260,7 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
     }
     if (ctx.focus_user_plant) {
       const p = plants.find((x) => x.id === ctx.focus_user_plant);
-      if (p && !u!.species_mentions.length && !u!.plant_nickname) return { plant: p, ambiguous: [] };
+      if (p && !u!.species_mentions.some(typed) && !u!.plant_nickname) return { plant: p, ambiguous: [] };
     }
     return { plant: null, ambiguous: [] };
   };
@@ -357,6 +390,7 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
 
   // 2) Authorised retrieval + deterministic logic per intent.
   let storeSet = false;
+  const focusItemBefore = ctx.focus_item?.key ?? null;
   const discuss = ref.kind !== "none" && (u.intent === "general_question" || u.intent === "get_plant_care" || u.intent === "clarify_request");
   if (discuss) {
     // "وش كانت الثانية؟", "حدثيني عن الأولى", "وش أضفتي؟", "وريني صفحتها" — about plants already presented.
@@ -529,7 +563,7 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
       const id = await deps.data.addUserPlant({ species_slug: sp.slug, nickname: u.plant_nickname });
       facts.action = { status: id ? "success" : "failed", plant: sp.name_en, nickname: u.plant_nickname };
       blocks.push({ type: "action", status: id ? "success" : "failed", message: id ? (ar ? `أضفت ${sp.name_ar}${u.plant_nickname ? ` (${u.plant_nickname})` : ""} لمساحتك الخضراء. تقدر تكمّل تفاصيل مكانها وإضاءتها من صفحتها.` : `Added ${sp.name_en}${u.plant_nickname ? ` (${u.plant_nickname})` : ""} to your Green Space. You can add its location and light on its page.`) : (ar ? "ما قدرت أحفظ النبتة." : "I couldn't save the plant.") });
-      if (id) ctx.focus_user_plant = id;
+      if (id) { ctx.focus_user_plant = id; touchedUserPlant = true; }
       break;
     }
 
@@ -675,6 +709,16 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
       facts.clarify = true;
   }
 
+  if (personal && touchedUserPlant && facts.user_plant) {
+    const p = plants.find((x) => x.id === ctx.focus_user_plant);
+    const sp = p?.species_slug ? speciesBySlug.get(p.species_slug) ?? null : null;
+    facts.recognized_saved_plant = { nickname: p?.nickname, species: sp ? (ar ? sp.name_ar : sp.name_en) : p?.unconfirmed_label ?? null, scientific: sp?.scientific_name ?? null, note: "The customer means THIS saved plant from their Green Space. Answer about it; never suggest a different species." };
+  }
+  // Remember which kind of plant this turn was about, for pronoun follow-ups next turn.
+  if (touchedUserPlant) ctx.last_focus = "user_plant";
+  else if (ctx.focus_item && ctx.focus_item.key !== focusItemBefore) ctx.last_focus = "item";
+  else if (storeSet || discuss) ctx.last_focus = "item";
+
   // 3) Response generation grounded in FACTS. If this second call fails after real work was done
   // (e.g. a care log was saved), return the factual blocks with replyError instead of hiding it.
   const generate = () => deps.llm(
@@ -722,7 +766,7 @@ export async function runNada(input: NadaInput, deps: NadaDeps): Promise<ChatRes
   const REPLY_LIST_INTENTS: Intent[] = ["general_question", "recommend_plant", "cheaper_options", "clarify_request", "get_plant_care"];
   if (!storeSet && ref.kind === "none" && !discuss && REPLY_LIST_INTENTS.includes(intent)) {
     const listed = extractReplyList(reply, deps.species, intent === "recommend_plant" || asksForRecommendations(input.message));
-    if (listed.length >= 2) pushRecSet(ctx, "reply", listed);
+    if (listed.length >= 2) { pushRecSet(ctx, "reply", listed); if (!touchedUserPlant) ctx.last_focus = "item"; }
   }
 
   const debug = process.env.NODE_ENV === "development" ? { understanding: u, facts } : undefined;

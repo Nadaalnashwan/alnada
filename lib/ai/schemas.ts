@@ -80,6 +80,8 @@ export const ChatContextSchema = z.object({
   /** Keys of the plants in the latest comparison ("أي وحدة أرخص؟" is answered among these). */
   compared: z.array(z.string().max(120)).max(4).default([]),
   /** Last cart/wishlist action — answers "وش أضفتي؟" and blocks accidental duplicates. */
+  /** Which kind of plant the conversation focused on last, so "هي / أسقيها" follow-ups resolve correctly. */
+  last_focus: z.enum(["user_plant", "item"]).nullable().default(null),
   last_action: z.object({ type: z.enum(["cart", "wishlist"]), item: RefItemSchema, message: z.string().max(200), turn: z.number().int().min(0) }).nullable().default(null),
 });
 export type ChatContext = z.infer<typeof ChatContextSchema>;

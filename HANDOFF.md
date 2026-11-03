@@ -63,6 +63,17 @@ shows an error. Advice ("away from AC", "better light") is confirmed by the cust
 `soil_check_due` in `insights.ts` without counting as a watering. No migration. Companion lines, the plant journey and
 the attention dot on pots come only from saved records. No notifications or automatic reminders exist.
 
+## Nada AI personal plant recognition (added 2026-11-03)
+**Bug:** "وش الإضاءة المناسبة لفله؟" (customer owns a jasmine nicknamed "فله") got a Philodendron guess. Saved plants
+were only matched when Llama filled `plant_nickname` *and* chose a care intent; for a "general question" with "فله"
+read as a species, no plant facts reached the reply. Joined prefixes / spelling variants were never matched.
+**Fix:** `lib/ai/user-plant-match.ts` finds the signed-in customer's own plants in the message before any generic
+interpretation — nicknames with Arabic variants (ة/ه, ى/ي, hamza forms, shadda/diacritics, tatweel, article) and
+joined prefixes (و ف ب ل ك + ال), plus species names of plants they own. A typed nickname wins over the sidebar
+selection, the model's guess and earlier recommendations; duplicates ask which plant; the plant stays in focus for
+follow-ups ("أسقيها", "هي") via `last_focus` in `chat_sessions.context` (survives reloads). Llama now also gets
+nickname→species pairs. Tests: `tests/nada-user-plants.test.ts` (19, mocked). Live check: "لياسمينه" → saved ياسمينة.
+
 ## Nada AI conversation memory (added 2026-11-03)
 **Bug:** after Nada listed Zinnia/Papaya in her reply, "قارني بين الأولى والثانية" showed an Aloe vera card and
 "أضيفي الثانية للسلة" added Aloe vera (reproduced against the old code). Root causes: (1) only store-engine picks were
@@ -122,7 +133,7 @@ free tier returned **429 (`AI_RATE_LIMITED`)** after many back-to-back calls —
 (this exercised brief Test 14 for real). Re-run the suite after the daily allowance resets.
 
 ## Test results
-**2026-11-03 (design branch):** `npm test` **113/113** (incl. 41 reference tests, 9 care-task tests), lint/typecheck clean, production build OK.
+**2026-11-03 (design branch):** `npm test` **132/132** (incl. 41 reference, 19 personal-plant, 9 care-task tests), lint/typecheck clean, production build OK.
 
 **2026-11-02 (from ~/Developer/alnada):**
 - `npm test`: **59/59** (recommendations 11, insights 4, Nada pipeline 28 with scripted model, DB/RLS/grants in PGlite 16).
